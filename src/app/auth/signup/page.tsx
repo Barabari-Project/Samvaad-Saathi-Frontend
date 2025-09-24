@@ -1,0 +1,107 @@
+"use client";
+
+import { ENDPOINTS } from "@/lib/api-config";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useCookies } from "react-cookie";
+
+export default function SignupPage() {
+  const [, setCookie] = useCookies(["token", "refresh_token"]);
+  const router = useRouter();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    const handleTokenExtraction = () => {
+      if (typeof window === "undefined") return;
+
+      const searchParams = window.location.search;
+      if (!searchParams) return;
+
+      // Extract token and refresh_token from URL query parameters
+      const params = new URLSearchParams(searchParams);
+      const token = params.get("token");
+      const refreshToken = params.get("refresh_token");
+
+      if (token && refreshToken) {
+        setIsProcessing(true);
+
+        // Set secure cookies with tokens
+        const cookieOptions = {
+          path: "/",
+          secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+          sameSite: "strict" as const,
+          httpOnly: false, // Set to true if you want httpOnly cookies (but then you can't access them via JS)
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        };
+
+        setCookie("token", token, cookieOptions);
+        setCookie("refresh_token", refreshToken, cookieOptions);
+
+        // Clear the query parameters from URL
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname
+        );
+
+        // Redirect to root page to let the main routing logic handle the redirect
+        setTimeout(() => {
+          router.push("/");
+        }, 1000);
+      }
+    };
+
+    handleTokenExtraction();
+  }, [setCookie, router]);
+
+  if (isProcessing) {
+    return (
+      <div
+        className="flex flex-col justify-center items-center w-full h-screen bg-cover bg-center bg-no-repeat px-4"
+        style={{ backgroundImage: "url('/welcome-bg.png')" }}
+      >
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-lg">Setting up your account...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex flex-col justify-center items-center w-full h-screen bg-cover bg-center bg-no-repeat px-4"
+      style={{ backgroundImage: "url('/welcome-bg.png')" }}
+    >
+      {/* Logo */}
+      <Image
+        src="/barabari_logo.png"
+        alt="Samvaad Saathi Logo"
+        className="w-[116px] h-[110px] mb-6"
+        width={300}
+        height={300}
+      />
+
+      {/* Welcome Text */}
+      <h2 className="font-noto text-white text-[32px] font-[600] text-center mb-2">
+        Welcome to Samvaad Saathi!
+      </h2>
+
+      {/* Page Heading */}
+      <h1 className="font-noto text-white text-[20px] font-[600] mb-8">
+        Create Account
+      </h1>
+
+      {/* Google Signup */}
+      <Link
+        href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/${ENDPOINTS.AUTH.COGNITO_LOGIN}`}
+      >
+        <button className="w-72 h-11 bg-white rounded-lg flex items-center justify-center gap-3 active:scale-95 transition shadow-md">
+          <span className="text-black text-sm font-semibold">Continue</span>
+        </button>
+      </Link>
+    </div>
+  );
+}
