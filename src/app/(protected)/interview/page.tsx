@@ -6,10 +6,10 @@ import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import { resampleAudioTo16kHz } from "@/lib/audio-utils";
-import { deleteAnswer, getAnswerBlob, saveAnswerBlob } from "@/lib/idb";
 import { MicrophoneIcon } from "@heroicons/react/24/solid";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
 
 type Question = {
@@ -52,6 +52,9 @@ const InterviewPage = () => {
   const [questionAttemptId, setQuestionAttemptId] = useState<number | null>(
     null
   );
+  const [pendingTranscription, setPendingTranscription] = useState(false);
+  const [audioUploaded, setAudioUploaded] = useState(false);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
 
   // Use the microphone permission hook
   const {
@@ -71,19 +74,17 @@ const InterviewPage = () => {
   const transcribeClient = createApiClient(APIService.TRANSCRIBE);
 
   // react-voice-visualizer controls
-  const recorderControls = useVoiceVisualizer({
-    onStartRecording: () => {},
-    onStopRecording: () => {},
-  });
+  const recorderControls = useVoiceVisualizer();
+
   const {
     startRecording,
     stopRecording,
-    audioSrc,
     recordedBlob,
     isRecordingInProgress,
     isPausedRecording,
-    isAvailableRecordedAudio,
   } = recorderControls;
+
+  console.log("recordedBlob :", recordedBlob);
 
   // Generate questions mutation
   const {
@@ -105,7 +106,19 @@ const InterviewPage = () => {
     transcribeClient.useMutation<TranscribeResponse, FormData>({
       url: ENDPOINTS.TRANSCRIBE.WHISPER,
       method: "post",
+      config: {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
       errorMessage: "Failed to transcribe audio. Please try again.",
+      options: {
+        onSuccess: () => {
+          // Move to next question after successful transcription
+          setAudioUploaded(false); // Reset audio uploaded state
+          resetStatesAndMoveNext();
+        },
+      },
     });
 
   // Complete interview mutation
@@ -156,29 +169,72 @@ const InterviewPage = () => {
     }
   }, [interviewId, useResume, generateQuestionsMutation]);
 
-  const startQuestionAttempt = useCallback(
-    async (questionId: string) => {
-      if (!interviewId) {
+  const startQuestionAttempt = async (questionId: string) => {
+    if (!interviewId) {
+      return;
+    }
+
+    try {
+      const response = await startQuestionAttemptMutation({
+        interviewId: parseInt(interviewId),
+        questionId: parseInt(questionId),
+      });
+      setQuestionAttemptId(response.questionAttemptId);
+    } catch (error) {
+      console.error("Failed to start question attempt:", error);
+    }
+  };
+
+  const handleTranscription = useCallback(
+    async (blob: Blob) => {
+      if (!questionAttemptId) {
+        console.error("No question attempt ID available for transcription");
         return;
       }
 
       try {
-        const response = await startQuestionAttemptMutation({
-          interviewId: parseInt(interviewId),
-          questionId: parseInt(questionId),
-        });
-        setQuestionAttemptId(response.questionAttemptId);
+        console.log("Starting transcription with blob:", blob);
+        // Resample audio to 16kHz
+        console.log("Resampling audio to 16kHz...");
+        const resampledBlob = await resampleAudioTo16kHz(blob);
+        console.log("resampledBlob :", resampledBlob);
+        console.log("Audio resampled successfully");
+
+        const formData = new FormData();
+        formData.append("question_attempt_id", questionAttemptId.toString());
+        formData.append("language", "en");
+
+        formData.append("file", resampledBlob);
+
+        const response = await transcribeMutation(formData);
+
+        // Handle the response based on the actual API structure
+        if (response.saved) {
+          console.log(
+            "Audio transcribed and saved successfully:",
+            response.message
+          );
+          setAudioUploaded(true);
+        } else {
+          console.error("Failed to save transcription:", response.saveError);
+        }
+
+        if (response.whisperError) {
+          console.error("Whisper transcription error:", response.whisperError);
+        }
       } catch (error) {
-        console.error("Failed to start question attempt:", error);
+        console.error("Failed to transcribe audio:", error);
+      } finally {
+        setPendingTranscription(false);
       }
     },
-    [interviewId]
+    [questionAttemptId, user?.userId, transcribeMutation]
   );
 
   // Generate questions when component mounts
   useEffect(() => {
     generateQuestions();
-  }, [generateQuestions]);
+  }, []);
 
   // Start question attempt when current question changes
   useEffect(() => {
@@ -195,97 +251,58 @@ const InterviewPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // When a recording finishes and blob/src is available, store it against the current question
-  useEffect(() => {
-    if (!isAvailableRecordedAudio || !audioSrc || !recordedBlob) return;
-    const q = questions[currentIndex];
-    if (!q) return;
-    const questionId = `${currentIndex}`; // Use index as ID since API doesn't provide one
-    setRecordedAnswers((prev) => ({ ...prev, [questionId]: audioSrc }));
-    // persist to IndexedDB
-    saveAnswerBlob(questionId, recordedBlob).catch(() => {});
-  }, [
-    isAvailableRecordedAudio,
-    audioSrc,
-    recordedBlob,
-    currentIndex,
-    questions,
-  ]);
-
-  // On question change, try to preload any previously saved blob from IndexedDB
-  useEffect(() => {
-    const q = questions[currentIndex];
-    if (!q) return;
-    const questionId = `${currentIndex}`;
-    let cancelled = false;
-    setAnswerSubmitted(false); // Reset submitted state when question changes
-    getAnswerBlob(questionId)
-      .then((blob) => {
-        if (cancelled || !blob) return;
-        const url = URL.createObjectURL(blob);
-        setRecordedAnswers((prev) => ({ ...prev, [questionId]: url }));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [currentIndex, questions]);
-
   const handleAnswer = () => {
     // Start recording for this question
     setAnswerSubmitted(false); // Reset the submitted state when starting new recording
+    setAudioUploaded(false); // Reset audio uploaded state
+    setRecordingError(null); // Reset recording error
     startRecording();
   };
 
   const handleSubmitAnswer = async () => {
     // Stop recording and show the message
-    stopRecording();
+
     setAnswerSubmitted(true);
+    setRecordingError(null);
 
-    // Transcribe the audio if we have a recorded blob and question attempt ID
-    console.log("questionAttemptId :", questionAttemptId);
+    console.log("recordedBlob :", recordedBlob);
+    // If we already have the blob, process it immediately
     if (recordedBlob && questionAttemptId !== null) {
-      try {
-        // Resample audio to 16kHz
-        console.log("Resampling audio to 16kHz...");
-        const resampledBlob = await resampleAudioTo16kHz(recordedBlob);
-        console.log("Audio resampled successfully");
-
-        const formData = new FormData();
-        formData.append("question_attempt_id", questionAttemptId.toString());
-        formData.append("language", "en");
-
-        // Generate filename with user ID, attempt ID, and datetime
-        const now = new Date();
-        const timestamp = now.toISOString();
-        const filename = `user_${user?.userId}_attempt_${questionAttemptId}_${timestamp}.wav`;
-
-        formData.append("file", resampledBlob, filename);
-
-        const response = await transcribeMutation(formData);
-
-        // Handle the response based on the actual API structure
-        if (response.saved) {
-          console.log(
-            "Audio transcribed and saved successfully:",
-            response.message
-          );
-        } else {
-          console.error("Failed to save transcription:", response.saveError);
-        }
-
-        if (response.whisperError) {
-          console.error("Whisper transcription error:", response.whisperError);
-        }
-      } catch (error) {
-        console.error("Failed to transcribe audio:", error);
-      }
+      console.log("Blob available immediately, processing transcription");
+      setPendingTranscription(true);
+      handleTranscription(recordedBlob);
+    } else {
+      // Set flag to process transcription when blob becomes available
+      console.log("Blob not available yet, setting pending transcription flag");
+      setPendingTranscription(true);
     }
   };
 
-  const handleNext = () => {
+  useEffect(() => {
+    if (recordedBlob && questionAttemptId !== null) {
+      handleSubmitAnswer();
+    }
+  }, [recordedBlob, questionAttemptId]);
+
+  const resetStatesAndMoveNext = () => {
     setAnswerSubmitted(false); // Reset submitted state when moving to next question
+    setPendingTranscription(false); // Reset pending transcription state
+    setRecordingError(null); // Reset recording error
+    // Reset audio blob by clearing recording
+    if (recorderControls.recordedBlob) {
+      recorderControls.clearCanvas();
+    }
     if (!isLast) setCurrentIndex((i) => i + 1);
+  };
+
+  const handleNext = () => {
+    if (!audioUploaded) {
+      setRecordingError(
+        "Please record and upload your answer before proceeding."
+      );
+      return;
+    }
+    resetStatesAndMoveNext();
   };
 
   const handleSkip = () => {
@@ -294,8 +311,8 @@ const InterviewPage = () => {
 
   const confirmSkip = () => {
     setShowSkipModal(false);
-    setAnswerSubmitted(false); // Reset submitted state when moving to next question
-    if (!isLast) setCurrentIndex((i) => i + 1);
+    setAudioUploaded(true); // Allow skipping without audio
+    resetStatesAndMoveNext();
   };
 
   const cancelSkip = () => {
@@ -305,6 +322,13 @@ const InterviewPage = () => {
   const handleSubmit = async () => {
     if (!interviewId) {
       console.error("No interview ID available");
+      return;
+    }
+
+    if (!audioUploaded) {
+      setRecordingError(
+        "Please record and upload your answer before completing the interview."
+      );
       return;
     }
 
@@ -320,12 +344,10 @@ const InterviewPage = () => {
   return (
     <div className="min-h-[calc(100dvh-56px)] py-8 px-4 flex items-start">
       <div className="mx-auto w-full max-w-md">
-        {isGeneratingQuestions || isStartingAttempt ? (
+        {isGeneratingQuestions ? (
           <div className="mx-auto mt-24 rounded-xl border border-black/10 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
             <p className="text-sm">
-              {isGeneratingQuestions
-                ? "Crafting personalized questions for you..."
-                : "Preparing question..."}
+              Crafting personalized questions for you...
             </p>
           </div>
         ) : !interviewId ? (
@@ -352,7 +374,7 @@ const InterviewPage = () => {
             </p>
             <button
               type="button"
-              className="px-4 h-9 rounded-md bg-black text-white text-sm"
+              className="btn btn-primary btn-sm"
               onClick={showMicPermissionModal}
             >
               Enable Microphone
@@ -377,6 +399,13 @@ const InterviewPage = () => {
               {questions[currentIndex].text}
             </p>
 
+            {/* Error Message */}
+            {recordingError && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{recordingError}</p>
+              </div>
+            )}
+
             {/* Recording / Playback UI */}
             {isRecordingInProgress || isPausedRecording ? (
               <div className="mt-4 space-y-3">
@@ -392,24 +421,42 @@ const InterviewPage = () => {
                 <div className="flex items-center justify-end gap-2">
                   <button
                     type="button"
-                    className="px-3 h-9 rounded-md bg-black text-white text-sm disabled:opacity-50"
-                    onClick={handleSubmitAnswer}
-                    disabled={isTranscribing}
+                    className="btn btn-primary btn-sm disabled:opacity-50"
+                    onClick={() => {
+                      stopRecording();
+                      console.log("first");
+                      handleSubmitAnswer();
+                    }}
+                    disabled={isTranscribing || pendingTranscription}
                   >
-                    {isTranscribing ? "Transcribing..." : "Submit Answer"}
+                    {isTranscribing ? (
+                      <>
+                        <span className="loading loading-spinner loading-xs"></span>
+                        Transcribing...
+                      </>
+                    ) : pendingTranscription ? (
+                      <>
+                        <span className="loading loading-spinner loading-xs"></span>
+                        Processing...
+                      </>
+                    ) : (
+                      "Submit Answer"
+                    )}
                   </button>
                 </div>
               </div>
             ) : recordedAnswers[`${currentIndex}`] || answerSubmitted ? (
               <div className="mt-4">
                 <div className="text-center text-xs border font-bold rounded px-3 py-2">
-                  Your answer has been recorded!
+                  {audioUploaded
+                    ? "Your answer has been uploaded!"
+                    : "Your answer has been recorded!"}
                 </div>
 
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <button
                     type="button"
-                    className="px-4 h-9 rounded-md bg-black text-white text-sm"
+                    className="btn btn-outline btn-sm"
                     onClick={() => {
                       const questionId = `${currentIndex}`;
                       setRecordedAnswers((prev) => {
@@ -418,7 +465,6 @@ const InterviewPage = () => {
                         return copy;
                       });
                       setAnswerSubmitted(false); // Reset submitted state when redoing
-                      deleteAnswer(questionId).catch(() => {});
                       // allow re-recording immediately
                       setTimeout(() => startRecording(), 0);
                     }}
@@ -428,19 +474,36 @@ const InterviewPage = () => {
                   {isLast ? (
                     <button
                       type="button"
-                      className="px-4 h-9 rounded-md bg-indigo-600 text-white text-sm disabled:opacity-50"
+                      className="btn btn-primary btn-sm disabled:opacity-50"
                       onClick={handleSubmit}
-                      disabled={isCompletingInterview}
+                      disabled={isCompletingInterview || !audioUploaded}
                     >
-                      {isCompletingInterview ? "Completing..." : "Submit"}
+                      {isCompletingInterview ? (
+                        <>
+                          <span className="loading loading-spinner loading-xs"></span>
+                          Completing...
+                        </>
+                      ) : (
+                        "Submit"
+                      )}
                     </button>
                   ) : (
                     <button
                       type="button"
-                      className="px-4 h-9 rounded-md bg-indigo-600 text-white text-sm"
+                      className="btn btn-primary btn-sm disabled:opacity-50"
                       onClick={handleNext}
+                      disabled={
+                        !audioUploaded || isTranscribing || pendingTranscription
+                      }
                     >
-                      Next ➜
+                      {isTranscribing || pendingTranscription ? (
+                        <>
+                          <span className="loading loading-spinner loading-xs"></span>
+                          Uploading...
+                        </>
+                      ) : (
+                        "Next ➜"
+                      )}
                     </button>
                   )}
                 </div>
@@ -449,24 +512,41 @@ const InterviewPage = () => {
               <div className="mt-4 flex items-center justify-between">
                 <button
                   type="button"
-                  className="px-4 h-9 rounded-md bg-black text-white text-sm flex items-center gap-3"
+                  className="btn btn-primary btn-sm flex items-center gap-3"
                   onClick={handleAnswer}
+                  disabled={isStartingAttempt}
                 >
-                  <MicrophoneIcon color="white" className="size-4" /> Answer
+                  {isStartingAttempt ? (
+                    <>
+                      <span className="loading loading-spinner loading-xs"></span>
+                      Preparing...
+                    </>
+                  ) : (
+                    <>
+                      <MicrophoneIcon color="white" className="size-4" /> Answer
+                    </>
+                  )}
                 </button>
                 {isLast ? (
                   <button
                     type="button"
-                    className="px-4 btn btn-primary disabled:opacity-50"
+                    className="btn btn-primary btn-sm disabled:opacity-50"
                     onClick={handleSubmit}
-                    disabled={isCompletingInterview}
+                    disabled={isCompletingInterview || !audioUploaded}
                   >
-                    {isCompletingInterview ? "Completing..." : "Submit"}
+                    {isCompletingInterview ? (
+                      <>
+                        <span className="loading loading-spinner loading-xs"></span>
+                        Completing...
+                      </>
+                    ) : (
+                      "Submit"
+                    )}
                   </button>
                 ) : (
                   <button
                     type="button"
-                    className="px-3 h-9 rounded-md border text-sm text-black/70"
+                    className="btn btn-outline btn-sm"
                     onClick={handleSkip}
                     title={"Skip"}
                   >
@@ -490,14 +570,14 @@ const InterviewPage = () => {
             <div className="flex gap-3">
               <button
                 type="button"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50"
+                className="btn btn-outline flex-1"
                 onClick={cancelSkip}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="flex-1 btn btn-primary"
+                className="btn btn-primary flex-1"
                 onClick={confirmSkip}
               >
                 Skip
