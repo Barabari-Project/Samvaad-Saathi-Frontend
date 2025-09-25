@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useCookies } from "react-cookie";
 
 export default function SignupPage() {
-  const [, setCookie] = useCookies(["token", "refresh_token"]);
+  const [cookies, setCookie] = useCookies(["token", "refresh_token"]);
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -16,6 +16,17 @@ export default function SignupPage() {
     const handleTokenExtraction = () => {
       if (typeof window === "undefined") return;
 
+      // First, check if user already has valid tokens in cookies
+      const existingToken = cookies.token;
+      const existingRefreshToken = cookies.refresh_token;
+
+      if (existingToken && existingRefreshToken) {
+        // User already has valid tokens, redirect to home
+        router.push("/home");
+        return;
+      }
+
+      // If no existing tokens, check for tokens in URL query parameters
       const searchParams = window.location.search;
       if (!searchParams) return;
 
@@ -54,7 +65,7 @@ export default function SignupPage() {
     };
 
     handleTokenExtraction();
-  }, [setCookie, router]);
+  }, [setCookie, router, cookies.token, cookies.refresh_token]);
 
   if (isProcessing) {
     return (
