@@ -1,23 +1,27 @@
 "use client";
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import React from "react";
+import { HomeIcon, ListBulletIcon, UserIcon } from "@heroicons/react/24/solid";
+import { usePathname, useRouter } from "next/navigation";
 
 /**
  * Bottom navigation bar with three primary actions: History, Home, Profile.
- * Highlights the currently active route via `active` prop.
+ * Automatically highlights the currently active route based on pathname.
  */
-export default function BottomNav({
-  active,
-  className = "",
-}: {
-  active?: "history" | "home" | "profile",
-  className?: string,
-}) {
+export default function BottomNav({ className = "" }: { className?: string }) {
   const router = useRouter();
+  const pathname = usePathname();
 
-  const baseItemClass = "flex flex-col items-center justify-center";
+  // Determine which nav item should be active based on pathname
+  const getActiveNav = () => {
+    if (pathname.startsWith("/history")) return "history";
+    if (pathname.startsWith("/home")) return "home";
+    if (pathname.startsWith("/profile")) return "profile";
+    return undefined;
+  };
+
+  const active = getActiveNav();
+  const baseItemClass =
+    "flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 hover:text-white";
   const isActive = (key: string) => active === key;
 
   return (
@@ -27,32 +31,32 @@ export default function BottomNav({
     >
       <button
         className={`${baseItemClass} ${
-          isActive("history") ? "opacity-100" : "opacity-80"
+          isActive("history") ? "text-white" : "text-gray-400"
         }`}
         onClick={() => router.push("/history")}
         aria-label="Go to history"
       >
-        <Image src="/history-icon.png" alt="History" width={28} height={28} />
+        <ListBulletIcon className="w-7 h-7" />
       </button>
 
       <button
         className={`${baseItemClass} ${
-          isActive("home") ? "opacity-100" : "opacity-80"
+          isActive("home") ? "text-white" : "text-gray-400"
         }`}
         onClick={() => router.push("/home")}
         aria-label="Go to home"
       >
-        <Image src="/home-icon.png" alt="Home" width={28} height={28} />
+        <HomeIcon className="w-7 h-7" />
       </button>
 
       <button
         className={`${baseItemClass} ${
-          isActive("profile") ? "opacity-100" : "opacity-80"
+          isActive("profile") ? "text-white" : "text-gray-400"
         }`}
         onClick={() => router.push("/profile")}
         aria-label="Go to profile"
       >
-        <Image src="/user-icon.png" alt="Profile" width={28} height={28} />
+        <UserIcon className="w-7 h-7" />
       </button>
     </nav>
   );
