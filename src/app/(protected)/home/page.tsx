@@ -1,7 +1,29 @@
 "use client";
 import { useAuth } from "@/components/providers/auth-provider";
+import { createApiClient } from "@/lib/api-config/src/client";
+import { APIService } from "@/lib/api-config/src/config";
+import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import dayjs from "dayjs";
+import Autoplay from "embla-carousel-autoplay";
+import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
 import Link from "next/link";
+import React from "react";
+
+interface InterviewItem {
+  interviewId: number;
+  track: string;
+  difficulty: string;
+  status: string;
+  createdAt: string;
+  knowledgePercentage: number;
+  speechFluencyPercentage: number;
+  summaryReportAvailable: boolean;
+}
+
+interface InterviewsResponse {
+  items: InterviewItem[];
+}
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -9,6 +31,48 @@ export default function HomePage() {
   const avatarUrl = `https://avatar.iran.liara.run/username?username=${encodeURIComponent(
     userName
   )}`;
+
+  // Create API client for interviews
+  const apiClient = createApiClient(APIService.INTERVIEWS);
+
+  // Embla Carousel setup with autoplay
+  const [emblaRef] = useEmblaCarousel(
+    {
+      loop: true,
+      align: "center",
+    },
+    [Autoplay({ delay: 4000, stopOnInteraction: false })]
+  );
+
+  // Fetch interviews with summary data
+  const {
+    data: interviewsData,
+    isLoading: interviewsLoading,
+    error: interviewsError,
+  } = apiClient.useQuery<InterviewsResponse>({
+    key: [ENDPOINTS.INTERVIEWS.WITH_SUMMARY, "interview-list"],
+    url: ENDPOINTS.INTERVIEWS.WITH_SUMMARY,
+    enabled: !loading, // Only fetch when auth is loaded
+  });
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    return dayjs(dateString).format("DD MMM , YYYY");
+  };
+
+  // Helper function to get difficulty color
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case "easy":
+        return "badge-success";
+      case "medium":
+        return "badge-warning";
+      case "hard":
+        return "badge-error";
+      default:
+        return "badge-neutral";
+    }
+  };
 
   if (loading) {
     return (
@@ -44,19 +108,34 @@ export default function HomePage() {
         />
       </div>
 
-      <div className="flex items-center justify-center flex-col gap-20">
-        <Image src="/home.png" alt="home image" height={300} width={300} />
-      </div>
-
       <div className="my-6">
-        <div className="card w-full bg-base-100 card-md shadow-sm">
-          <div className="card-body">
-            <h2 className="card-title">Recent Interviews</h2>
-            <p>
-              Your recent interviews will be shown here. Complete your first
-              interview to see your progress and history.
+        <h2 className="text-2xl font-bold mb-4">Recent Interviews</h2>
+
+        {interviewsLoading ? (
+          // Skeleton loader
+          <div className="space-y-4">
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+          </div>
+        ) : interviewsError ||
+          !interviewsData?.items ||
+          interviewsData.items.length === 0 ? (
+          // Fallback illustration and message
+          <div className="text-center py-8">
+            <Image
+              src="/home.png"
+              alt="No interviews illustration"
+              height={200}
+              width={200}
+              className="mx-auto mb-4 opacity-50"
+            />
+            <p className="text-gray-500 mb-4">
+              {interviewsError
+                ? "Unable to load interviews. Please try again later."
+                : "Your recent interviews will be shown here. Complete your first interview to see your progress and history."}
             </p>
-            <div className="justify-end card-actions">
+            <div className="justify-center">
               <Link href="history">
                 <button className="btn btn-primary rounded-md">
                   View History
@@ -64,16 +143,115 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-        </div>
+        ) : (
+          // Carousel with interview data
+          <div className="space-y-4">
+            {/* Embla Carousel */}
+            <div className="embla overflow-hidden" ref={emblaRef}>
+              <div className="embla__container flex p-4">
+                {interviewsData.items.map((interview) => (
+                  <div
+                    key={interview.interviewId}
+                    className="embla__slide flex-[0_0_100%] min-w-0"
+                  >
+                    <div className="card bg-base-100 w-full shadow-lg ">
+                      <div className="card-body">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="card-title text-lg">
+                              {interview.track}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              {formatDate(interview.createdAt)} • Attempt-
+                              {interview.interviewId}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <div
+                              className={`badge ${getDifficultyColor(
+                                interview.difficulty
+                              )}`}
+                            >
+                              {interview.difficulty?.toUpperCase()}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Progress indicators */}
+                        <div className="flex gap-4 mb-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-black rounded-full"></div>
+                            <span className="text-sm">Knowledge</span>
+                            <span className="font-bold">
+                              {interview.knowledgePercentage}%
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                            <span className="text-sm">Fluency</span>
+                            <span className="font-bold">
+                              {interview.speechFluencyPercentage}%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="card-actions justify-end">
+                          {interview.status.toLowerCase() === "completed" ? (
+                            <>
+                              {interview.summaryReportAvailable ? (
+                                <Link
+                                  href={`/report-summary?interviewId=${interview.interviewId}`}
+                                >
+                                  <button className="btn btn-outline btn-sm">
+                                    View Report
+                                  </button>
+                                </Link>
+                              ) : (
+                                <button
+                                  className="btn btn-outline btn-sm"
+                                  disabled
+                                >
+                                  Report Pending
+                                </button>
+                              )}
+                              <Link href="interview-start">
+                                <button className="btn btn-primary btn-sm">
+                                  Reattempt
+                                </button>
+                              </Link>
+                            </>
+                          ) : interview.status.toLowerCase() === "active" ? (
+                            <Link
+                              href={`/interview?interviewId=${interview.interviewId}`}
+                            >
+                              <button className="btn btn-primary btn-sm">
+                                Continue Interview
+                              </button>
+                            </Link>
+                          ) : (
+                            <Link href="interview-start">
+                              <button className="btn btn-primary btn-sm">
+                                Start Interview
+                              </button>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="absolute inset-x-0 bottom-32 px-6">
-        <Link href="interview-start">
-          <button className="w-full bg-black text-white font-bold font-xl p-4 rounded-xl">
-            Get Started
-          </button>
-        </Link>
-      </div>
+      <Link href="interview-start">
+        <button className="btn btn-neutral btn-block btn-lg rounded-lg">
+          Get Started
+        </button>
+      </Link>
     </div>
   );
 }

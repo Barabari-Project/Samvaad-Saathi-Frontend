@@ -22,6 +22,11 @@ const InterviewCompleted = () => {
       method: "post",
       successMessage: "Report generated successfully!",
       errorMessage: "Failed to generate report. Please try again.",
+      options: {
+        onSuccess: () => {
+          router.push(`/report-summary?interviewId=${interviewId}`);
+        },
+      },
     });
 
   const handleViewReport = async () => {
@@ -42,8 +47,6 @@ const InterviewCompleted = () => {
       });
       // Clear timeout if report generation succeeds
       clearTimeout(timeoutId);
-      // Navigate to report summary after successful generation
-      router.push(`/report-summary?interviewId=${interviewId}`);
     } catch (error) {
       console.error("Failed to generate final report:", error);
       toast.error("Failed to generate final report");
@@ -72,8 +75,10 @@ const InterviewCompleted = () => {
 
           {/* Success Message */}
           <p className="py-6 text-lg">
-            You have successfully completed your 1st{" "}
-            <span className="text-primary font-semibold">React Developer</span>{" "}
+            You have successfully completed your
+            <span className="text-primary font-semibold">
+              React Developer
+            </span>{" "}
             interview
           </p>
 
@@ -86,7 +91,7 @@ const InterviewCompleted = () => {
           <button
             onClick={handleViewReport}
             disabled={isGeneratingReport}
-            className="btn btn-primary btn-lg w-full"
+            className="btn btn-neutral btn-lg"
           >
             {isGeneratingReport && (
               <span className="loading loading-spinner loading-sm"></span>
