@@ -181,7 +181,7 @@ export default function InterviewHistory() {
                     {/* Complete Interview Button - Bottom Right */}
                     <div className="flex justify-end">
                       <Link
-                        href={`/interview?id=${item.interviewId}`}
+                        href={`/interview?interviewId=${item.interviewId}&useResume=false`}
                         className="px-4 py-2 border border-black rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-50 transition-colors"
                       >
                         Complete Interview
@@ -206,64 +206,37 @@ export default function InterviewHistory() {
                 {completed.map((item) => (
                   <div
                     key={item.interviewId}
-                    className="card bg-white shadow-lg border border-gray-200 rounded-xl p-4"
+                    className="bg-white rounded-xl shadow-lg p-4 relative"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-[14px] font-semibold text-gray-900">
-                          {item.track}
-                        </h3>
-                        <p className="text-[12px] text-gray-600 mt-1">
-                          Total no. of attempts - 8
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        {/* Circular Progress Indicators using DaisyUI */}
-                        <div className="flex items-center gap-2">
-                          {/* Technical Knowledge Progress */}
-                          <div
-                            className="radial-progress text-blue-600"
-                            style={{ "--value": 90 } as React.CSSProperties}
-                            role="progressbar"
-                          >
-                            <span className="text-[8px] font-semibold">
-                              90%
-                            </span>
-                          </div>
-                          {/* Speech Fluency Progress */}
-                          <div
-                            className="radial-progress text-gray-600"
-                            style={{ "--value": 75 } as React.CSSProperties}
-                            role="progressbar"
-                          >
-                            <span className="text-[8px] font-semibold">
-                              75%
-                            </span>
-                          </div>
-                        </div>
-                        <Link
-                          href={`/interview-completed?id=${item.interviewId}`}
-                          className="btn btn-outline btn-sm"
-                        >
-                          View Report
-                        </Link>
-                      </div>
-                    </div>
-                    {/* Legend */}
-                    <div className="mt-3 flex items-center gap-4 text-[10px] text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-                        <span>Technical Knowledge</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-gray-600"></div>
-                        <span>Speech Fluency</span>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[10px] text-gray-600">
-                        Total Average Score
+                    {/* Role Title - Top Left */}
+                    <h3 className="text-lg font-bold text-black mb-2">
+                      {item.track}
+                    </h3>
+
+                    {/* Date and Attempt - Below Title */}
+                    <p className="text-sm text-black mb-4">
+                      {formatDate(item.createdAt)} / Attempt-1
+                    </p>
+
+                    {/* Difficulty Label - Top Right */}
+                    <div className="absolute top-4 right-4">
+                      <span
+                        className={`text-sm font-medium capitalize ${getDifficultyColor(
+                          item.difficulty
+                        )}`}
+                      >
+                        {item.difficulty?.toUpperCase()}
                       </span>
+                    </div>
+
+                    {/* View Report Button - Bottom Right */}
+                    <div className="flex justify-end">
+                      <Link
+                        href={`/report-summary?interviewId=${item.interviewId}`}
+                        className="px-4 py-2 border border-black rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-50 transition-colors"
+                      >
+                        View Report
+                      </Link>
                     </div>
                   </div>
                 ))}

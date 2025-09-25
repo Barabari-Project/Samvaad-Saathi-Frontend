@@ -33,3 +33,19 @@ h5,
 h6 {
   font-family: var(--font-heading), sans-serif;
 }
+
+/* Embla Carousel styles */
+.embla {
+  overflow: hidden;
+}
+
+.embla__container {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.embla__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}

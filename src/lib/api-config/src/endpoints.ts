@@ -20,6 +20,7 @@ export const ENDPOINTS = {
     QUESTION_ATTEMPTS: (interviewId: string) =>
       `interviews/${interviewId}/question-attempts`,
     START_QUESTION_ATTEMPT: "interviews/question-attempts",
+    WITH_SUMMARY: "interviews-with-summary",
   },
   TRANSCRIBE: {
     WHISPER: "transcribe-whisper",
