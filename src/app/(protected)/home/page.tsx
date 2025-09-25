@@ -135,13 +135,6 @@ export default function HomePage() {
                 ? "Unable to load interviews. Please try again later."
                 : "Your recent interviews will be shown here. Complete your first interview to see your progress and history."}
             </p>
-            <div className="justify-center">
-              <Link href="history">
-                <button className="btn btn-primary rounded-md">
-                  View History
-                </button>
-              </Link>
-            </div>
           </div>
         ) : (
           // Carousel with interview data
