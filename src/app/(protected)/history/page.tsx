@@ -1,83 +1,111 @@
 "use client";
 
+import { createApiClient } from "@/lib/api-config/src/client";
+import { APIService } from "@/lib/api-config/src/config";
+import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import dayjs from "dayjs";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
-type OngoingItem = {
-  id: string;
-  role: string;
-  date: string;
-  attemptLabel: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  knowledgePercent: number;
-  fluencyPercent: number;
-};
+interface InterviewItem {
+  interviewId: number;
+  track: string;
+  difficulty: string;
+  status: string;
+  createdAt: string;
+}
 
-type CompletedItem = {
-  id: string;
-  role: string;
-  attemptsCount: number;
-};
+interface InterviewsListResponse {
+  items: InterviewItem[];
+  nextCursor: number | null;
+  limit: number;
+}
 
-const TabButton = ({
-  label,
-  isActive,
-  onClick,
-}: {
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    aria-pressed={isActive}
-    className={`min-w-[120px] h-10 px-4 rounded-md text-sm font-medium transition shadow-sm border ${
-      isActive
-        ? "bg-white text-black border-black/10"
-        : "bg-[#F1F1F1] text-black/80 border-black/10"
-    }`}
-    onClick={onClick}
-  >
-    {label}
-  </button>
-);
+type InterviewStatus = "incomplete" | "completed";
 
 export default function InterviewHistory() {
-  const [activeTab, setActiveTab] = useState<"ongoing" | "completed">(
-    "ongoing"
-  );
+  const [activeTab, setActiveTab] = useState<InterviewStatus>("incomplete");
+  const { useQuery } = createApiClient(APIService.INTERVIEWS);
 
-  const ongoing = useMemo<OngoingItem[]>(
-    () => [
-      {
-        id: "r1",
-        role: "React Developer",
-        date: "13 Dec",
-        attemptLabel: "2025/Q3 • Attempt 3",
-        difficulty: "Hard",
-        knowledgePercent: 90,
-        fluencyPercent: 75,
-      },
-      {
-        id: "r2",
-        role: "Backend Developer",
-        date: "11 Dec",
-        attemptLabel: "2025/Q3 • Attempt 1",
-        difficulty: "Easy",
-        knowledgePercent: 75,
-        fluencyPercent: 65,
-      },
-    ],
-    []
-  );
+  const {
+    data: interviewsData,
+    isLoading,
+    error,
+  } = useQuery<InterviewsListResponse>({
+    key: [ENDPOINTS.INTERVIEWS.LIST, "list"],
+    url: ENDPOINTS.INTERVIEWS.LIST,
+    method: "get",
+  });
+  console.log("interviewsData :", interviewsData);
 
-  const completed = useMemo<CompletedItem[]>(
-    () => [
-      { id: "c1", role: "React Developer", attemptsCount: 8 },
-      { id: "c2", role: "Backend Developer", attemptsCount: 6 },
-    ],
-    []
-  );
+  const { incomplete, completed } = useMemo(() => {
+    if (!interviewsData?.items) {
+      return { incomplete: [], completed: [] };
+    }
+
+    const incompleteInterviews: InterviewItem[] = [];
+    const completedInterviews: InterviewItem[] = [];
+
+    interviewsData.items.forEach((interview) => {
+      if (interview.status === "active") {
+        incompleteInterviews.push(interview);
+      } else if (interview.status === "completed") {
+        completedInterviews.push(interview);
+      }
+    });
+
+    return {
+      incomplete: incompleteInterviews,
+      completed: completedInterviews,
+    };
+  }, [interviewsData]);
+
+  const formatDate = (dateString: string) => {
+    return dayjs(dateString).format("DD MMM , YYYY");
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case "hard":
+        return "text-red-600";
+      case "easy":
+        return "text-green-600";
+      case "medium":
+        return "text-yellow-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[calc(100dvh-56px)] py-6">
+        <div className="max-w-md mx-auto">
+          <h2 className="text-[20px] font-semibold text-[#1F285B] mb-4">
+            History
+          </h2>
+          <div className="flex justify-center items-center h-32">
+            <span className="loading loading-spinner loading-md"></span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[calc(100dvh-56px)] py-6">
+        <div className="max-w-md mx-auto">
+          <h2 className="text-[20px] font-semibold text-[#1F285B] mb-4">
+            History
+          </h2>
+          <div className="alert alert-error">
+            <span>Failed to load interviews. Please try again.</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100dvh-56px)] py-6">
@@ -86,114 +114,161 @@ export default function InterviewHistory() {
           History
         </h2>
 
-        <div className="flex items-center gap-3 mb-3">
-          <TabButton
-            label="Ongoing"
-            isActive={activeTab === "ongoing"}
-            onClick={() => setActiveTab("ongoing")}
-          />
-          <TabButton
-            label="Completed"
-            isActive={activeTab === "completed"}
+        <div
+          role="tablist"
+          className="tabs tabs-box mb-3 w-full bg-gray-200 p-2 font-bold text-2xl"
+        >
+          <a
+            role="tab"
+            className={`tab flex-1 ${
+              activeTab === "incomplete"
+                ? "tab-active shadow-2xl rounded-xl"
+                : ""
+            }`}
+            onClick={() => setActiveTab("incomplete")}
+          >
+            Incomplete
+          </a>
+          <a
+            role="tab"
+            className={`tab flex-1 ${
+              activeTab === "completed" ? "tab-active" : ""
+            }`}
             onClick={() => setActiveTab("completed")}
-          />
+          >
+            Completed
+          </a>
         </div>
 
-        {activeTab === "ongoing" ? (
+        {activeTab === "incomplete" ? (
           <div>
             <p className="text-[12px] text-black/60 mb-3">
               This page lists all interviews you have put on hold.
             </p>
 
-            <div className="space-y-3">
-              {ongoing.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-xl border border-black/10 bg-white shadow-[0_6px_20px_rgba(0,0,0,0.08)] p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Progress placeholder circle */}
-                    <div className="relative w-16 h-16 rounded-full bg-[#EFF3FF] border-2 border-[#1F285B]/20 flex items-center justify-center">
-                      <div className="text-[10px] text-[#1F285B] text-center leading-3">
-                        <div>{item.knowledgePercent}%</div>
-                        <div className="text-black/50">
-                          {item.fluencyPercent}%
-                        </div>
-                      </div>
+            {incomplete.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No incomplete interviews found.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {incomplete.map((item) => (
+                  <div
+                    key={item.interviewId}
+                    className="bg-white rounded-xl shadow-lg p-4 relative"
+                  >
+                    {/* Role Title - Top Left */}
+                    <h3 className="text-lg font-bold text-black mb-2">
+                      {item.track}
+                    </h3>
+
+                    {/* Date and Attempt - Below Title */}
+                    <p className="text-sm text-black mb-4">
+                      {formatDate(item.createdAt)} / Attempt-1
+                    </p>
+
+                    {/* Difficulty Label - Top Right */}
+                    <div className="absolute top-4 right-4">
+                      <span
+                        className={`text-sm font-medium capitalize ${getDifficultyColor(
+                          item.difficulty
+                        )}`}
+                      >
+                        {item.difficulty?.toUpperCase()}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="text-[14px] font-semibold truncate">
-                            {item.role}
-                          </p>
-                          <p className="text-[10px] text-black/60">
-                            {item.date} • {item.attemptLabel}
-                          </p>
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#1F285B] inline-block" />
-                            <span className="text-[10px] text-black/60">
-                              Theoretical Knowledge
-                            </span>
-                            <span className="w-2 h-2 rounded-full bg-black/50 inline-block ml-3" />
-                            <span className="text-[10px] text-black/60">
-                              Speech Fluency
-                            </span>
-                          </div>
-                        </div>
-                        <span
-                          className={`text-[10px] ml-2 ${
-                            item.difficulty === "Hard"
-                              ? "text-red-600"
-                              : item.difficulty === "Easy"
-                              ? "text-green-600"
-                              : "text-yellow-600"
-                          }`}
-                        >
-                          {item.difficulty}
-                        </span>
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <Link
-                          href={`/interview?id=${item.id}`}
-                          className="px-4 h-9 rounded-md bg-black text-white text-sm inline-flex items-center"
-                        >
-                          Resume
-                        </Link>
-                      </div>
+
+                    {/* Complete Interview Button - Bottom Right */}
+                    <div className="flex justify-end">
+                      <Link
+                        href={`/interview?id=${item.interviewId}`}
+                        className="px-4 py-2 border border-black rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-50 transition-colors"
+                      >
+                        Complete Interview
+                      </Link>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div>
             <p className="text-[12px] text-black/60 mb-3">
-              Access your interview history
+              Access Your Interview History
             </p>
-            <div className="space-y-3">
-              {completed.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-xl border border-black/10 bg-white shadow-[0_6px_20px_rgba(0,0,0,0.08)] p-3"
-                >
-                  <p className="text-[14px] font-semibold">{item.role}</p>
-                  <p className="text-[12px] text-black/80 mt-1">
-                    No. of Interviews attempted:{" "}
-                    <span className="font-medium">{item.attemptsCount}</span>
-                  </p>
-                  <div className="mt-3 flex justify-end">
-                    <Link
-                      href={`/interview-completed?id=${item.id}`}
-                      className="px-4 h-9 rounded-md bg-white border text-sm inline-flex items-center shadow-sm"
-                    >
-                      View Report
-                    </Link>
+            {completed.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No completed interviews found.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {completed.map((item) => (
+                  <div
+                    key={item.interviewId}
+                    className="card bg-white shadow-lg border border-gray-200 rounded-xl p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-[14px] font-semibold text-gray-900">
+                          {item.track}
+                        </h3>
+                        <p className="text-[12px] text-gray-600 mt-1">
+                          Total no. of attempts - 8
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {/* Circular Progress Indicators using DaisyUI */}
+                        <div className="flex items-center gap-2">
+                          {/* Technical Knowledge Progress */}
+                          <div
+                            className="radial-progress text-blue-600"
+                            style={{ "--value": 90 } as React.CSSProperties}
+                            role="progressbar"
+                          >
+                            <span className="text-[8px] font-semibold">
+                              90%
+                            </span>
+                          </div>
+                          {/* Speech Fluency Progress */}
+                          <div
+                            className="radial-progress text-gray-600"
+                            style={{ "--value": 75 } as React.CSSProperties}
+                            role="progressbar"
+                          >
+                            <span className="text-[8px] font-semibold">
+                              75%
+                            </span>
+                          </div>
+                        </div>
+                        <Link
+                          href={`/interview-completed?id=${item.interviewId}`}
+                          className="btn btn-outline btn-sm"
+                        >
+                          View Report
+                        </Link>
+                      </div>
+                    </div>
+                    {/* Legend */}
+                    <div className="mt-3 flex items-center gap-4 text-[10px] text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                        <span>Technical Knowledge</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-gray-600"></div>
+                        <span>Speech Fluency</span>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[10px] text-gray-600">
+                        Total Average Score
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
