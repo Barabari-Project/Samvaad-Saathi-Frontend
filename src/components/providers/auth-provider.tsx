@@ -40,6 +40,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // If we have both tokens but no user data yet, let the main page handle the routing
+    // This prevents unnecessary redirects while user data is being fetched
+    if (token && refreshToken && !user && loading) {
+      setShouldRedirect(null);
+      return;
+    }
+
     // If user is loaded and NOT onboarded, redirect to onboarding
     if (user && !loading && !user.authorizedUser.isOnboarded) {
       console.log("redirecting to onboarding");
