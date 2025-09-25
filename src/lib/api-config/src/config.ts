@@ -12,19 +12,8 @@ interface ErrorResponse {
   };
 }
 
-const isDevEnv = () => {
-  if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-
-    const isDevEnv = /(^(localhost|127\.0\.0\.1)$)|(^|\.)dev(\.|-)/i.test(host);
-    return isDevEnv;
-  }
-};
-
 // TODO: Move to env variables
-export const AUTH_BASE_URL = isDevEnv()
-  ? process.env.NEXT_PUBLIC_API_BASE_URL
-  : "";
+export const AUTH_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export enum APIService {
   AUTH = "AUTH",
