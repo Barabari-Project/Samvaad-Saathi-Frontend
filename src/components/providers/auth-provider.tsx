@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [cookies] = useCookies(["token", "refresh_token"]);
+  const [cookies, , removeCookie] = useCookies(["token", "refresh_token"]);
   const [shouldRedirect, setShouldRedirect] = useState<string | null>(null);
 
   const { data: user, isLoading: loading } = apiClient.useQuery<UserProfile>({
@@ -65,25 +65,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [shouldRedirect, router]);
 
-  const logoutMutation = apiClient.useMutation<void>({
-    url: ENDPOINTS.AUTH.COGNITO_LOGOUT,
-    method: "get",
-    options: {
-      onSuccess: () => {
-        queryClient.removeQueries({
-          queryKey: [ENDPOINTS.AUTH.ABOUT_ME, "me"],
-        });
-        router.push("/");
-      },
-    },
-  });
-
   const signInWithCognito = () => {
     window.location.href = `api${ENDPOINTS.AUTH.COGNITO_LOGIN}`;
   };
 
   const signOut = () => {
-    logoutMutation.mutate({});
+    // Clear all cookies
+    removeCookie("token", { path: "/" });
+    removeCookie("refresh_token", { path: "/" });
+
+    // Clear localStorage
+    if (typeof window !== "undefined") {
+      localStorage.clear();
+    }
+
+    // Clear sessionStorage
+    if (typeof window !== "undefined") {
+      sessionStorage.clear();
+    }
+
+    // Clear all query cache
+    queryClient.clear();
+
+    // Redirect to signup page
+    router.push("/auth/signup");
   };
 
   const value: AuthContextType = {

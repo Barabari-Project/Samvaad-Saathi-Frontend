@@ -25,7 +25,8 @@
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-voice-visualizer": "^2.0.8",
-    "tailwindcss": "^4.1.13"
+    "tailwindcss": "^4.1.13",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

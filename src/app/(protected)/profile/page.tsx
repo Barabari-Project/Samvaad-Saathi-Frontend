@@ -1,5 +1,9 @@
 "use client";
 
+import { useAuth } from "@/components/providers/auth-provider";
+import { ENDPOINTS } from "@/lib/api-config";
+import { createApiClient } from "@/lib/api-config/src/client";
+import { APIService } from "@/lib/api-config/src/config";
 import {
   AcademicCapIcon,
   ArrowLeftStartOnRectangleIcon,
@@ -11,63 +15,110 @@ import {
 } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import { useState } from "react";
+import { z } from "zod";
+
+// Create USERS API client
+const usersApiClient = createApiClient(APIService.USERS);
+
+// Zod validation schema
+const profileSchema = z.object({
+  targetPosition: z.string().min(1, "Target position is required"),
+  yearsExperience: z.string().min(1, "Experience level is required"),
+  degree: z.string().min(1, "Degree is required"),
+  university: z.string().min(1, "University is required"),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const [targetRole, setTargetRole] = useState("Software Engineer");
-  const [experience, setExperience] = useState("3-5");
-  const [degree, setDegree] = useState("B.Tech Computer Science");
-  const [university, setUniversity] = useState("IIT Delhi");
+  const { user, signOut } = useAuth();
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [tempData, setTempData] = useState({
-    targetRole: "",
-    experience: "",
+  const [tempData, setTempData] = useState<ProfileFormData>({
+    targetPosition: "",
+    yearsExperience: "",
     degree: "",
     university: "",
+  });
+  const [errors, setErrors] = useState<Partial<ProfileFormData>>({});
+
+  // Set up mutation for profile update
+  const updateProfileMutation = usersApiClient.useMutation({
+    url: ENDPOINTS.USERS.PROFILE,
+    method: "put",
+    successMessage: "Profile updated successfully!",
+    errorMessage: "Failed to update profile. Please try again.",
+    keyToInvalidate: {
+      queryKey: [ENDPOINTS.AUTH.ABOUT_ME],
+    },
   });
 
   const handleEdit = () => {
     setTempData({
-      targetRole,
-      experience,
-      degree,
-      university,
+      targetPosition: user?.authorizedUser.targetPosition || "",
+      yearsExperience: user?.authorizedUser.yearsExperience?.toString() || "",
+      degree: user?.authorizedUser.degree || "",
+      university: user?.authorizedUser.university || "",
     });
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    setTargetRole(tempData.targetRole);
-    setExperience(tempData.experience);
-    setDegree(tempData.degree);
-    setUniversity(tempData.university);
-    setIsEditing(false);
-    // Handle form submission here
-    console.log({
-      targetRole: tempData.targetRole,
-      experience: tempData.experience,
-      degree: tempData.degree,
-      university: tempData.university,
-      resumeFile: resumeFile?.name,
-    });
+  const handleSave = async () => {
+    // Clear previous errors
+    setErrors({});
+
+    // Validate form data
+    const validationResult = profileSchema.safeParse(tempData);
+
+    if (!validationResult.success) {
+      const fieldErrors: Partial<ProfileFormData> = {};
+      validationResult.error.issues.forEach((error) => {
+        const field = error.path[0] as keyof ProfileFormData;
+        fieldErrors[field] = error.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    // Create FormData for the API call
+    const submitData = new FormData();
+    submitData.append("degree", tempData.degree);
+    submitData.append("university", tempData.university);
+    submitData.append("target_position", tempData.targetPosition);
+    submitData.append("years_experience", tempData.yearsExperience);
+    if (resumeFile) {
+      submitData.append("resume", resumeFile);
+    }
+
+    try {
+      await updateProfileMutation.mutateAsync(submitData);
+      setIsEditing(false);
+      setResumeFile(null); // Reset resume file after successful update
+    } catch (error) {
+      // Error handling is done by the mutation's onError callback
+      console.error("Profile update failed:", error);
+    }
   };
 
   const handleCancel = () => {
     setTempData({
-      targetRole: "",
-      experience: "",
+      targetPosition: "",
+      yearsExperience: "",
       degree: "",
       university: "",
     });
+    setErrors({});
     setIsEditing(false);
+    setResumeFile(null);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type === "application/pdf") {
+    if (file && file.size <= 1024 * 1024) {
+      // max 1MB
       setResumeFile(file);
-    } else {
-      alert("Please select a PDF file");
+    } else if (file) {
+      alert("File size must be less than 1MB");
     }
   };
 
@@ -76,52 +127,114 @@ export default function ProfilePage() {
       ...prev,
       [field]: value,
     }));
+
+    // Clear error for this field when user starts typing
+    if (errors[field as keyof ProfileFormData]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    }
   };
+
+  if (!user) {
+    return (
+      <main className="pt-20 pb-8 max-w-md mx-auto">
+        <section className="card bg-base-200 shadow-xl">
+          {/* Avatar Skeleton */}
+          <div className="card-body items-center text-center">
+            <div className="avatar">
+              <div className="w-20 rounded-full">
+                <div className="skeleton w-full h-full"></div>
+              </div>
+            </div>
+            <div className="skeleton h-8 w-32 mt-4"></div>
+            <div className="skeleton h-4 w-24 mt-2"></div>
+          </div>
+
+          {/* Stats Skeleton */}
+          <div className="stats shadow">
+            <div className="stat">
+              <div className="skeleton h-3 w-24 mb-2"></div>
+              <div className="skeleton h-8 w-12"></div>
+            </div>
+          </div>
+
+          {/* Profile Information Skeleton */}
+          <div className="card-body space-y-4">
+            <div className="flex justify-between items-center">
+              <div className="skeleton h-6 w-40"></div>
+              <div className="skeleton h-10 w-10 rounded-lg"></div>
+            </div>
+
+            <div className="space-y-4">
+              {[...Array(4)].map((_, index) => (
+                <div key={index}>
+                  <div className="skeleton h-4 w-20 mb-2"></div>
+                  <div className="skeleton h-12 w-full rounded-lg"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions Skeleton */}
+          <div className="card-actions">
+            {[...Array(3)].map((_, index) => (
+              <div key={index} className="w-full">
+                <div className="flex items-center gap-3 p-4">
+                  <div className="skeleton h-6 w-6"></div>
+                  <div className="skeleton h-4 w-20"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="pt-20 pb-8 max-w-md mx-auto">
       {/* Card */}
-      <section className="">
+      <section className=" ">
         {/* Avatar */}
-        <div className="flex flex-col justify-center items-center">
-          <div className="w-20 h-20 rounded-full ring-4 ring-white/80 overflow-hidden shadow-md">
-            <Image
-              src="https://avatar.iran.liara.run/public"
-              alt="User avatar"
-              width={80}
-              height={80}
-              className="w-full h-full object-cover"
-              priority
-            />
+        <div className="card-body items-center text-center">
+          <div className="avatar">
+            <div className="w-20 rounded-full">
+              <Image
+                src="https://avatar.iran.liara.run/public"
+                alt="User avatar"
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+                priority
+              />
+            </div>
           </div>
 
-          <h2 className=" text-2xl font-semibold">Emma Phillips</h2>
-          <p className="text-sm font-medium">React Developer</p>
+          <h2 className="card-title text-2xl">{user.authorizedUser.name}</h2>
+          <p className="text-base-content/70">
+            {user.authorizedUser.targetPosition || "No position set"}
+          </p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 px-6 py-4 border-y border-white/10 bg-white/5">
-          <div>
-            <p className="text-xs">Interviews attempted</p>
-            <p className=" text-2xl font-semibold mt-1">20</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs">Highest Score</p>
-            <p className=" text-2xl font-semibold mt-1">85%</p>
+        <div className="stats shadow">
+          <div className="stat">
+            <div className="stat-title">Interviews attempted</div>
+            <div className="stat-value text-primary">20</div>
           </div>
         </div>
 
         {/* Profile Information */}
-        <div className="px-6 py-4 space-y-4">
+        <div className=" space-y-4 my-10">
           {/* Header with Edit Button */}
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-white">
-              Profile Information
-            </h3>
+            <h3 className="card-title">Profile Information</h3>
             {!isEditing ? (
               <button
                 onClick={handleEdit}
-                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors duration-200"
+                className="btn btn-ghost btn-sm"
                 title="Edit Profile"
               >
                 <PencilIcon className="size-5" />
@@ -130,14 +243,20 @@ export default function ProfilePage() {
               <div className="flex gap-2">
                 <button
                   onClick={handleSave}
-                  className="p-2 text-green-400 hover:text-green-300 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                  disabled={updateProfileMutation.isPending}
+                  className="btn btn-success btn-sm"
                   title="Save Changes"
                 >
-                  <CheckIcon className="size-5" />
+                  {updateProfileMutation.isPending ? (
+                    <span className="loading loading-spinner loading-sm"></span>
+                  ) : (
+                    <CheckIcon className="size-5" />
+                  )}
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="p-2 text-red-400 hover:text-red-300 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                  disabled={updateProfileMutation.isPending}
+                  className="btn btn-error btn-sm"
                   title="Cancel"
                 >
                   <XMarkIcon className="size-5" />
@@ -149,139 +268,188 @@ export default function ProfilePage() {
           {/* Profile Data - View Mode */}
           {!isEditing ? (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Target Role
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Target Position</span>
                 </label>
-                <p className="text-white bg-white/5 px-3 py-2 rounded-lg border border-white/10">
-                  {targetRole || "Not specified"}
-                </p>
+                <select
+                  disabled
+                  className="select select-bordered w-full"
+                  value={user.authorizedUser.targetPosition || ""}
+                >
+                  <option value="">Not specified</option>
+                  <option value="Frontend Developer">Frontend Developer</option>
+                  <option value="Backend Developer">Backend Developer</option>
+                  <option value="Full Stack">Full Stack</option>
+                  <option value="UI/UX Designer">UI/UX Designer</option>
+                </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Experience
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Experience Level</span>
                 </label>
-                <p className="text-white bg-white/5 px-3 py-2 rounded-lg border border-white/10">
-                  {experience ? `${experience} years` : "Not specified"}
-                </p>
+                <select
+                  disabled
+                  className="select select-bordered w-full"
+                  value={user.authorizedUser.yearsExperience?.toString() || ""}
+                >
+                  <option value="">Not specified</option>
+                  <option value="Fresher">Fresher</option>
+                  <option value="1-2 years">1-2 years</option>
+                  <option value="2-5 years">2-5 years</option>
+                  <option value="5+ years">5+ years</option>
+                </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Degree
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Degree</span>
                 </label>
-                <p className="text-white bg-white/5 px-3 py-2 rounded-lg border border-white/10">
-                  {degree || "Not specified"}
-                </p>
+                <select
+                  disabled
+                  className="select select-bordered w-full"
+                  value={user.authorizedUser.degree || ""}
+                >
+                  <option value="">Not specified</option>
+                  <option value="BBA">BBA</option>
+                  <option value="BCA">BCA</option>
+                  <option value="Bcom Computers">Bcom Computers</option>
+                  <option value="BSc Al/ML">BSc Al/ML</option>
+                  <option value="BSc Computer Science">
+                    BSc Computer Science
+                  </option>
+                  <option value="BSc Life Science">BSc Life Science</option>
+                </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  University
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">University</span>
                 </label>
-                <p className="text-white bg-white/5 px-3 py-2 rounded-lg border border-white/10">
-                  {university || "Not specified"}
-                </p>
+                <select
+                  disabled
+                  className="select select-bordered w-full"
+                  value={user.authorizedUser.university || ""}
+                >
+                  <option value="">Not specified</option>
+                  <option value="GDC Begumpet">GDC Begumpet</option>
+                  <option value="GDC Nampally">GDC Nampally</option>
+                  <option value="Government City College">
+                    Government City College
+                  </option>
+                  <option value="GDC Husaini Alam">GDC Husaini Alam</option>
+                  <option value="GDC Narayanguda">GDC Narayanguda</option>
+                </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Resume
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Resume (Optional, Max 1MB)</span>
                 </label>
-                <div className="text-white bg-white/5 px-3 py-2 rounded-lg border border-white/10">
-                  {resumeFile ? (
-                    <div className="flex items-center gap-2">
-                      <DocumentTextIcon className="size-4 text-blue-400" />
-                      <span className="text-sm">{resumeFile.name}</span>
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">No file uploaded</span>
-                  )}
+                <div className="file-input file-input-bordered w-full">
+                  <input type="file" disabled className="file-input w-full" />
                 </div>
               </div>
             </div>
           ) : (
             /* Profile Data - Edit Mode */
             <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="targetRole"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Target Role
-                </label>
-                <input
-                  type="text"
-                  id="targetRole"
-                  value={tempData.targetRole}
-                  onChange={(e) =>
-                    handleInputChange("targetRole", e.target.value)
-                  }
-                  placeholder="e.g., Software Engineer, Data Scientist"
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="experience"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Experience
+              <div className="form-control">
+                <label htmlFor="targetPosition" className="label">
+                  <span className="label-text">Target Position</span>
                 </label>
                 <select
-                  id="experience"
-                  value={tempData.experience}
+                  id="targetPosition"
+                  value={tempData.targetPosition}
                   onChange={(e) =>
-                    handleInputChange("experience", e.target.value)
+                    handleInputChange("targetPosition", e.target.value)
                   }
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={updateProfileMutation.isPending}
+                  className={`select select-bordered w-full ${
+                    errors.targetPosition ? "select-error" : ""
+                  }`}
                 >
-                  <option value="" className="bg-gray-800">
-                    Select experience level
-                  </option>
-                  <option value="0-1" className="bg-gray-800">
-                    0-1 years
-                  </option>
-                  <option value="1-3" className="bg-gray-800">
-                    1-3 years
-                  </option>
-                  <option value="3-5" className="bg-gray-800">
-                    3-5 years
-                  </option>
-                  <option value="5-10" className="bg-gray-800">
-                    5-10 years
-                  </option>
-                  <option value="10+" className="bg-gray-800">
-                    10+ years
-                  </option>
+                  <option value="">Select Role</option>
+                  <option value="Frontend Developer">Frontend Developer</option>
+                  <option value="Backend Developer">Backend Developer</option>
+                  <option value="Full Stack">Full Stack</option>
+                  <option value="UI/UX Designer">UI/UX Designer</option>
                 </select>
+                {errors.targetPosition && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">
+                      {errors.targetPosition}
+                    </span>
+                  </label>
+                )}
               </div>
 
-              <div>
-                <label
-                  htmlFor="degree"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Degree
+              <div className="form-control">
+                <label htmlFor="yearsExperience" className="label">
+                  <span className="label-text">Experience Level</span>
                 </label>
-                <input
-                  type="text"
+                <select
+                  id="yearsExperience"
+                  value={tempData.yearsExperience}
+                  onChange={(e) =>
+                    handleInputChange("yearsExperience", e.target.value)
+                  }
+                  disabled={updateProfileMutation.isPending}
+                  className={`select select-bordered w-full ${
+                    errors.yearsExperience ? "select-error" : ""
+                  }`}
+                >
+                  <option value="">Select Experience Level</option>
+                  <option value="Fresher">Fresher</option>
+                  <option value="1-2 years">1-2 years</option>
+                  <option value="2-5 years">2-5 years</option>
+                  <option value="5+ years">5+ years</option>
+                </select>
+                {errors.yearsExperience && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">
+                      {errors.yearsExperience}
+                    </span>
+                  </label>
+                )}
+              </div>
+
+              <div className="form-control">
+                <label htmlFor="degree" className="label">
+                  <span className="label-text">Degree</span>
+                </label>
+                <select
                   id="degree"
                   value={tempData.degree}
                   onChange={(e) => handleInputChange("degree", e.target.value)}
-                  placeholder="e.g., B.Tech Computer Science, MBA"
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                  disabled={updateProfileMutation.isPending}
+                  className={`select select-bordered w-full ${
+                    errors.degree ? "select-error" : ""
+                  }`}
+                >
+                  <option value="">Select Degree</option>
+                  <option value="BBA">BBA</option>
+                  <option value="BCA">BCA</option>
+                  <option value="Bcom Computers">Bcom Computers</option>
+                  <option value="BSc Al/ML">BSc Al/ML</option>
+                  <option value="BSc Computer Science">
+                    BSc Computer Science
+                  </option>
+                  <option value="BSc Life Science">BSc Life Science</option>
+                </select>
+                {errors.degree && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">
+                      {errors.degree}
+                    </span>
+                  </label>
+                )}
               </div>
 
-              <div>
-                <label
-                  htmlFor="university"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  University
+              <div className="form-control">
+                <label htmlFor="university" className="label">
+                  <span className="label-text">University</span>
                 </label>
                 <select
                   id="university"
@@ -289,110 +457,50 @@ export default function ProfilePage() {
                   onChange={(e) =>
                     handleInputChange("university", e.target.value)
                   }
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={updateProfileMutation.isPending}
+                  className={`select select-bordered w-full ${
+                    errors.university ? "select-error" : ""
+                  }`}
                 >
-                  <option value="" className="bg-gray-800">
-                    Select University
+                  <option value="">Select University</option>
+                  <option value="GDC Begumpet">GDC Begumpet</option>
+                  <option value="GDC Nampally">GDC Nampally</option>
+                  <option value="Government City College">
+                    Government City College
                   </option>
-                  <option value="IIT Delhi" className="bg-gray-800">
-                    IIT Delhi
-                  </option>
-                  <option value="IIT Bombay" className="bg-gray-800">
-                    IIT Bombay
-                  </option>
-                  <option value="IIT Madras" className="bg-gray-800">
-                    IIT Madras
-                  </option>
-                  <option value="IIT Kanpur" className="bg-gray-800">
-                    IIT Kanpur
-                  </option>
-                  <option value="IIT Kharagpur" className="bg-gray-800">
-                    IIT Kharagpur
-                  </option>
-                  <option value="IIT Roorkee" className="bg-gray-800">
-                    IIT Roorkee
-                  </option>
-                  <option value="IIT Guwahati" className="bg-gray-800">
-                    IIT Guwahati
-                  </option>
-                  <option value="IIT Hyderabad" className="bg-gray-800">
-                    IIT Hyderabad
-                  </option>
-                  <option value="IIT Indore" className="bg-gray-800">
-                    IIT Indore
-                  </option>
-                  <option value="IIT Bhubaneswar" className="bg-gray-800">
-                    IIT Bhubaneswar
-                  </option>
-                  <option value="IIT Gandhinagar" className="bg-gray-800">
-                    IIT Gandhinagar
-                  </option>
-                  <option value="IIT Ropar" className="bg-gray-800">
-                    IIT Ropar
-                  </option>
-                  <option value="IIT Patna" className="bg-gray-800">
-                    IIT Patna
-                  </option>
-                  <option value="IIT Mandi" className="bg-gray-800">
-                    IIT Mandi
-                  </option>
-                  <option value="IIT Jodhpur" className="bg-gray-800">
-                    IIT Jodhpur
-                  </option>
-                  <option value="IIT Goa" className="bg-gray-800">
-                    IIT Goa
-                  </option>
-                  <option value="IIT Jammu" className="bg-gray-800">
-                    IIT Jammu
-                  </option>
-                  <option value="IIT Dharwad" className="bg-gray-800">
-                    IIT Dharwad
-                  </option>
-                  <option value="IIT Tirupati" className="bg-gray-800">
-                    IIT Tirupati
-                  </option>
-                  <option value="IIT Bhilai" className="bg-gray-800">
-                    IIT Bhilai
-                  </option>
-                  <option value="IIT Palakkad" className="bg-gray-800">
-                    IIT Palakkad
-                  </option>
-                  <option value="Other" className="bg-gray-800">
-                    Other
-                  </option>
+                  <option value="GDC Husaini Alam">GDC Husaini Alam</option>
+                  <option value="GDC Narayanguda">GDC Narayanguda</option>
                 </select>
+                {errors.university && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">
+                      {errors.university}
+                    </span>
+                  </label>
+                )}
               </div>
 
-              <div>
-                <label
-                  htmlFor="resume"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Resume (PDF)
+              <div className="form-control">
+                <label htmlFor="resume" className="label">
+                  <span className="label-text">Resume (Optional, Max 1MB)</span>
                 </label>
-                <div className="relative">
+                <div className="file-input w-full">
                   <input
                     type="file"
                     id="resume"
-                    accept=".pdf"
+                    accept=".pdf,.doc,.docx"
                     onChange={handleFileChange}
-                    className="hidden"
+                    disabled={updateProfileMutation.isPending}
+                    className="file-input w-full"
                   />
-                  <label
-                    htmlFor="resume"
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white cursor-pointer hover:bg-white/20 transition-colors duration-200 flex items-center gap-2"
-                  >
-                    <CloudArrowUpIcon className="size-5 text-blue-400" />
-                    <span className="text-sm">
-                      {resumeFile ? resumeFile.name : "Choose PDF file"}
-                    </span>
-                  </label>
                 </div>
                 {resumeFile && (
-                  <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
-                    <DocumentTextIcon className="size-3" />
-                    File selected successfully
-                  </p>
+                  <label className="label">
+                    <span className="label-text-alt text-success flex items-center gap-1">
+                      <DocumentTextIcon className="size-3" />
+                      File selected successfully
+                    </span>
+                  </label>
                 )}
               </div>
             </div>
@@ -400,26 +508,15 @@ export default function ProfilePage() {
         </div>
 
         {/* Actions */}
-        <ul className="divide-y divide-white/10">
-          <li>
-            <button className="w-full flex items-center gap-3 px-6 py-4 text-left  hover:bg-white/5">
-              <DocumentTextIcon className="size-6 text-[#1F285B]" />{" "}
-              <span>Resume</span>
-            </button>
-          </li>
-          <li>
-            <button className="w-full flex items-center gap-3 px-6 py-4 text-left  hover:bg-white/5">
-              <AcademicCapIcon className="size-6 text-[#1F285B]" />
-              <span>University</span>
-            </button>
-          </li>
-          <li>
-            <button className="w-full flex items-center gap-3 px-6 py-4 text-left text-red-400 hover:bg-white/5">
-              <ArrowLeftStartOnRectangleIcon className="size-6" />
-              <span>Log Out</span>
-            </button>
-          </li>
-        </ul>
+        <div className="card-actions">
+          <button
+            onClick={signOut}
+            className="btn btn-soft btn-error w-full justify-start"
+          >
+            <ArrowLeftStartOnRectangleIcon className="size-6" />
+            Log Out
+          </button>
+        </div>
       </section>
     </main>
   );

@@ -1,4 +1,5 @@
 export const ENDPOINTS = {
+  HEALTH_CHECK: "",
   AUTH: {
     ABOUT_ME: "me",
     COGNITO_LOGIN: "auth/cognito/login",

@@ -6,6 +6,7 @@
 
 :root {
   --color-primary: #1f285b;
+  --color-error: #d40303;
   --font-heading: var(--font-noto-sans-devanagari);
   --font-body: var(--font-anek-devanagari);
 }
