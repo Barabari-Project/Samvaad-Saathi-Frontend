@@ -193,12 +193,7 @@ const InterviewPage = () => {
       }
 
       try {
-        console.log("Starting transcription with blob:", blob);
-        // Resample audio to 16kHz
-        console.log("Resampling audio to 16kHz...");
         const resampledBlob = await resampleAudioTo16kHz(blob);
-        console.log("resampledBlob :", resampledBlob);
-        console.log("Audio resampled successfully");
 
         const formData = new FormData();
         formData.append("question_attempt_id", questionAttemptId.toString());
@@ -210,10 +205,6 @@ const InterviewPage = () => {
 
         // Handle the response based on the actual API structure
         if (response.saved) {
-          console.log(
-            "Audio transcribed and saved successfully:",
-            response.message
-          );
           setAudioUploaded(true);
         } else {
           console.error("Failed to save transcription:", response.saveError);

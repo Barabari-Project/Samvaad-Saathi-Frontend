@@ -5,6 +5,7 @@ import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface CreateInterviewRequest {
   track: string;
@@ -52,6 +53,16 @@ export default function InterviewStartPage() {
     "DevOps Engineer",
   ];
 
+  const handleToggleResume = (checked: boolean) => {
+    setUseResume(checked);
+
+    if (checked) {
+      toast.success("Resume will be considered for this interview");
+    } else {
+      toast.error("Resume will not be considered for this interview");
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedRole) {
       // You could add toast notification here
@@ -71,7 +82,7 @@ export default function InterviewStartPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 p-6">
       <div className="space-y-2">
         <h2 className="text-center text-[20px] font-bold leading-6">
           Select Your Interview
@@ -134,14 +145,21 @@ export default function InterviewStartPage() {
 
       <div className="pt-2">
         <div className="flex items-center justify-between">
-          <label className="text-[14px] font-noto font-[500] text-black">
-            Use Resume for Interview
-          </label>
+          <div className="flex flex-col">
+            <label className="text-[14px] font-noto font-[500] text-black">
+              Use Resume for Interview
+            </label>
+            <span className="text-[12px] text-gray-600 font-noto">
+              {useResume
+                ? "Resume will be considered for this interview"
+                : "Resume will not be considered for this interview"}
+            </span>
+          </div>
 
           <input
             type="checkbox"
             checked={useResume}
-            onChange={(e) => setUseResume(e.target.checked)}
+            onChange={(e) => handleToggleResume(e.target.checked)}
             className="toggle toggle-sm"
             aria-label="Toggle resume usage"
           />
