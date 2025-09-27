@@ -178,7 +178,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <main className="pt-20 pb-8 max-w-md mx-auto">
+      <main className="p-8 max-w-md mx-auto">
         <section className="card bg-base-200 shadow-xl">
           {/* Avatar Skeleton */}
           <div className="card-body items-center text-center">
@@ -233,7 +233,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="pt-20 pb-8 max-w-md mx-auto">
+    <main className="p-8 max-w-md mx-auto">
       {/* Card */}
       <section className=" ">
         {/* Avatar */}
