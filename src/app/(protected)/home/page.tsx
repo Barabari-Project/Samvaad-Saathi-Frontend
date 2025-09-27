@@ -19,6 +19,8 @@ interface InterviewItem {
   knowledgePercentage: number;
   speechFluencyPercentage: number;
   summaryReportAvailable: boolean;
+  topActionItems: string[];
+  attemptsCount: number;
 }
 
 interface InterviewsResponse {
@@ -94,8 +96,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col">
-      <div className="flex justify-between items-center py-4 relative">
+    <div className="flex flex-col py-6">
+      <div className="flex justify-between items-center relative">
         <h2 className="text-4xl font-bold">Hi {userName},</h2>
 
         <Image
@@ -155,8 +157,8 @@ export default function HomePage() {
                               {interview.track}
                             </h3>
                             <p className="text-sm text-gray-500">
-                              {formatDate(interview.createdAt)} • Attempt-
-                              {interview.interviewId}
+                              {formatDate(interview.createdAt)} • Attempt{" "}
+                              {interview.attemptsCount ?? 0}
                             </p>
                           </div>
                           <div className="flex gap-2">
@@ -176,16 +178,32 @@ export default function HomePage() {
                             <div className="w-3 h-3 bg-black rounded-full"></div>
                             <span className="text-sm">Knowledge</span>
                             <span className="font-bold">
-                              {interview.knowledgePercentage}%
+                              {interview.knowledgePercentage ?? 0}%
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                             <span className="text-sm">Fluency</span>
                             <span className="font-bold">
-                              {interview.speechFluencyPercentage}%
+                              {interview.speechFluencyPercentage ?? 0}%
                             </span>
                           </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                            Actionable Insights
+                          </h4>
+                          {interview.topActionItems.map((item) => (
+                            <div key={item} className="flex items-start gap-2">
+                              <div className="flex-shrink-0 mt-1">
+                                <div className="size-1.5 bg-primary rounded-full"></div>
+                              </div>
+                              <p className="text-xs font-semibold text-gray-700">
+                                {item}
+                              </p>
+                            </div>
+                          ))}
                         </div>
 
                         {/* Action buttons */}
