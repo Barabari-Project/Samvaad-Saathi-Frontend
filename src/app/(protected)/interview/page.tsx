@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@/components/providers/auth-provider";
 import { MicPermissionModal, useMicPermission } from "@/hooks/useMicPermission";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
@@ -40,7 +39,6 @@ type TranscribeResponse = {
 };
 
 const InterviewPage = () => {
-  const { user } = useAuth();
   const router = useRouter();
   const [showGreeting, setShowGreeting] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -72,6 +70,7 @@ const InterviewPage = () => {
 
   const apiClient = createApiClient(APIService.INTERVIEWS);
   const transcribeClient = createApiClient(APIService.TRANSCRIBE);
+  const analysisClient = createApiClient(APIService.ANALYSIS);
 
   // react-voice-visualizer controls
   const recorderControls = useVoiceVisualizer();
@@ -112,13 +111,6 @@ const InterviewPage = () => {
         },
       },
       errorMessage: "Failed to transcribe audio. Please try again.",
-      options: {
-        onSuccess: () => {
-          // Move to next question after successful transcription
-          setAudioUploaded(false); // Reset audio uploaded state
-          resetStatesAndMoveNext();
-        },
-      },
     });
 
   // Complete interview mutation
@@ -149,6 +141,17 @@ const InterviewPage = () => {
     errorMessage: "Failed to start question attempt. Please try again.",
   });
 
+  // Analysis mutation
+  const { mutateAsync: analysisMutation, isPending: isAnalyzing } =
+    analysisClient.useMutation<
+      unknown,
+      { analysisTypes: string[]; questionAttemptId: number }
+    >({
+      url: ENDPOINTS.ANALYSIS.COMPLETE,
+      method: "post",
+      errorMessage: "Failed to analyze answer. Please try again.",
+    });
+
   // Extract questions from the response data
   const questions = useMemo(() => questionsData?.items || [], [questionsData]);
 
@@ -169,21 +172,24 @@ const InterviewPage = () => {
     }
   }, [interviewId, useResume, generateQuestionsMutation]);
 
-  const startQuestionAttempt = async (questionId: string) => {
-    if (!interviewId) {
-      return;
-    }
+  const startQuestionAttempt = useCallback(
+    async (questionId: string) => {
+      if (!interviewId) {
+        return;
+      }
 
-    try {
-      const response = await startQuestionAttemptMutation({
-        interviewId: parseInt(interviewId),
-        questionId: parseInt(questionId),
-      });
-      setQuestionAttemptId(response.questionAttemptId);
-    } catch (error) {
-      console.error("Failed to start question attempt:", error);
-    }
-  };
+      try {
+        const response = await startQuestionAttemptMutation({
+          interviewId: parseInt(interviewId),
+          questionId: parseInt(questionId),
+        });
+        setQuestionAttemptId(response.questionAttemptId);
+      } catch (error) {
+        console.error("Failed to start question attempt:", error);
+      }
+    },
+    [interviewId, startQuestionAttemptMutation]
+  );
 
   const handleTranscription = useCallback(
     async (blob: Blob) => {
@@ -201,25 +207,23 @@ const InterviewPage = () => {
 
         formData.append("file", resampledBlob);
 
-        const response = await transcribeMutation(formData);
+        await transcribeMutation(formData);
 
-        // Handle the response based on the actual API structure
-        if (response.saved) {
-          setAudioUploaded(true);
-        } else {
-          console.error("Failed to save transcription:", response.saveError);
-        }
+        await analysisMutation({
+          analysisTypes: ["domain", "communication", "pace", "pause"],
+          questionAttemptId: questionAttemptId,
+        });
 
-        if (response.whisperError) {
-          console.error("Whisper transcription error:", response.whisperError);
-        }
+        // Move to next question after successful transcription
+        setAudioUploaded(false); // Reset audio uploaded state
+        resetStatesAndMoveNext();
       } catch (error) {
         console.error("Failed to transcribe audio:", error);
       } finally {
         setPendingTranscription(false);
       }
     },
-    [questionAttemptId, user?.userId, transcribeMutation]
+    [questionAttemptId]
   );
 
   // Generate questions when component mounts
@@ -250,13 +254,12 @@ const InterviewPage = () => {
     startRecording();
   };
 
-  const handleSubmitAnswer = async () => {
+  const handleSubmitAnswer = useCallback(async () => {
     // Stop recording and show the message
 
     setAnswerSubmitted(true);
     setRecordingError(null);
 
-    console.log("recordedBlob :", recordedBlob);
     // If we already have the blob, process it immediately
     if (recordedBlob && questionAttemptId !== null) {
       console.log("Blob available immediately, processing transcription");
@@ -267,7 +270,7 @@ const InterviewPage = () => {
       console.log("Blob not available yet, setting pending transcription flag");
       setPendingTranscription(true);
     }
-  };
+  }, [recordedBlob, questionAttemptId, handleTranscription]);
 
   useEffect(() => {
     if (recordedBlob && questionAttemptId !== null) {
@@ -418,7 +421,9 @@ const InterviewPage = () => {
                       console.log("first");
                       handleSubmitAnswer();
                     }}
-                    disabled={isTranscribing || pendingTranscription}
+                    disabled={
+                      isTranscribing || pendingTranscription || isAnalyzing
+                    }
                   >
                     {isTranscribing ? (
                       <>
@@ -429,6 +434,11 @@ const InterviewPage = () => {
                       <>
                         <span className="loading loading-spinner loading-xs"></span>
                         Processing...
+                      </>
+                    ) : isAnalyzing ? (
+                      <>
+                        <span className="loading loading-spinner loading-xs"></span>
+                        Analyzing...
                       </>
                     ) : (
                       "Submit Answer"
@@ -484,13 +494,16 @@ const InterviewPage = () => {
                       className="btn btn-primary btn-sm disabled:opacity-50"
                       onClick={handleNext}
                       disabled={
-                        !audioUploaded || isTranscribing || pendingTranscription
+                        !audioUploaded ||
+                        isTranscribing ||
+                        pendingTranscription ||
+                        isAnalyzing
                       }
                     >
-                      {isTranscribing || pendingTranscription ? (
+                      {isTranscribing || pendingTranscription || isAnalyzing ? (
                         <>
                           <span className="loading loading-spinner loading-xs"></span>
-                          Uploading...
+                          {isAnalyzing ? "Analyzing..." : "Uploading..."}
                         </>
                       ) : (
                         "Next ➜"
