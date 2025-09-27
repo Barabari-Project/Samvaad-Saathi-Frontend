@@ -3,6 +3,12 @@
 import { ENDPOINTS } from "@/lib/api-config";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
+import {
+  EXPERIENCE_OPTIONS,
+  MAX_RESUME_SIZE_MB,
+  RESUME_FILE_TYPES,
+  ROLE_OPTIONS,
+} from "@/lib/constants";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -42,13 +48,8 @@ export default function Step2({
     },
   });
 
-  const roles = [
-    "Frontend Developer",
-    "Backend Developer",
-    "Full Stack",
-    "UI/UX Designer",
-  ];
-  const experiences = ["Fresher", "1-2 years", "2-5 years", "5+ years"];
+  const roles = ROLE_OPTIONS;
+  const experiences = EXPERIENCE_OPTIONS;
 
   const handleSubmit = async () => {
     // Call resume extraction API if resume is selected
@@ -72,11 +73,10 @@ export default function Step2({
 
   const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.size <= 5 * 1024 * 1024) {
-      // max 5MB
+    if (file && file.size <= MAX_RESUME_SIZE_MB * 1024 * 1024) {
       setResume(file);
     } else if (file) {
-      toast.error("File size must be less than 5MB");
+      toast.error(`File size must be less than ${MAX_RESUME_SIZE_MB}MB`);
     }
   };
 
@@ -146,11 +146,11 @@ export default function Step2({
         {/* Resume Upload */}
         <div className="mb-6">
           <label className="block mb-3 text-[16px] font-noto font-[600] text-gray-800">
-            Resume (Optional, Max 5MB)
+            Resume (Optional, Max {MAX_RESUME_SIZE_MB}MB)
           </label>
           <input
             type="file"
-            accept=".pdf,.doc,.docx"
+            accept={RESUME_FILE_TYPES}
             onChange={handleResumeUpload}
             className="file-input file-input-bordered w-full h-[60px] text-gray-800 font-noto text-[16px] rounded-xl"
           />

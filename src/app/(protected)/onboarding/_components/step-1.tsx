@@ -1,4 +1,5 @@
 "use client";
+import { DEGREE_OPTIONS, UNIVERSITY_OPTIONS } from "@/lib/constants";
 import { useState } from "react";
 
 interface Step1Props {
@@ -9,21 +10,8 @@ export default function Step1({ onNext }: Step1Props) {
   const [degree, setDegree] = useState("");
   const [university, setUniversity] = useState("");
 
-  const degrees = [
-    "BBA",
-    "BCA",
-    "Bcom Computers",
-    "BSc Al/ML",
-    "BSc Computer Science",
-    "BSc Life Science",
-  ];
-  const universities = [
-    "GDC Begumpet",
-    "GDC Nampally",
-    "Government City College",
-    "GDC Husaini Alam",
-    "GDC Narayanguda",
-  ];
+  const degrees = DEGREE_OPTIONS;
+  const universities = UNIVERSITY_OPTIONS;
 
   return (
     <div className="relative w-full bg-gradient-to-br from-blue-50 to-purple-50 px-4 pt-10 text-left font-inter">

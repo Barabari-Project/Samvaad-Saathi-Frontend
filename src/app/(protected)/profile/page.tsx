@@ -4,6 +4,14 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { ENDPOINTS } from "@/lib/api-config";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
+import {
+  DEGREE_OPTIONS,
+  EXPERIENCE_OPTIONS,
+  MAX_PROFILE_RESUME_SIZE_MB,
+  RESUME_FILE_TYPES,
+  ROLE_OPTIONS,
+  UNIVERSITY_OPTIONS,
+} from "@/lib/constants";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import {
   ArrowLeftStartOnRectangleIcon,
@@ -140,11 +148,10 @@ export default function ProfilePage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.size <= 1024 * 1024) {
-      // max 1MB
+    if (file && file.size <= MAX_PROFILE_RESUME_SIZE_MB * 1024 * 1024) {
       setResumeFile(file);
     } else if (file) {
-      alert("File size must be less than 1MB");
+      alert(`File size must be less than ${MAX_PROFILE_RESUME_SIZE_MB}MB`);
     }
   };
 
@@ -317,10 +324,11 @@ export default function ProfilePage() {
                   value={user.authorizedUser.targetPosition || ""}
                 >
                   <option value="">Not specified</option>
-                  <option value="Frontend Developer">Frontend Developer</option>
-                  <option value="Backend Developer">Backend Developer</option>
-                  <option value="Full Stack">Full Stack</option>
-                  <option value="UI/UX Designer">UI/UX Designer</option>
+                  {ROLE_OPTIONS.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -334,10 +342,11 @@ export default function ProfilePage() {
                   value={user.authorizedUser.yearsExperience?.toString() || ""}
                 >
                   <option value="">Not specified</option>
-                  <option value="Fresher">Fresher</option>
-                  <option value="1-2 years">1-2 years</option>
-                  <option value="2-5 years">2-5 years</option>
-                  <option value="5+ years">5+ years</option>
+                  {EXPERIENCE_OPTIONS.map((exp) => (
+                    <option key={exp} value={exp}>
+                      {exp}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -351,14 +360,11 @@ export default function ProfilePage() {
                   value={user.authorizedUser.degree || ""}
                 >
                   <option value="">Not specified</option>
-                  <option value="BBA">BBA</option>
-                  <option value="BCA">BCA</option>
-                  <option value="Bcom Computers">Bcom Computers</option>
-                  <option value="BSc Al/ML">BSc Al/ML</option>
-                  <option value="BSc Computer Science">
-                    BSc Computer Science
-                  </option>
-                  <option value="BSc Life Science">BSc Life Science</option>
+                  {DEGREE_OPTIONS.map((degree) => (
+                    <option key={degree} value={degree}>
+                      {degree}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -372,19 +378,19 @@ export default function ProfilePage() {
                   value={user.authorizedUser.university || ""}
                 >
                   <option value="">Not specified</option>
-                  <option value="GDC Begumpet">GDC Begumpet</option>
-                  <option value="GDC Nampally">GDC Nampally</option>
-                  <option value="Government City College">
-                    Government City College
-                  </option>
-                  <option value="GDC Husaini Alam">GDC Husaini Alam</option>
-                  <option value="GDC Narayanguda">GDC Narayanguda</option>
+                  {UNIVERSITY_OPTIONS.map((university) => (
+                    <option key={university} value={university}>
+                      {university}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text">Resume (Optional, Max 1MB)</span>
+                  <span className="label-text">
+                    Resume (Optional, Max {MAX_PROFILE_RESUME_SIZE_MB}MB)
+                  </span>
                 </label>
                 <div className="file-input file-input-bordered w-full">
                   <input type="file" disabled className="file-input w-full" />
@@ -410,10 +416,11 @@ export default function ProfilePage() {
                   }`}
                 >
                   <option value="">Select Role</option>
-                  <option value="Frontend Developer">Frontend Developer</option>
-                  <option value="Backend Developer">Backend Developer</option>
-                  <option value="Full Stack">Full Stack</option>
-                  <option value="UI/UX Designer">UI/UX Designer</option>
+                  {ROLE_OPTIONS.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
                 </select>
                 {errors.targetPosition && (
                   <label className="label">
@@ -440,10 +447,11 @@ export default function ProfilePage() {
                   }`}
                 >
                   <option value="">Select Experience Level</option>
-                  <option value="Fresher">Fresher</option>
-                  <option value="1-2 years">1-2 years</option>
-                  <option value="2-5 years">2-5 years</option>
-                  <option value="5+ years">5+ years</option>
+                  {EXPERIENCE_OPTIONS.map((exp) => (
+                    <option key={exp} value={exp}>
+                      {exp}
+                    </option>
+                  ))}
                 </select>
                 {errors.yearsExperience && (
                   <label className="label">
@@ -468,14 +476,11 @@ export default function ProfilePage() {
                   }`}
                 >
                   <option value="">Select Degree</option>
-                  <option value="BBA">BBA</option>
-                  <option value="BCA">BCA</option>
-                  <option value="Bcom Computers">Bcom Computers</option>
-                  <option value="BSc Al/ML">BSc Al/ML</option>
-                  <option value="BSc Computer Science">
-                    BSc Computer Science
-                  </option>
-                  <option value="BSc Life Science">BSc Life Science</option>
+                  {DEGREE_OPTIONS.map((degree) => (
+                    <option key={degree} value={degree}>
+                      {degree}
+                    </option>
+                  ))}
                 </select>
                 {errors.degree && (
                   <label className="label">
@@ -502,13 +507,11 @@ export default function ProfilePage() {
                   }`}
                 >
                   <option value="">Select University</option>
-                  <option value="GDC Begumpet">GDC Begumpet</option>
-                  <option value="GDC Nampally">GDC Nampally</option>
-                  <option value="Government City College">
-                    Government City College
-                  </option>
-                  <option value="GDC Husaini Alam">GDC Husaini Alam</option>
-                  <option value="GDC Narayanguda">GDC Narayanguda</option>
+                  {UNIVERSITY_OPTIONS.map((university) => (
+                    <option key={university} value={university}>
+                      {university}
+                    </option>
+                  ))}
                 </select>
                 {errors.university && (
                   <label className="label">
@@ -521,13 +524,15 @@ export default function ProfilePage() {
 
               <div className="form-control">
                 <label htmlFor="resume" className="label">
-                  <span className="label-text">Resume (Optional, Max 1MB)</span>
+                  <span className="label-text">
+                    Resume (Optional, Max {MAX_PROFILE_RESUME_SIZE_MB}MB)
+                  </span>
                 </label>
                 <div className="file-input w-full">
                   <input
                     type="file"
                     id="resume"
-                    accept=".pdf,.doc,.docx"
+                    accept={RESUME_FILE_TYPES}
                     onChange={handleFileChange}
                     disabled={updateProfileMutation.isPending}
                     className="file-input w-full"
