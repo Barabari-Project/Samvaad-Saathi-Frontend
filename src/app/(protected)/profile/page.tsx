@@ -15,10 +15,12 @@ import {
 } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { z } from "zod";
 
-// Create USERS API client
+// Create API clients
 const usersApiClient = createApiClient(APIService.USERS);
+const resumeApiClient = createApiClient(APIService.RESUME);
 
 // Zod validation schema
 const profileSchema = z.object({
@@ -42,7 +44,7 @@ export default function ProfilePage() {
   });
   const [errors, setErrors] = useState<Partial<ProfileFormData>>({});
 
-  // Set up mutation for profile update
+  // Set up mutations
   const updateProfileMutation = usersApiClient.useMutation({
     url: ENDPOINTS.USERS.PROFILE,
     method: "put",
@@ -50,6 +52,18 @@ export default function ProfilePage() {
     errorMessage: "Failed to update profile. Please try again.",
     keyToInvalidate: {
       queryKey: [ENDPOINTS.AUTH.ABOUT_ME],
+    },
+  });
+
+  const extractResumeMutation = resumeApiClient.useMutation({
+    url: ENDPOINTS.RESUME.EXTRACT,
+    method: "post",
+    successMessage: "Resume processed successfully!",
+    errorMessage: "Failed to process resume. Please try again.",
+    config: {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     },
   });
 
@@ -78,6 +92,18 @@ export default function ProfilePage() {
       });
       setErrors(fieldErrors);
       return;
+    }
+
+    // Call resume extraction API if resume is selected
+    if (resumeFile) {
+      try {
+        const formData = new FormData();
+        formData.append("file", resumeFile);
+        await extractResumeMutation.mutateAsync(formData);
+      } catch (error) {
+        toast.error("Resume extraction failed");
+        // Don't prevent form submission if extraction fails
+      }
     }
 
     // Create FormData for the API call

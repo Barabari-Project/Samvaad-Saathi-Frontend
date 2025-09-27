@@ -1,5 +1,8 @@
 "use client";
 
+import { ENDPOINTS } from "@/lib/api-config";
+import { createApiClient } from "@/lib/api-config/src/client";
+import { APIService } from "@/lib/api-config/src/config";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -14,6 +17,9 @@ interface Step2Props {
   isLoading?: boolean;
 }
 
+// Create RESUME API client
+const resumeApiClient = createApiClient(APIService.RESUME);
+
 export default function Step2({
   onNext,
   onBack,
@@ -23,6 +29,19 @@ export default function Step2({
   const [experience, setExperience] = useState("");
   const [resume, setResume] = useState<File | null>(null);
 
+  // Set up mutation for resume extraction
+  const extractResumeMutation = resumeApiClient.useMutation({
+    url: ENDPOINTS.RESUME.EXTRACT,
+    method: "post",
+    successMessage: "Resume processed successfully!",
+    errorMessage: "Failed to process resume. Please try again.",
+    config: {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  });
+
   const roles = [
     "Frontend Developer",
     "Backend Developer",
@@ -31,7 +50,19 @@ export default function Step2({
   ];
   const experiences = ["Fresher", "1-2 years", "2-5 years", "5+ years"];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Call resume extraction API if resume is selected
+    if (resume) {
+      try {
+        const formData = new FormData();
+        formData.append("file", resume);
+        await extractResumeMutation.mutateAsync(formData);
+      } catch (error) {
+        toast.error("Resume extraction failed");
+        // Don't prevent form submission if extraction fails
+      }
+    }
+
     onNext({
       target_position: role,
       years_experience: experience,
