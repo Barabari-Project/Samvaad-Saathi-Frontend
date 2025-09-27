@@ -15,6 +15,7 @@
     "@tailwindcss/typography": "^0.5.16",
     "@tanstack/react-query": "^5.89.0",
     "axios": "^1.12.2",
+    "clsx": "^2.1.1",
     "daisyui": "^5.1.13",
     "dayjs": "^1.11.18",
     "embla-carousel-autoplay": "^8.6.0",
@@ -25,6 +26,7 @@
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-voice-visualizer": "^2.0.8",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.13",
     "zod": "^4.1.11"
   },

@@ -36,7 +36,6 @@ export default function InterviewHistory() {
     url: ENDPOINTS.INTERVIEWS.LIST,
     method: "get",
   });
-  console.log("interviewsData :", interviewsData);
 
   const { incomplete, completed } = useMemo(() => {
     if (!interviewsData?.items) {

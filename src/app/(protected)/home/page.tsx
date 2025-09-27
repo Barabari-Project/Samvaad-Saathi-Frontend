@@ -1,4 +1,5 @@
 "use client";
+import ConcentricRadialProgress from "@/components/ConcentricRadialProgress";
 import { useAuth } from "@/components/providers/auth-provider";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
@@ -111,11 +112,11 @@ export default function HomePage() {
       </div>
 
       <div className="my-6">
-        <h2 className="text-2xl font-bold mb-4">Recent Interviews</h2>
+        <h2 className="text-2xl font-bold">Recent Interviews</h2>
 
         {interviewsLoading ? (
           // Skeleton loader
-          <div className="space-y-4">
+          <div className="space-y-4 mt-4">
             <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
             <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
             <div className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
@@ -173,7 +174,7 @@ export default function HomePage() {
                         </div>
 
                         {/* Progress indicators */}
-                        <div className="flex gap-4 mb-4">
+                        <div className="flex flex-col gap-4 mb-4">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-black rounded-full"></div>
                             <span className="text-sm">Knowledge</span>
