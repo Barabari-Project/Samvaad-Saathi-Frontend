@@ -83,8 +83,6 @@ const InterviewPage = () => {
     isPausedRecording,
   } = recorderControls;
 
-  console.log("recordedBlob :", recordedBlob);
-
   // Generate questions mutation
   const {
     loading: isGeneratingQuestions,
@@ -191,41 +189,6 @@ const InterviewPage = () => {
     [interviewId, startQuestionAttemptMutation]
   );
 
-  const handleTranscription = useCallback(
-    async (blob: Blob) => {
-      if (!questionAttemptId) {
-        console.error("No question attempt ID available for transcription");
-        return;
-      }
-
-      try {
-        const resampledBlob = await resampleAudioTo16kHz(blob);
-
-        const formData = new FormData();
-        formData.append("question_attempt_id", questionAttemptId.toString());
-        formData.append("language", "en");
-
-        formData.append("file", resampledBlob);
-
-        await transcribeMutation(formData);
-
-        await analysisMutation({
-          analysisTypes: ["domain", "communication", "pace", "pause"],
-          questionAttemptId: questionAttemptId,
-        });
-
-        // Move to next question after successful transcription
-        setAudioUploaded(false); // Reset audio uploaded state
-        resetStatesAndMoveNext();
-      } catch (error) {
-        console.error("Failed to transcribe audio:", error);
-      } finally {
-        setPendingTranscription(false);
-      }
-    },
-    [questionAttemptId]
-  );
-
   // Generate questions when component mounts
   useEffect(() => {
     generateQuestions();
@@ -241,6 +204,7 @@ const InterviewPage = () => {
     }
   }, [currentIndex, questions]);
 
+  // Show greeting for 1.5 seconds
   useEffect(() => {
     const timer = setTimeout(() => setShowGreeting(false), 1500);
     return () => clearTimeout(timer);
@@ -254,7 +218,7 @@ const InterviewPage = () => {
     startRecording();
   };
 
-  const handleSubmitAnswer = useCallback(async () => {
+  const handleSubmitAnswer = async () => {
     // Stop recording and show the message
 
     setAnswerSubmitted(true);
@@ -262,15 +226,29 @@ const InterviewPage = () => {
 
     // If we already have the blob, process it immediately
     if (recordedBlob && questionAttemptId !== null) {
-      console.log("Blob available immediately, processing transcription");
       setPendingTranscription(true);
-      handleTranscription(recordedBlob);
+      const resampledBlob = await resampleAudioTo16kHz(recordedBlob);
+
+      const formData = new FormData();
+      formData.append("question_attempt_id", questionAttemptId.toString());
+      formData.append("language", "en");
+
+      formData.append("file", resampledBlob);
+
+      await transcribeMutation(formData);
+
+      // Move to next question after successful transcription
+      setAudioUploaded(false); // Reset audio uploaded state
+      resetStatesAndMoveNext();
+
+      analysisMutation({
+        analysisTypes: ["domain", "communication", "pace", "pause"],
+        questionAttemptId: questionAttemptId,
+      });
     } else {
-      // Set flag to process transcription when blob becomes available
-      console.log("Blob not available yet, setting pending transcription flag");
       setPendingTranscription(true);
     }
-  }, [recordedBlob, questionAttemptId, handleTranscription]);
+  };
 
   useEffect(() => {
     if (recordedBlob && questionAttemptId !== null) {
@@ -418,7 +396,6 @@ const InterviewPage = () => {
                     className="btn btn-primary btn-sm disabled:opacity-50"
                     onClick={() => {
                       stopRecording();
-                      console.log("first");
                       handleSubmitAnswer();
                     }}
                     disabled={
