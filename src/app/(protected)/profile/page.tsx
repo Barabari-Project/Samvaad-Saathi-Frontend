@@ -4,13 +4,13 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { ENDPOINTS } from "@/lib/api-config";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
+import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import {
-  AcademicCapIcon,
   ArrowLeftStartOnRectangleIcon,
   CheckIcon,
-  CloudArrowUpIcon,
   DocumentTextIcon,
   PencilIcon,
+  QuestionMarkCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
 import Image from "next/image";
@@ -135,6 +135,19 @@ export default function ProfilePage() {
         [field]: undefined,
       }));
     }
+  };
+
+  const handleHelpClick = () => {
+    window.open("https://www.youtube.com", "_blank");
+  };
+
+  const handleSupportClick = () => {
+    const phoneNumber = "+918639322365";
+    const message = "Hi, I need support with Samvaad Saathi app.";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   if (!user) {
@@ -508,7 +521,24 @@ export default function ProfilePage() {
         </div>
 
         {/* Actions */}
-        <div className="card-actions">
+        <div className="card-actions flex-col space-y-2">
+          <div className="flex items-center gap-10 justify-between w-full">
+            <button
+              onClick={handleHelpClick}
+              className="btn btn-ghost  justify-center flex-1"
+            >
+              <QuestionMarkCircleIcon className="size-6" />
+              Help
+            </button>
+            <button
+              onClick={handleSupportClick}
+              className="btn btn-ghost  justify-center  flex-1"
+            >
+              <ChatBubbleLeftRightIcon className="size-6" />
+              Support
+            </button>
+          </div>
+
           <button
             onClick={signOut}
             className="btn btn-soft btn-error w-full justify-start"

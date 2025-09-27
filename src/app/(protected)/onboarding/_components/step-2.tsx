@@ -1,6 +1,8 @@
 "use client";
 
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface Step2Props {
   onNext: (data: {
@@ -39,11 +41,22 @@ export default function Step2({
 
   const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.size <= 1024 * 1024) {
-      // max 1MB
+    if (file && file.size <= 5 * 1024 * 1024) {
+      // max 5MB
       setResume(file);
     } else if (file) {
-      alert("File size must be less than 1MB");
+      toast.error("File size must be less than 5MB");
+    }
+  };
+
+  const handleRemoveResume = () => {
+    setResume(null);
+    // Reset the file input
+    const fileInput = document.querySelector(
+      'input[type="file"]'
+    ) as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = "";
     }
   };
 
@@ -102,7 +115,7 @@ export default function Step2({
         {/* Resume Upload */}
         <div className="mb-6">
           <label className="block mb-3 text-[16px] font-noto font-[600] text-gray-800">
-            Resume (Optional, Max 1MB)
+            Resume (Optional, Max 5MB)
           </label>
           <input
             type="file"
@@ -111,9 +124,20 @@ export default function Step2({
             className="file-input file-input-bordered w-full h-[60px] text-gray-800 font-noto text-[16px] rounded-xl"
           />
           {resume && (
-            <p className="mt-3 text-[14px] text-green-600 font-medium">
-              ✓ {resume.name}
-            </p>
+            <div className="mt-3 flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
+              <p className="text-[14px] text-green-600 font-medium flex items-center">
+                <span className="mr-2">✓</span>
+                {resume.name}
+              </p>
+              <button
+                type="button"
+                onClick={handleRemoveResume}
+                className="text-red-500 hover:text-red-700 transition-colors"
+                title="Remove file"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
           )}
         </div>
 
