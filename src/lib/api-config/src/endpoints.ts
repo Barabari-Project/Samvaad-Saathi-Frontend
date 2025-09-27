@@ -30,5 +30,8 @@ export const ENDPOINTS = {
     COMPLETE: "complete-analysis",
     FINAL_REPORT: "final-report",
     FETCH_REPORT: (interviewId: string) => `final-report/${interviewId}`,
+    GENERATE_SUMMARY_REPORT: "summary-report",
+    GET_SUMMARY_REPORT: (interviewId: string) =>
+      `summary-report/${interviewId}`,
   },
 };

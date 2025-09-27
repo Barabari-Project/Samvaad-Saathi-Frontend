@@ -18,7 +18,7 @@ const InterviewCompleted = () => {
   // Generate final report mutation
   const { mutateAsync: generateFinalReport, isPending: isGeneratingReport } =
     apiClient.useMutation<unknown, { interviewId: number }>({
-      url: ENDPOINTS.ANALYSIS.FINAL_REPORT,
+      url: ENDPOINTS.ANALYSIS.GENERATE_SUMMARY_REPORT,
       method: "post",
       successMessage: "Report generated successfully!",
       errorMessage: "Failed to generate report. Please try again.",

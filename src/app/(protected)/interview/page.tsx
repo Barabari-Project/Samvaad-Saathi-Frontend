@@ -52,7 +52,6 @@ const InterviewPage = () => {
   );
   const [pendingTranscription, setPendingTranscription] = useState(false);
   const [audioUploaded, setAudioUploaded] = useState(false);
-  const [recordingError, setRecordingError] = useState<string | null>(null);
 
   // Use the microphone permission hook
   const {
@@ -214,7 +213,6 @@ const InterviewPage = () => {
     // Start recording for this question
     setAnswerSubmitted(false); // Reset the submitted state when starting new recording
     setAudioUploaded(false); // Reset audio uploaded state
-    setRecordingError(null); // Reset recording error
     startRecording();
   };
 
@@ -222,7 +220,6 @@ const InterviewPage = () => {
     // Stop recording and show the message
 
     setAnswerSubmitted(true);
-    setRecordingError(null);
 
     // If we already have the blob, process it immediately
     if (recordedBlob && questionAttemptId !== null) {
@@ -259,7 +256,6 @@ const InterviewPage = () => {
   const resetStatesAndMoveNext = () => {
     setAnswerSubmitted(false); // Reset submitted state when moving to next question
     setPendingTranscription(false); // Reset pending transcription state
-    setRecordingError(null); // Reset recording error
     // Reset audio blob by clearing recording
     if (recorderControls.recordedBlob) {
       recorderControls.clearCanvas();
@@ -268,12 +264,6 @@ const InterviewPage = () => {
   };
 
   const handleNext = () => {
-    if (!audioUploaded) {
-      setRecordingError(
-        "Please record and upload your answer before proceeding."
-      );
-      return;
-    }
     resetStatesAndMoveNext();
   };
 
@@ -294,13 +284,6 @@ const InterviewPage = () => {
   const handleSubmit = async () => {
     if (!interviewId) {
       console.error("No interview ID available");
-      return;
-    }
-
-    if (!audioUploaded) {
-      setRecordingError(
-        "Please record and upload your answer before completing the interview."
-      );
       return;
     }
 
@@ -370,13 +353,6 @@ const InterviewPage = () => {
             <p className="text-sm leading-5 text-black">
               {questions[currentIndex].text}
             </p>
-
-            {/* Error Message */}
-            {recordingError && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">{recordingError}</p>
-              </div>
-            )}
 
             {/* Recording / Playback UI */}
             {isRecordingInProgress || isPausedRecording ? (
@@ -454,7 +430,7 @@ const InterviewPage = () => {
                       type="button"
                       className="btn btn-primary btn-sm disabled:opacity-50"
                       onClick={handleSubmit}
-                      disabled={isCompletingInterview || !audioUploaded}
+                      disabled={isCompletingInterview}
                     >
                       {isCompletingInterview ? (
                         <>
@@ -513,7 +489,7 @@ const InterviewPage = () => {
                     type="button"
                     className="btn btn-primary btn-sm disabled:opacity-50"
                     onClick={handleSubmit}
-                    disabled={isCompletingInterview || !audioUploaded}
+                    disabled={isCompletingInterview}
                   >
                     {isCompletingInterview ? (
                       <>
