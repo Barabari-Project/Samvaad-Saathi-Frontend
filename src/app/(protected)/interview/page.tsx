@@ -426,7 +426,7 @@ const InterviewPage = () => {
             <div className="mx-auto mt-16 rounded-xl border border-black/10 shadow-[0_6px_24px_rgba(0,0,0,0.08)] bg-white/90 backdrop-blur p-4">
               <div className="flex items-center justify-between mb-2">
                 <span
-                  className={`badge ${
+                  className={`badge badge-xs ${
                     questions[currentIndex]?.category?.toLowerCase() === "tech"
                       ? "badge-primary"
                       : questions[currentIndex]?.category?.toLowerCase() ===

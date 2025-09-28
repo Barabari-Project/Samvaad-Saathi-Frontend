@@ -5,7 +5,6 @@ import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import dayjs from "dayjs";
-import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -38,14 +37,11 @@ export default function HomePage() {
   // Create API client for interviews
   const apiClient = createApiClient(APIService.INTERVIEWS);
 
-  // Embla Carousel setup with autoplay
-  const [emblaRef] = useEmblaCarousel(
-    {
-      loop: true,
-      align: "center",
-    }
-    // [Autoplay({ delay: 4000, stopOnInteraction: false })]
-  );
+  // Embla Carousel setup
+  const [emblaRef] = useEmblaCarousel({
+    loop: true,
+    align: "center",
+  });
 
   // Fetch interviews with summary data
   const {
@@ -164,7 +160,7 @@ export default function HomePage() {
                           </div>
                           <div className="flex gap-2">
                             <div
-                              className={`badge ${getDifficultyColor(
+                              className={`badge badge-xs ${getDifficultyColor(
                                 interview.difficulty
                               )}`}
                             >
@@ -173,21 +169,59 @@ export default function HomePage() {
                           </div>
                         </div>
 
-                        {/* Progress indicators */}
-                        <div className="flex flex-col gap-4 mb-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-black rounded-full"></div>
-                            <span className="text-sm">Knowledge</span>
-                            <span className="font-bold">
-                              {interview.knowledgePercentage ?? 0}%
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                            <span className="text-sm">Fluency</span>
-                            <span className="font-bold">
-                              {interview.speechFluencyPercentage ?? 0}%
-                            </span>
+                        {/* Radial Progress Chart */}
+                        <div className="flex items-center gap-4 mb-4">
+                          <ConcentricRadialProgress
+                            size={120}
+                            rings={[
+                              {
+                                value: interview.knowledgePercentage ?? 0,
+                                color: "#3b82f6",
+                                ariaLabel: "Technical Knowledge progress",
+                                trackColor: "#e5e7eb",
+                                thickness: 10,
+                              },
+                              {
+                                value: interview.speechFluencyPercentage ?? 0,
+                                color: "#6b7280",
+                                ariaLabel: "Speech Fluency progress",
+                                trackColor: "#e5e7eb",
+                                thickness: 8,
+                              },
+                            ]}
+                            centerRender={(rings) => (
+                              <div className="text-center">
+                                <div className="text-xs text-blue-500 font-bold">
+                                  {rings[0]?.value
+                                    ? `${Math.round(rings[0].value)}%`
+                                    : "0%"}
+                                </div>
+                                <div className="text-xs text-gray-500 font-bold">
+                                  {rings[1]?.value
+                                    ? `${Math.round(rings[1].value)}%`
+                                    : "0%"}
+                                </div>
+                              </div>
+                            )}
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-600 mb-2 font-semibold">
+                              Performance Score
+                            </p>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                                <span className="text-sm text-gray-700">
+                                  Technical Knowledge
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                                <span className="text-sm text-gray-700">
+                                  Speech Fluency
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
 

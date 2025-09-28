@@ -180,7 +180,7 @@ export default function InterviewHistory() {
                     {/* Difficulty Label - Top Right */}
                     <div className="absolute top-4 right-4">
                       <span
-                        className={`badge badge-soft ${
+                        className={`badge badge-xs badge-soft ${
                           item.difficulty?.toLowerCase() === "hard"
                             ? "badge-error"
                             : item.difficulty?.toLowerCase() === "easy"
@@ -238,7 +238,7 @@ export default function InterviewHistory() {
                     {/* Difficulty Label - Top Right */}
                     <div className="absolute top-4 right-4">
                       <span
-                        className={`badge badge-soft ${
+                        className={`badge badge-xs badge-soft ${
                           item?.difficulty?.toLowerCase() === "hard"
                             ? "badge-error"
                             : item?.difficulty?.toLowerCase() === "easy"

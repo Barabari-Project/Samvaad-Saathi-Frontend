@@ -179,7 +179,7 @@ const ReAttemptInterview = () => {
                 <div className="card-body p-4">
                   <div className="flex justify-between items-start mb-2">
                     <span
-                      className={`badge ${
+                      className={`badge badge-xs ${
                         question?.category?.toLowerCase() === "tech"
                           ? "badge-primary"
                           : question?.category?.toLowerCase() === "behavioral"
