@@ -1,5 +1,6 @@
 "use client";
 
+import InterviewTopNav from "@/components/InterviewTopNav";
 import { MicPermissionModal, useMicPermission } from "@/hooks/useMicPermission";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
@@ -66,6 +67,7 @@ const InterviewPage = () => {
   const searchParams = useSearchParams();
   const interviewId = searchParams.get("interviewId");
   const useResume = searchParams.get("useResume") === "true";
+  const role = searchParams.get("role");
 
   const apiClient = createApiClient(APIService.INTERVIEWS);
   const transcribeClient = createApiClient(APIService.TRANSCRIBE);
@@ -297,133 +299,198 @@ const InterviewPage = () => {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-56px)] py-8 px-4 flex items-start">
-      <div className="mx-auto w-full max-w-md">
-        {isGeneratingQuestions ? (
-          <div className="mx-auto mt-24 rounded-xl border border-black/10 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
-            <p className="text-sm">
-              Crafting personalized questions for you...
-            </p>
-          </div>
-        ) : !interviewId ? (
-          <div className="mx-auto mt-24 rounded-xl border border-red-300 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
-            <p className="text-sm text-red-600">
-              Invalid interview session. Please start over.
-            </p>
-          </div>
-        ) : questions.length === 0 ? (
-          <div className="mx-auto mt-24 rounded-xl border border-red-300 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
-            <p className="text-sm text-red-600">
-              No questions available. Please try again.
-            </p>
-          </div>
-        ) : isCheckingMic ? (
-          <div className="mx-auto mt-24 rounded-xl border border-black/10 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
-            <p className="text-sm">Checking microphone access...</p>
-          </div>
-        ) : !hasMicPermission ? (
-          <div className="mx-auto mt-24 rounded-xl border border-black/10 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
-            <p className="text-sm mb-3">
-              Ready to start your interview! We&apos;ll need microphone access
-              to record your answers.
-            </p>
-            <button
-              type="button"
-              className="btn btn-primary btn-sm"
-              onClick={showMicPermissionModal}
-            >
-              Enable Microphone
-            </button>
-          </div>
-        ) : showGreeting ? (
-          <div className="mx-auto mt-24 rounded-xl border border-yellow-300 shadow-sm bg-white/80 backdrop-blur px-4 py-5 text-center">
-            <p className="text-sm">Hi! Lets start your interview 👋</p>
-          </div>
-        ) : (
-          <div className="mx-auto mt-16 rounded-xl border border-black/10 shadow-[0_6px_24px_rgba(0,0,0,0.08)] bg-white/90 backdrop-blur p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] px-2 py-0.5 rounded border border-blue-300 text-blue-700 bg-blue-50">
-                {questions[currentIndex]?.category?.toUpperCase() || "Question"}
-              </span>
-              <span className="text-[10px] text-black/60">
-                {currentIndex + 1}/{questions.length}
-              </span>
+    <div className="min-h-[calc(100dvh-64px)]">
+      <InterviewTopNav role={role || "Interview"} />
+      <div className="min-h-[calc(100dvh-64px)] py-8 px-4 flex items-start pt-16">
+        <div className="mx-auto w-full max-w-md">
+          {isGeneratingQuestions ? (
+            <div className="mx-auto mt-24 rounded-xl border border-black/10 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
+              <p className="text-sm">
+                Crafting personalized questions for you...
+              </p>
             </div>
+          ) : !interviewId ? (
+            <div className="mx-auto mt-24 rounded-xl border border-red-300 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
+              <p className="text-sm text-red-600">
+                Invalid interview session. Please start over.
+              </p>
+            </div>
+          ) : questions.length === 0 ? (
+            <div className="mx-auto mt-24 rounded-xl border border-red-300 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
+              <p className="text-sm text-red-600">
+                No questions available. Please try again.
+              </p>
+            </div>
+          ) : isCheckingMic ? (
+            <div className="mx-auto mt-24 rounded-xl border border-black/10 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
+              <p className="text-sm">Checking microphone access...</p>
+            </div>
+          ) : !hasMicPermission ? (
+            <div className="mx-auto mt-24 rounded-xl border border-black/10 shadow-sm bg-white/90 backdrop-blur px-4 py-5 text-center">
+              <p className="text-sm mb-3">
+                Ready to start your interview! We&apos;ll need microphone access
+                to record your answers.
+              </p>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={showMicPermissionModal}
+              >
+                Enable Microphone
+              </button>
+            </div>
+          ) : showGreeting ? (
+            <div className="mx-auto mt-24 rounded-xl border border-yellow-300 shadow-sm bg-white/80 backdrop-blur px-4 py-5 text-center">
+              <p className="text-sm">Hi! Lets start your interview 👋</p>
+            </div>
+          ) : (
+            <div className="mx-auto mt-16 rounded-xl border border-black/10 shadow-[0_6px_24px_rgba(0,0,0,0.08)] bg-white/90 backdrop-blur p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] px-2 py-0.5 rounded border border-blue-300 text-blue-700 bg-blue-50">
+                  {questions[currentIndex]?.category?.toUpperCase() ||
+                    "Question"}
+                </span>
+                <span className="text-[10px] text-black/60">
+                  {currentIndex + 1}/{questions.length}
+                </span>
+              </div>
 
-            <p className="text-sm leading-5 text-black">
-              {questions[currentIndex].text}
-            </p>
+              <p className="text-sm leading-5 text-black">
+                {questions[currentIndex].text}
+              </p>
 
-            {/* Recording / Playback UI */}
-            {isRecordingInProgress || isPausedRecording ? (
-              <div className="mt-4 space-y-3">
-                <VoiceVisualizer
-                  controls={recorderControls}
-                  height={50}
-                  //   backgroundColor="#0b1021"
-                  mainBarColor="#1F285B"
-                  secondaryBarColor="#1F285B"
-                  isControlPanelShown={false}
-                  isProgressIndicatorShown={false}
-                />
-                <div className="flex items-center justify-end gap-2">
+              {/* Recording / Playback UI */}
+              {isRecordingInProgress || isPausedRecording ? (
+                <div className="mt-4 space-y-3">
+                  <VoiceVisualizer
+                    controls={recorderControls}
+                    height={50}
+                    //   backgroundColor="#0b1021"
+                    mainBarColor="#1F285B"
+                    secondaryBarColor="#1F285B"
+                    isControlPanelShown={false}
+                    isProgressIndicatorShown={false}
+                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm disabled:opacity-50"
+                      onClick={() => {
+                        stopRecording();
+                        handleSubmitAnswer();
+                      }}
+                      disabled={
+                        isTranscribing || pendingTranscription || isAnalyzing
+                      }
+                    >
+                      {isTranscribing ? (
+                        <>
+                          <span className="loading loading-spinner loading-xs"></span>
+                          Transcribing...
+                        </>
+                      ) : pendingTranscription ? (
+                        <>
+                          <span className="loading loading-spinner loading-xs"></span>
+                          Processing...
+                        </>
+                      ) : isAnalyzing ? (
+                        <>
+                          <span className="loading loading-spinner loading-xs"></span>
+                          Analyzing...
+                        </>
+                      ) : (
+                        "Submit Answer"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : recordedAnswers[`${currentIndex}`] || answerSubmitted ? (
+                <div className="mt-4">
+                  <div className="text-center text-xs border font-bold rounded px-3 py-2">
+                    {audioUploaded
+                      ? "Your answer has been uploaded!"
+                      : "Your answer has been recorded!"}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      onClick={() => {
+                        const questionId = `${currentIndex}`;
+                        setRecordedAnswers((prev) => {
+                          const copy = { ...prev };
+                          delete copy[questionId];
+                          return copy;
+                        });
+                        setAnswerSubmitted(false); // Reset submitted state when redoing
+                        // allow re-recording immediately
+                        setTimeout(() => startRecording(), 0);
+                      }}
+                    >
+                      Redo
+                    </button>
+                    {isLast ? (
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm disabled:opacity-50"
+                        onClick={handleSubmit}
+                        disabled={isCompletingInterview}
+                      >
+                        {isCompletingInterview ? (
+                          <>
+                            <span className="loading loading-spinner loading-xs"></span>
+                            Completing...
+                          </>
+                        ) : (
+                          "Submit"
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm disabled:opacity-50"
+                        onClick={handleNext}
+                        disabled={
+                          !audioUploaded ||
+                          isTranscribing ||
+                          pendingTranscription ||
+                          isAnalyzing
+                        }
+                      >
+                        {isTranscribing ||
+                        pendingTranscription ||
+                        isAnalyzing ? (
+                          <>
+                            <span className="loading loading-spinner loading-xs"></span>
+                            {isAnalyzing ? "Analyzing..." : "Uploading..."}
+                          </>
+                        ) : (
+                          "Next ➜"
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 flex items-center justify-between">
                   <button
                     type="button"
-                    className="btn btn-primary btn-sm disabled:opacity-50"
-                    onClick={() => {
-                      stopRecording();
-                      handleSubmitAnswer();
-                    }}
-                    disabled={
-                      isTranscribing || pendingTranscription || isAnalyzing
-                    }
+                    className="btn btn-primary btn-sm flex items-center gap-3"
+                    onClick={handleAnswer}
+                    disabled={isStartingAttempt}
                   >
-                    {isTranscribing ? (
+                    {isStartingAttempt ? (
                       <>
                         <span className="loading loading-spinner loading-xs"></span>
-                        Transcribing...
-                      </>
-                    ) : pendingTranscription ? (
-                      <>
-                        <span className="loading loading-spinner loading-xs"></span>
-                        Processing...
-                      </>
-                    ) : isAnalyzing ? (
-                      <>
-                        <span className="loading loading-spinner loading-xs"></span>
-                        Analyzing...
+                        Preparing...
                       </>
                     ) : (
-                      "Submit Answer"
+                      <>
+                        <MicrophoneIcon color="white" className="size-4" />{" "}
+                        Answer
+                      </>
                     )}
-                  </button>
-                </div>
-              </div>
-            ) : recordedAnswers[`${currentIndex}`] || answerSubmitted ? (
-              <div className="mt-4">
-                <div className="text-center text-xs border font-bold rounded px-3 py-2">
-                  {audioUploaded
-                    ? "Your answer has been uploaded!"
-                    : "Your answer has been recorded!"}
-                </div>
-
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-sm"
-                    onClick={() => {
-                      const questionId = `${currentIndex}`;
-                      setRecordedAnswers((prev) => {
-                        const copy = { ...prev };
-                        delete copy[questionId];
-                        return copy;
-                      });
-                      setAnswerSubmitted(false); // Reset submitted state when redoing
-                      // allow re-recording immediately
-                      setTimeout(() => startRecording(), 0);
-                    }}
-                  >
-                    Redo
                   </button>
                   {isLast ? (
                     <button
@@ -444,76 +511,18 @@ const InterviewPage = () => {
                   ) : (
                     <button
                       type="button"
-                      className="btn btn-primary btn-sm disabled:opacity-50"
-                      onClick={handleNext}
-                      disabled={
-                        !audioUploaded ||
-                        isTranscribing ||
-                        pendingTranscription ||
-                        isAnalyzing
-                      }
+                      className="btn btn-outline btn-sm"
+                      onClick={handleSkip}
+                      title={"Skip"}
                     >
-                      {isTranscribing || pendingTranscription || isAnalyzing ? (
-                        <>
-                          <span className="loading loading-spinner loading-xs"></span>
-                          {isAnalyzing ? "Analyzing..." : "Uploading..."}
-                        </>
-                      ) : (
-                        "Next ➜"
-                      )}
+                      ➜
                     </button>
                   )}
                 </div>
-              </div>
-            ) : (
-              <div className="mt-4 flex items-center justify-between">
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm flex items-center gap-3"
-                  onClick={handleAnswer}
-                  disabled={isStartingAttempt}
-                >
-                  {isStartingAttempt ? (
-                    <>
-                      <span className="loading loading-spinner loading-xs"></span>
-                      Preparing...
-                    </>
-                  ) : (
-                    <>
-                      <MicrophoneIcon color="white" className="size-4" /> Answer
-                    </>
-                  )}
-                </button>
-                {isLast ? (
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm disabled:opacity-50"
-                    onClick={handleSubmit}
-                    disabled={isCompletingInterview}
-                  >
-                    {isCompletingInterview ? (
-                      <>
-                        <span className="loading loading-spinner loading-xs"></span>
-                        Completing...
-                      </>
-                    ) : (
-                      "Submit"
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-sm"
-                    onClick={handleSkip}
-                    title={"Skip"}
-                  >
-                    ➜
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Skip Confirmation Modal */}

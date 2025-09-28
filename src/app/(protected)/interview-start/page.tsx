@@ -39,7 +39,9 @@ export default function InterviewStartPage() {
         const interviewId = data.interviewId;
         if (interviewId) {
           router.push(
-            `/interview?interviewId=${interviewId}&useResume=${useResume}`
+            `/interview?interviewId=${interviewId}&useResume=${useResume}&role=${encodeURIComponent(
+              selectedRole
+            )}`
           );
         }
       },
