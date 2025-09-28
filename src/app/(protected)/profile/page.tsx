@@ -15,7 +15,6 @@ import {
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import {
   ArrowLeftStartOnRectangleIcon,
-  CheckIcon,
   DocumentTextIcon,
   PencilIcon,
   QuestionMarkCircleIcon,
@@ -23,12 +22,10 @@ import {
 } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import { useState } from "react";
-import toast from "react-hot-toast";
 import { z } from "zod";
 
 // Create API clients
 const usersApiClient = createApiClient(APIService.USERS);
-const resumeApiClient = createApiClient(APIService.RESUME);
 
 // Zod validation schema
 const profileSchema = z.object({
@@ -39,11 +36,18 @@ const profileSchema = z.object({
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
+type EditableField = keyof ProfileFormData | "resume";
 
 export default function ProfilePage() {
   const { user, signOut } = useAuth();
   const [resumeFile, setResumeFile] = useState<File | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  // Separate editing states for each field
+  const [isEditingTargetPosition, setIsEditingTargetPosition] = useState(false);
+  const [isEditingYearsExperience, setIsEditingYearsExperience] =
+    useState(false);
+  const [isEditingDegree, setIsEditingDegree] = useState(false);
+  const [isEditingUniversity, setIsEditingUniversity] = useState(false);
+  const [isEditingResume, setIsEditingResume] = useState(false);
   const [tempData, setTempData] = useState<ProfileFormData>({
     targetPosition: "",
     yearsExperience: "",
@@ -63,86 +67,159 @@ export default function ProfilePage() {
     },
   });
 
-  const extractResumeMutation = resumeApiClient.useMutation({
-    url: ENDPOINTS.RESUME.EXTRACT,
-    method: "post",
-    successMessage: "Resume processed successfully!",
-    errorMessage: "Failed to process resume. Please try again.",
-    config: {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
-  });
-
-  const handleEdit = () => {
-    setTempData({
+  // Separate edit handlers for each field
+  const handleTargetPositionEdit = () => {
+    setIsEditingTargetPosition(true);
+    setTempData((prev) => ({
+      ...prev,
       targetPosition: user?.authorizedUser.targetPosition || "",
-      yearsExperience: user?.authorizedUser.yearsExperience?.toString() || "",
-      degree: user?.authorizedUser.degree || "",
-      university: user?.authorizedUser.university || "",
-    });
-    setIsEditing(true);
+    }));
   };
 
-  const handleSave = async () => {
-    // Clear previous errors
-    setErrors({});
+  const handleYearsExperienceEdit = () => {
+    setIsEditingYearsExperience(true);
+    setTempData((prev) => ({
+      ...prev,
+      yearsExperience: user?.authorizedUser.yearsExperience?.toString() || "",
+    }));
+  };
 
-    // Validate form data
-    const validationResult = profileSchema.safeParse(tempData);
+  const handleDegreeEdit = () => {
+    setIsEditingDegree(true);
+    setTempData((prev) => ({
+      ...prev,
+      degree: user?.authorizedUser.degree || "",
+    }));
+  };
 
-    if (!validationResult.success) {
-      const fieldErrors: Partial<ProfileFormData> = {};
-      validationResult.error.issues.forEach((error) => {
-        const field = error.path[0] as keyof ProfileFormData;
-        fieldErrors[field] = error.message;
+  const handleUniversityEdit = () => {
+    setIsEditingUniversity(true);
+    setTempData((prev) => ({
+      ...prev,
+      university: user?.authorizedUser.university || "",
+    }));
+  };
+
+  const handleResumeEdit = () => {
+    setIsEditingResume(true);
+  };
+
+  const handleFieldSave = async (field: EditableField) => {
+    // Clear previous errors for this field
+    if (field !== "resume") {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: undefined,
+      }));
+
+      // Validate only the specific field
+      const fieldValidation = profileSchema.pick({ [field]: true });
+      const validationResult = fieldValidation.safeParse({
+        [field]: tempData[field],
       });
-      setErrors(fieldErrors);
-      return;
-    }
 
-    // Call resume extraction API if resume is selected
-    if (resumeFile) {
-      try {
-        const formData = new FormData();
-        formData.append("file", resumeFile);
-        await extractResumeMutation.mutateAsync(formData);
-      } catch (error) {
-        toast.error("Resume extraction failed");
-        // Don't prevent form submission if extraction fails
+      if (!validationResult.success) {
+        const fieldError = validationResult.error.issues[0]?.message;
+        if (fieldError) {
+          setErrors((prev) => ({
+            ...prev,
+            [field]: fieldError,
+          }));
+          return;
+        }
       }
     }
 
-    // Create FormData for the API call
+    // Create FormData for the API call with only the specific field
     const submitData = new FormData();
-    submitData.append("degree", tempData.degree);
-    submitData.append("university", tempData.university);
-    submitData.append("target_position", tempData.targetPosition);
-    submitData.append("years_experience", tempData.yearsExperience);
-    if (resumeFile) {
-      submitData.append("resume", resumeFile);
+
+    if (field === "resume") {
+      if (resumeFile) {
+        submitData.append("resume", resumeFile);
+      } else {
+        // No file selected, just return
+        setIsEditingResume(false);
+        return;
+      }
+    } else {
+      submitData.append(
+        field === "targetPosition"
+          ? "target_position"
+          : field === "yearsExperience"
+          ? "years_experience"
+          : field,
+        tempData[field]
+      );
     }
 
     try {
       await updateProfileMutation.mutateAsync(submitData);
-      setIsEditing(false);
-      setResumeFile(null); // Reset resume file after successful update
+
+      // Reset the specific field's editing state
+      if (field === "targetPosition") setIsEditingTargetPosition(false);
+      else if (field === "yearsExperience") setIsEditingYearsExperience(false);
+      else if (field === "degree") setIsEditingDegree(false);
+      else if (field === "university") setIsEditingUniversity(false);
+      else if (field === "resume") {
+        setIsEditingResume(false);
+        setResumeFile(null);
+      }
     } catch (error) {
-      // Error handling is done by the mutation's onError callback
-      console.error("Profile update failed:", error);
+      console.error(`Field update failed for ${field}:`, error);
     }
   };
 
-  const handleCancel = () => {
-    setTempData({
-      targetPosition: "",
-      yearsExperience: "",
-      degree: "",
-      university: "",
-    });
-    setErrors({});
-    setIsEditing(false);
+  // Separate cancel handlers for each field
+  const handleTargetPositionCancel = () => {
+    setIsEditingTargetPosition(false);
+    setErrors((prev) => ({
+      ...prev,
+      targetPosition: undefined,
+    }));
+    setTempData((prev) => ({
+      ...prev,
+      targetPosition: user?.authorizedUser.targetPosition || "",
+    }));
+  };
+
+  const handleYearsExperienceCancel = () => {
+    setIsEditingYearsExperience(false);
+    setErrors((prev) => ({
+      ...prev,
+      yearsExperience: undefined,
+    }));
+    setTempData((prev) => ({
+      ...prev,
+      yearsExperience: user?.authorizedUser.yearsExperience?.toString() || "",
+    }));
+  };
+
+  const handleDegreeCancel = () => {
+    setIsEditingDegree(false);
+    setErrors((prev) => ({
+      ...prev,
+      degree: undefined,
+    }));
+    setTempData((prev) => ({
+      ...prev,
+      degree: user?.authorizedUser.degree || "",
+    }));
+  };
+
+  const handleUniversityCancel = () => {
+    setIsEditingUniversity(false);
+    setErrors((prev) => ({
+      ...prev,
+      university: undefined,
+    }));
+    setTempData((prev) => ({
+      ...prev,
+      university: user?.authorizedUser.university || "",
+    }));
+  };
+
+  const handleResumeCancel = () => {
+    setIsEditingResume(false);
     setResumeFile(null);
   };
 
@@ -168,6 +245,24 @@ export default function ProfilePage() {
         [field]: undefined,
       }));
     }
+  };
+
+  // Check if any field is being edited
+  const hasAnyFieldEditing =
+    isEditingTargetPosition ||
+    isEditingYearsExperience ||
+    isEditingDegree ||
+    isEditingUniversity ||
+    isEditingResume;
+
+  // Get the currently editing field for the update button
+  const getCurrentEditingField = (): EditableField | null => {
+    if (isEditingTargetPosition) return "targetPosition";
+    if (isEditingYearsExperience) return "yearsExperience";
+    if (isEditingDegree) return "degree";
+    if (isEditingUniversity) return "university";
+    if (isEditingResume) return "resume";
+    return null;
   };
 
   const handleHelpClick = () => {
@@ -240,7 +335,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="p-8 max-w-md mx-auto">
+    <main className="max-w-md mx-auto">
       {/* Card */}
       <section className=" ">
         {/* Avatar */}
@@ -276,282 +371,314 @@ export default function ProfilePage() {
           {/* Header with Edit Button */}
           <div className="flex justify-between items-center">
             <h3 className="card-title">Profile Information</h3>
-            {!isEditing ? (
+            {hasAnyFieldEditing && (
               <button
-                onClick={handleEdit}
-                className="btn btn-ghost btn-sm"
-                title="Edit Profile"
+                onClick={() =>
+                  handleFieldSave(getCurrentEditingField() as EditableField)
+                }
+                className="btn btn-xs btn-success"
+                disabled={updateProfileMutation.isPending}
               >
-                <PencilIcon className="size-5" />
+                {updateProfileMutation.isPending ? "Saving..." : "Update"}
               </button>
-            ) : (
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSave}
-                  disabled={updateProfileMutation.isPending}
-                  className="btn btn-success btn-sm"
-                  title="Save Changes"
-                >
-                  {updateProfileMutation.isPending ? (
-                    <span className="loading loading-spinner loading-sm"></span>
-                  ) : (
-                    <CheckIcon className="size-5" />
-                  )}
-                </button>
-                <button
-                  onClick={handleCancel}
-                  disabled={updateProfileMutation.isPending}
-                  className="btn btn-error btn-sm"
-                  title="Cancel"
-                >
-                  <XMarkIcon className="size-5" />
-                </button>
-              </div>
             )}
           </div>
 
-          {/* Profile Data - View Mode */}
-          {!isEditing ? (
-            <div className="space-y-4">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Target Position</span>
-                </label>
-                <select
-                  disabled
-                  className="select select-bordered w-full"
-                  value={user.authorizedUser.targetPosition || ""}
-                >
-                  <option value="">Not specified</option>
-                  {ROLE_OPTIONS.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {/* Profile Data */}
+          <div className="space-y-4">
+            <div className="form-control">
+              <label className="label flex justify-between items-center mb-2">
+                <span className="label-text">Target Position</span>
 
-              <div className="form-control">
+                {isEditingTargetPosition ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleTargetPositionCancel();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <XMarkIcon className="size-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleTargetPositionEdit();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <PencilIcon className="size-4" />
+                  </button>
+                )}
+              </label>
+              <select
+                disabled={!isEditingTargetPosition}
+                className={`select select-bordered w-full ${
+                  errors.targetPosition ? "select-error" : ""
+                }`}
+                value={
+                  isEditingTargetPosition
+                    ? tempData.targetPosition
+                    : user.authorizedUser.targetPosition || ""
+                }
+                onChange={(e) =>
+                  handleInputChange("targetPosition", e.target.value)
+                }
+              >
+                <option value="">Not specified</option>
+                {ROLE_OPTIONS.map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                ))}
+              </select>
+              {errors.targetPosition && (
                 <label className="label">
-                  <span className="label-text">Experience Level</span>
-                </label>
-                <select
-                  disabled
-                  className="select select-bordered w-full"
-                  value={user.authorizedUser.yearsExperience?.toString() || ""}
-                >
-                  <option value="">Not specified</option>
-                  {EXPERIENCE_OPTIONS.map((exp) => (
-                    <option key={exp} value={exp}>
-                      {exp}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Degree</span>
-                </label>
-                <select
-                  disabled
-                  className="select select-bordered w-full"
-                  value={user.authorizedUser.degree || ""}
-                >
-                  <option value="">Not specified</option>
-                  {DEGREE_OPTIONS.map((degree) => (
-                    <option key={degree} value={degree}>
-                      {degree}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">University</span>
-                </label>
-                <select
-                  disabled
-                  className="select select-bordered w-full"
-                  value={user.authorizedUser.university || ""}
-                >
-                  <option value="">Not specified</option>
-                  {UNIVERSITY_OPTIONS.map((university) => (
-                    <option key={university} value={university}>
-                      {university}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">
-                    Resume (Optional, Max {MAX_PROFILE_RESUME_SIZE_MB}MB)
+                  <span className="label-text-alt text-error">
+                    {errors.targetPosition}
                   </span>
                 </label>
-                <div className="file-input file-input-bordered w-full">
-                  <input type="file" disabled className="file-input w-full" />
-                </div>
-              </div>
+              )}
             </div>
-          ) : (
-            /* Profile Data - Edit Mode */
-            <div className="space-y-4">
-              <div className="form-control">
-                <label htmlFor="targetPosition" className="label">
-                  <span className="label-text">Target Position</span>
-                </label>
-                <select
-                  id="targetPosition"
-                  value={tempData.targetPosition}
-                  onChange={(e) =>
-                    handleInputChange("targetPosition", e.target.value)
-                  }
-                  disabled={updateProfileMutation.isPending}
-                  className={`select select-bordered w-full ${
-                    errors.targetPosition ? "select-error" : ""
-                  }`}
-                >
-                  <option value="">Select Role</option>
-                  {ROLE_OPTIONS.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-                {errors.targetPosition && (
-                  <label className="label">
-                    <span className="label-text-alt text-error">
-                      {errors.targetPosition}
-                    </span>
-                  </label>
-                )}
-              </div>
 
-              <div className="form-control">
-                <label htmlFor="yearsExperience" className="label">
-                  <span className="label-text">Experience Level</span>
-                </label>
-                <select
-                  id="yearsExperience"
-                  value={tempData.yearsExperience}
-                  onChange={(e) =>
-                    handleInputChange("yearsExperience", e.target.value)
-                  }
-                  disabled={updateProfileMutation.isPending}
-                  className={`select select-bordered w-full ${
-                    errors.yearsExperience ? "select-error" : ""
-                  }`}
-                >
-                  <option value="">Select Experience Level</option>
-                  {EXPERIENCE_OPTIONS.map((exp) => (
-                    <option key={exp} value={exp}>
-                      {exp}
-                    </option>
-                  ))}
-                </select>
-                {errors.yearsExperience && (
-                  <label className="label">
-                    <span className="label-text-alt text-error">
-                      {errors.yearsExperience}
-                    </span>
-                  </label>
-                )}
-              </div>
+            <div className="form-control">
+              <label className="label flex justify-between items-center mb-2">
+                <span className="label-text">Experience Level</span>
 
-              <div className="form-control">
-                <label htmlFor="degree" className="label">
-                  <span className="label-text">Degree</span>
-                </label>
-                <select
-                  id="degree"
-                  value={tempData.degree}
-                  onChange={(e) => handleInputChange("degree", e.target.value)}
-                  disabled={updateProfileMutation.isPending}
-                  className={`select select-bordered w-full ${
-                    errors.degree ? "select-error" : ""
-                  }`}
-                >
-                  <option value="">Select Degree</option>
-                  {DEGREE_OPTIONS.map((degree) => (
-                    <option key={degree} value={degree}>
-                      {degree}
-                    </option>
-                  ))}
-                </select>
-                {errors.degree && (
-                  <label className="label">
-                    <span className="label-text-alt text-error">
-                      {errors.degree}
-                    </span>
-                  </label>
+                {isEditingYearsExperience ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleYearsExperienceCancel();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <XMarkIcon className="size-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleYearsExperienceEdit();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <PencilIcon className="size-4" />
+                  </button>
                 )}
-              </div>
-
-              <div className="form-control">
-                <label htmlFor="university" className="label">
-                  <span className="label-text">University</span>
-                </label>
-                <select
-                  id="university"
-                  value={tempData.university}
-                  onChange={(e) =>
-                    handleInputChange("university", e.target.value)
-                  }
-                  disabled={updateProfileMutation.isPending}
-                  className={`select select-bordered w-full ${
-                    errors.university ? "select-error" : ""
-                  }`}
-                >
-                  <option value="">Select University</option>
-                  {UNIVERSITY_OPTIONS.map((university) => (
-                    <option key={university} value={university}>
-                      {university}
-                    </option>
-                  ))}
-                </select>
-                {errors.university && (
-                  <label className="label">
-                    <span className="label-text-alt text-error">
-                      {errors.university}
-                    </span>
-                  </label>
-                )}
-              </div>
-
-              <div className="form-control">
-                <label htmlFor="resume" className="label">
-                  <span className="label-text">
-                    Resume (Optional, Max {MAX_PROFILE_RESUME_SIZE_MB}MB)
+              </label>
+              <select
+                disabled={!isEditingYearsExperience}
+                className={`select select-bordered w-full ${
+                  errors.yearsExperience ? "select-error" : ""
+                }`}
+                value={
+                  isEditingYearsExperience
+                    ? tempData.yearsExperience
+                    : user.authorizedUser.yearsExperience?.toString() || ""
+                }
+                onChange={(e) =>
+                  handleInputChange("yearsExperience", e.target.value)
+                }
+              >
+                <option value="">Not specified</option>
+                {EXPERIENCE_OPTIONS.map((exp) => (
+                  <option key={exp} value={exp}>
+                    {exp}
+                  </option>
+                ))}
+              </select>
+              {errors.yearsExperience && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {errors.yearsExperience}
                   </span>
                 </label>
-                <div className="file-input w-full">
-                  <input
-                    type="file"
-                    id="resume"
-                    accept={RESUME_FILE_TYPES}
-                    onChange={handleFileChange}
-                    disabled={updateProfileMutation.isPending}
-                    className="file-input w-full"
-                  />
-                </div>
-                {resumeFile && (
-                  <label className="label">
-                    <span className="label-text-alt text-success flex items-center gap-1">
-                      <DocumentTextIcon className="size-3" />
-                      File selected successfully
-                    </span>
-                  </label>
-                )}
-              </div>
+              )}
             </div>
-          )}
+
+            <div className="form-control">
+              <label className="label flex justify-between items-center mb-2">
+                <span className="label-text">Degree</span>
+
+                {isEditingDegree ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDegreeCancel();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <XMarkIcon className="size-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDegreeEdit();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <PencilIcon className="size-4" />
+                  </button>
+                )}
+              </label>
+              <select
+                disabled={!isEditingDegree}
+                className={`select select-bordered w-full ${
+                  errors.degree ? "select-error" : ""
+                }`}
+                value={
+                  isEditingDegree
+                    ? tempData.degree
+                    : user.authorizedUser.degree || ""
+                }
+                onChange={(e) => handleInputChange("degree", e.target.value)}
+              >
+                <option value="">Not specified</option>
+                {DEGREE_OPTIONS.map((degree) => (
+                  <option key={degree} value={degree}>
+                    {degree}
+                  </option>
+                ))}
+              </select>
+              {errors.degree && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {errors.degree}
+                  </span>
+                </label>
+              )}
+            </div>
+
+            <div className="form-control">
+              <label className="label flex justify-between items-center mb-2">
+                <span className="label-text">University</span>
+
+                {isEditingUniversity ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleUniversityCancel();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <XMarkIcon className="size-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleUniversityEdit();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <PencilIcon className="size-4" />
+                  </button>
+                )}
+              </label>
+              <select
+                disabled={!isEditingUniversity}
+                className={`select select-bordered w-full ${
+                  errors.university ? "select-error" : ""
+                }`}
+                value={
+                  isEditingUniversity
+                    ? tempData.university
+                    : user.authorizedUser.university || ""
+                }
+                onChange={(e) =>
+                  handleInputChange("university", e.target.value)
+                }
+              >
+                <option value="">Not specified</option>
+                {UNIVERSITY_OPTIONS.map((university) => (
+                  <option key={university} value={university}>
+                    {university}
+                  </option>
+                ))}
+              </select>
+              {errors.university && (
+                <label className="label">
+                  <span className="label-text-alt text-error">
+                    {errors.university}
+                  </span>
+                </label>
+              )}
+            </div>
+
+            <div className="form-control">
+              <label className="label flex justify-between items-center mb-2">
+                <span className="label-text">
+                  Resume (Optional, Max {MAX_PROFILE_RESUME_SIZE_MB}MB)
+                </span>
+
+                {isEditingResume ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleResumeCancel();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <XMarkIcon className="size-4" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleResumeEdit();
+                    }}
+                    className="btn btn-xs btn-ghost"
+                    type="button"
+                  >
+                    <PencilIcon className="size-4" />
+                  </button>
+                )}
+              </label>
+              <div className="w-full">
+                <input
+                  type="file"
+                  disabled={!isEditingResume}
+                  className="file-input w-full"
+                  accept={RESUME_FILE_TYPES}
+                  onChange={handleFileChange}
+                />
+              </div>
+              {isEditingResume && resumeFile && (
+                <label className="label">
+                  <span className="label-text-alt text-success flex items-center gap-1">
+                    <DocumentTextIcon className="size-3" />
+                    File selected successfully
+                  </span>
+                </label>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Actions */}
-        <div className="card-actions flex-col space-y-2">
+        <div className="card-actions flex-col space-y-2 pb-6">
           <div className="flex items-center gap-10 justify-between w-full">
             <button
               onClick={handleHelpClick}
