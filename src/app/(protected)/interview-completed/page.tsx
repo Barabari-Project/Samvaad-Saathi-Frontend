@@ -11,6 +11,7 @@ const InterviewCompleted = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const interviewId = searchParams.get("interviewId");
+  const role = searchParams.get("role") || "Interview";
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
 
   const apiClient = createApiClient(APIService.ANALYSIS);
@@ -62,7 +63,7 @@ const InterviewCompleted = () => {
   };
 
   return (
-    <div className="hero bg-base-100">
+    <div className="hero">
       <div className="hero-content text-center">
         <div className="max-w-md">
           {/* Lottie Animation */}
@@ -71,19 +72,18 @@ const InterviewCompleted = () => {
           </div>
 
           {/* Congratulations Message */}
-          <h1 className="text-5xl font-bold">Congratulations!</h1>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold italic">
+            Congratulations!
+          </h1>
 
           {/* Success Message */}
-          <p className="py-6 text-lg">
+          <p className="py-4 sm:py-6 text-base sm:text-lg md:text-xl">
             You have successfully completed your
-            <span className="text-primary font-semibold">
-              React Developer
-            </span>{" "}
-            interview
+            <span className="text-primary font-semibold">{role}</span> interview
           </p>
 
           {/* Performance Report Message */}
-          <p className="text-base-content/70 mb-8">
+          <p className="text-sm sm:text-base md:text-lg text-base-content/70 mb-6 sm:mb-8">
             Your performance report is ready! Check it out to see how you did.
           </p>
 
@@ -91,7 +91,7 @@ const InterviewCompleted = () => {
           <button
             onClick={handleViewReport}
             disabled={isGeneratingReport}
-            className="btn btn-neutral btn-lg"
+            className="btn btn-neutral btn-sm sm:btn-md md:btn-lg text-sm sm:text-base"
           >
             {isGeneratingReport && (
               <span className="loading loading-spinner loading-sm"></span>
@@ -105,13 +105,16 @@ const InterviewCompleted = () => {
       <dialog className={`modal ${showTimeoutModal ? "modal-open" : ""}`}>
         <div className="modal-box">
           <div className="text-center">
-            <h3 className="text-xl font-bold mb-4">
+            <h3 className="text-lg sm:text-xl font-bold mb-4">
               Your report is currently being generated.
             </h3>
-            <p className="text-base mb-6">
+            <p className="text-sm sm:text-base mb-6">
               It will appear on your home screen as soon as it&apos;s ready.
             </p>
-            <button onClick={handleReturnToHome} className="btn btn-secondary">
+            <button
+              onClick={handleReturnToHome}
+              className="btn btn-secondary btn-sm sm:btn-md text-sm sm:text-base"
+            >
               Return to Home Screen
             </button>
           </div>

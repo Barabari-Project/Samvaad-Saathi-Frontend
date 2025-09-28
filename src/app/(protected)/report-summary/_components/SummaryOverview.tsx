@@ -1,14 +1,19 @@
+import dayjs from "dayjs";
 import React from "react";
 import SectionCard from "./SectionCard";
 
 type SummaryOverviewProps = {
   interviewId: number;
   candidateName: string;
+  role: string;
+  date: string;
 };
 
 const SummaryOverview: React.FC<SummaryOverviewProps> = ({
   interviewId,
   candidateName,
+  role,
+  date,
 }) => {
   return (
     <SectionCard title="Summary Overview">
@@ -18,11 +23,11 @@ const SummaryOverview: React.FC<SummaryOverviewProps> = ({
 
         <div className="text-gray-500">Interview Date</div>
         <div className="text-right font-medium">
-          {new Date().toLocaleDateString()}
+          {dayjs(date).format("DD MMM , YYYY")}
         </div>
 
         <div className="text-gray-500">Role</div>
-        <div className="text-right font-medium"></div>
+        <div className="text-right font-medium">{role}</div>
       </div>
     </SectionCard>
   );

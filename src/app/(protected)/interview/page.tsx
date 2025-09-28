@@ -47,6 +47,7 @@ const InterviewPage = () => {
     Record<string, string>
   >({});
   const [showSkipModal, setShowSkipModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
   const [questionAttemptId, setQuestionAttemptId] = useState<number | null>(
     null
@@ -125,7 +126,11 @@ const InterviewPage = () => {
     errorMessage: "Failed to complete interview. Please try again.",
     options: {
       onSuccess: () => {
-        router.push(`/interview-completed?interviewId=${interviewId}`);
+        router.push(
+          `/interview-completed?interviewId=${interviewId}&role=${
+            role || "Interview"
+          }`
+        );
       },
     },
   });
@@ -143,15 +148,14 @@ const InterviewPage = () => {
   });
 
   // Analysis mutation
-  const { mutateAsync: analysisMutation, isPending: isAnalyzing } =
-    analysisClient.useMutation<
-      unknown,
-      { analysisTypes: string[]; questionAttemptId: number }
-    >({
-      url: ENDPOINTS.ANALYSIS.COMPLETE,
-      method: "post",
-      errorMessage: "Failed to analyze answer. Please try again.",
-    });
+  const { mutateAsync: analysisMutation } = analysisClient.useMutation<
+    unknown,
+    { analysisTypes: string[]; questionAttemptId: number }
+  >({
+    url: ENDPOINTS.ANALYSIS.COMPLETE,
+    method: "post",
+    errorMessage: "Failed to analyze answer. Please try again.",
+  });
 
   // Extract questions from the response data
   const questions = useMemo(() => questionsData?.items || [], [questionsData]);
@@ -311,6 +315,19 @@ const InterviewPage = () => {
     setShowSkipModal(false);
   };
 
+  const handleSubmitClick = () => {
+    setShowSubmitModal(true);
+  };
+
+  const confirmSubmit = () => {
+    setShowSubmitModal(false);
+    handleSubmit();
+  };
+
+  const cancelSubmit = () => {
+    setShowSubmitModal(false);
+  };
+
   const handleRedo = () => {
     // Cancel ongoing transcribe request if it exists
     if (transcribeAbortController) {
@@ -427,9 +444,7 @@ const InterviewPage = () => {
                         stopRecording();
                         handleSubmitAnswer();
                       }}
-                      disabled={
-                        isTranscribing || pendingTranscription || isAnalyzing
-                      }
+                      disabled={isTranscribing || pendingTranscription}
                     >
                       {isTranscribing ? (
                         <>
@@ -440,11 +455,6 @@ const InterviewPage = () => {
                         <>
                           <span className="loading loading-spinner loading-xs"></span>
                           Processing...
-                        </>
-                      ) : isAnalyzing ? (
-                        <>
-                          <span className="loading loading-spinner loading-xs"></span>
-                          Analyzing...
                         </>
                       ) : (
                         "Submit Answer"
@@ -472,7 +482,7 @@ const InterviewPage = () => {
                       <button
                         type="button"
                         className="btn btn-primary btn-sm disabled:opacity-50"
-                        onClick={handleSubmit}
+                        onClick={handleSubmitClick}
                         disabled={isCompletingInterview}
                       >
                         {isCompletingInterview ? (
@@ -492,16 +502,13 @@ const InterviewPage = () => {
                         disabled={
                           !audioUploaded ||
                           isTranscribing ||
-                          pendingTranscription ||
-                          isAnalyzing
+                          pendingTranscription
                         }
                       >
-                        {isTranscribing ||
-                        pendingTranscription ||
-                        isAnalyzing ? (
+                        {isTranscribing || pendingTranscription ? (
                           <>
                             <span className="loading loading-spinner loading-xs"></span>
-                            {isAnalyzing ? "Analyzing..." : "Uploading..."}
+                            Uploading...
                           </>
                         ) : (
                           "Next ➜"
@@ -534,7 +541,7 @@ const InterviewPage = () => {
                     <button
                       type="button"
                       className="btn btn-primary btn-sm disabled:opacity-50"
-                      onClick={handleSubmit}
+                      onClick={handleSubmitClick}
                       disabled={isCompletingInterview}
                     >
                       {isCompletingInterview ? (
@@ -585,6 +592,43 @@ const InterviewPage = () => {
                 onClick={confirmSkip}
               >
                 Skip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submit Confirmation Modal */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 mx-4 max-w-sm w-full">
+            <h3 className="text-lg font-semibold mb-2">Submit Interview?</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to submit your interview? This action cannot
+              be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="btn btn-outline flex-1"
+                onClick={cancelSubmit}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary flex-1"
+                onClick={confirmSubmit}
+                disabled={isCompletingInterview}
+              >
+                {isCompletingInterview ? (
+                  <>
+                    <span className="loading loading-spinner loading-xs"></span>
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit"
+                )}
               </button>
             </div>
           </div>

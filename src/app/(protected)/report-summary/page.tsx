@@ -77,6 +77,7 @@ interface ReportResponse {
     strengthsTopics: string[];
     improvementTopics: string[];
   };
+  track: string;
 }
 
 const ReportSummaryPage: React.FC = () => {
@@ -114,12 +115,18 @@ const ReportSummaryPage: React.FC = () => {
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold">Web Development</h1>
+        <h1 className="text-2xl font-bold">
+          {reportData?.track
+            ? `${reportData?.track} Interview Summary Report`
+            : "Web Development Interview Summary Report"}
+        </h1>
       </div>
 
       <SummaryOverview
         interviewId={reportData.interviewId}
         candidateName={user?.authorizedUser?.name || "Unknown"}
+        role={reportData?.track ?? "Web Developer"}
+        date={reportData?.metadata?.generatedAt ?? ""}
       />
 
       <OverallScoreSummary
