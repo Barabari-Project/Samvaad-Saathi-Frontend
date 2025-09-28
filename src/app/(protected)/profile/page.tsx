@@ -185,7 +185,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <main className="p-8 max-w-md mx-auto">
+      <main className="max-w-md mx-auto">
         <section className="card bg-base-200 shadow-xl">
           {/* Avatar Skeleton */}
           <div className="card-body items-center text-center">
@@ -264,16 +264,15 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="stats shadow">
-          <div className="stat">
-            <div className="stat-title">Interviews attempted</div>
-            <div className="stat-value text-primary">20</div>
-          </div>
+        <div className="flex justify-between items-center font-semibold gap-8 text-primary">
+          <span>Interviews attempted:</span>
+          <span>20</span>
         </div>
 
+        <div className="divider" />
+
         {/* Profile Information */}
-        <div className=" space-y-4 my-10">
+        <div className=" space-y-4 my-4">
           {/* Header with Edit Button */}
           <div className="flex justify-between items-center">
             <h3 className="card-title">Profile Information</h3>
