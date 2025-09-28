@@ -9,7 +9,7 @@ import dayjs from "dayjs";
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import { useRouter } from "next/navigation";
 
 interface InterviewItem {
   interviewId: number;
@@ -28,8 +28,28 @@ interface InterviewsResponse {
   items: InterviewItem[];
 }
 
+interface ResumeInterviewQuestion {
+  interviewQuestionId: number;
+  text: string;
+  topic: string;
+  category: string;
+  status: string;
+  resumeUsed: boolean;
+}
+
+interface ResumeInterviewResponse {
+  interviewId: number;
+  track: string;
+  difficulty: string;
+  questions: ResumeInterviewQuestion[];
+  totalQuestions: number;
+  attemptedQuestions: number;
+  remainingQuestions: number;
+}
+
 export default function HomePage() {
   const { user, loading } = useAuth();
+  const router = useRouter();
   const userName = user?.authorizedUser?.name || "User";
   const avatarUrl = `https://avatar.iran.liara.run/username?username=${encodeURIComponent(
     userName
@@ -55,6 +75,15 @@ export default function HomePage() {
     enabled: !loading, // Only fetch when auth is loaded
   });
 
+  // Mutation for resume interview
+  const { loading: isResumingInterview, mutateAsync: resumeInterviewMutation } =
+    apiClient.useMutation<ResumeInterviewResponse, { interviewId: number }>({
+      url: ENDPOINTS.INTERVIEWS.RESUME_INTERVIEW,
+      method: "post",
+      successMessage: "Interview resumed successfully!",
+      errorMessage: "Failed to resume interview. Please try again.",
+    });
+
   // Helper function to format date
   const formatDate = (dateString: string) => {
     return dayjs(dateString).format("DD MMM, YYYY");
@@ -71,6 +100,26 @@ export default function HomePage() {
         return "badge-error";
       default:
         return "badge-neutral";
+    }
+  };
+
+  // Handle continue interview
+  const handleContinueInterview = async (interviewId: number) => {
+    try {
+      const response = await resumeInterviewMutation({ interviewId });
+
+      // Navigate to interview page with resumed questions
+      const resumeParams = new URLSearchParams({
+        interviewId: response.interviewId.toString(),
+        role: response.track,
+        useResume: "true",
+        selectedQuestions: JSON.stringify(response.questions),
+        resumed: "true",
+      });
+
+      router.push(`/interview?${resumeParams.toString()}`);
+    } catch (error) {
+      console.error("Failed to resume interview:", error);
     }
   };
 
@@ -298,13 +347,22 @@ export default function HomePage() {
                               </Link>
                             </>
                           ) : interview.status.toLowerCase() === "active" ? (
-                            <Link
-                              href={`/interview?interviewId=${interview.interviewId}`}
+                            <button
+                              className="btn btn-primary btn-sm disabled:opacity-50"
+                              onClick={() =>
+                                handleContinueInterview(interview.interviewId)
+                              }
+                              disabled={isResumingInterview}
                             >
-                              <button className="btn btn-primary btn-sm">
-                                Continue Interview
-                              </button>
-                            </Link>
+                              {isResumingInterview ? (
+                                <>
+                                  <span className="loading loading-spinner loading-xs"></span>
+                                  Resuming...
+                                </>
+                              ) : (
+                                "Continue Interview"
+                              )}
+                            </button>
                           ) : (
                             <Link href="interview-start">
                               <button className="btn btn-primary btn-sm">

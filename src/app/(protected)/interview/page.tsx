@@ -72,6 +72,7 @@ const InterviewPage = () => {
   const useResume = searchParams.get("useResume") === "true";
   const role = searchParams.get("role");
   const isReattempt = searchParams.get("reattempt") === "true";
+  const isResumed = searchParams.get("resumed") === "true";
   const selectedQuestionsParam = searchParams.get("selectedQuestions");
 
   const apiClient = createApiClient(APIService.INTERVIEWS);
@@ -161,7 +162,7 @@ const InterviewPage = () => {
 
   // Extract questions from the response data
   const questions = useMemo(() => {
-    if (isReattempt && selectedQuestionsParam) {
+    if ((isReattempt || isResumed) && selectedQuestionsParam) {
       // Parse the selected questions from URL parameter
       try {
         return JSON.parse(selectedQuestionsParam);
@@ -171,12 +172,12 @@ const InterviewPage = () => {
       }
     }
     return questionsData?.items || [];
-  }, [questionsData, isReattempt, selectedQuestionsParam]);
+  }, [questionsData, isReattempt, isResumed, selectedQuestionsParam]);
 
   const isLast = currentIndex === questions.length - 1;
 
   const generateQuestions = useCallback(async () => {
-    if (!interviewId || isReattempt) {
+    if (!interviewId || isReattempt || isResumed) {
       return;
     }
 
@@ -188,7 +189,7 @@ const InterviewPage = () => {
     } catch (error) {
       console.error("Failed to generate questions:", error);
     }
-  }, [interviewId, useResume, generateQuestionsMutation, isReattempt]);
+  }, [interviewId, useResume, isReattempt, isResumed]);
 
   const startQuestionAttempt = useCallback(
     async (questionId: string | number) => {

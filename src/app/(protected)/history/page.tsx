@@ -27,13 +27,32 @@ interface InterviewsListResponse {
   limit: number;
 }
 
+interface ResumeInterviewQuestion {
+  interviewQuestionId: number;
+  text: string;
+  topic: string;
+  category: string;
+  status: string;
+  resumeUsed: boolean;
+}
+
+interface ResumeInterviewResponse {
+  interviewId: number;
+  track: string;
+  difficulty: string;
+  questions: ResumeInterviewQuestion[];
+  totalQuestions: number;
+  attemptedQuestions: number;
+  remainingQuestions: number;
+}
+
 type InterviewStatus = "incomplete" | "completed";
 
 export default function InterviewHistory() {
   const [activeTab, setActiveTab] = useState<InterviewStatus>("incomplete");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { useQuery } = createApiClient(APIService.INTERVIEWS);
+  const { useQuery, useMutation } = createApiClient(APIService.INTERVIEWS);
 
   // Read tab from query params on component mount
   useEffect(() => {
@@ -61,6 +80,15 @@ export default function InterviewHistory() {
     method: "get",
   });
 
+  // Mutation for resume interview
+  const { loading: isResumingInterview, mutateAsync: resumeInterviewMutation } =
+    useMutation<ResumeInterviewResponse, { interviewId: number }>({
+      url: ENDPOINTS.INTERVIEWS.RESUME_INTERVIEW,
+      method: "post",
+      successMessage: "Interview resumed successfully!",
+      errorMessage: "Failed to resume interview. Please try again.",
+    });
+
   const { incomplete, completed } = useMemo(() => {
     if (!interviewsData?.items) {
       return { incomplete: [], completed: [] };
@@ -85,6 +113,26 @@ export default function InterviewHistory() {
 
   const formatDate = (dateString: string) => {
     return dayjs(dateString).format("DD MMM , YYYY");
+  };
+
+  // Handle complete interview
+  const handleCompleteInterview = async (interviewId: number) => {
+    try {
+      const response = await resumeInterviewMutation({ interviewId });
+
+      // Navigate to interview page with resumed questions
+      const resumeParams = new URLSearchParams({
+        interviewId: response.interviewId.toString(),
+        role: response.track,
+        useResume: "true",
+        selectedQuestions: JSON.stringify(response.questions),
+        resumed: "true",
+      });
+
+      router.push(`/interview?${resumeParams.toString()}`);
+    } catch (error) {
+      console.error("Failed to resume interview:", error);
+    }
   };
 
   if (isLoading) {
@@ -196,12 +244,22 @@ export default function InterviewHistory() {
 
                     {/* Complete Interview Button - Bottom Right */}
                     <div className="flex justify-end">
-                      <Link
-                        href={`/interview?interviewId=${item.interviewId}&useResume=${item.resumeUsed}`}
-                        className="px-4 py-2 border border-black rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-50 transition-colors"
+                      <button
+                        onClick={() =>
+                          handleCompleteInterview(item.interviewId)
+                        }
+                        disabled={isResumingInterview}
+                        className="px-4 py-2 border border-black rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Complete Interview
-                      </Link>
+                        {isResumingInterview ? (
+                          <>
+                            <span className="loading loading-spinner loading-xs mr-2"></span>
+                            Resuming...
+                          </>
+                        ) : (
+                          "Complete Interview"
+                        )}
+                      </button>
                     </div>
                   </div>
                 ))}
