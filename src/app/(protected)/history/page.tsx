@@ -315,7 +315,7 @@ export default function InterviewHistory() {
                     {/* View Report Button - Bottom Right */}
                     <div className="flex justify-end gap-2">
                       <Link
-                        href={`/reattempt-interview?interviewId=${item.interviewId}`}
+                        href={`/reattempt-interview?interviewId=${item.interviewId}&role=${item.track}&attemptsCount=${item.attemptsCount}`}
                         className="btn btn-neutral btn-sm"
                       >
                         Reattempt
