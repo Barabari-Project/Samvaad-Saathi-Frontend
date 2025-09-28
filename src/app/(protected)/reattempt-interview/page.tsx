@@ -149,19 +149,19 @@ const ReAttemptInterview = () => {
         {/* Question Selection Section */}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row mb-4">
-            <h3 className="text-lg font-semibold text-primary">
+            <h3 className="text-lg font-semibold text-primary mb-2">
               Select the questions you want to reattempt
             </h3>
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center justify-end gap-2 cursor-pointer pr-4">
+              <span className="text-sm font-medium text-primary">
+                Select All
+              </span>
               <input
                 type="checkbox"
                 className="checkbox checkbox-sm"
                 checked={selectAll}
                 onChange={handleSelectAll}
               />
-              <span className="text-sm font-medium text-primary">
-                Select All
-              </span>
             </label>
           </div>
 

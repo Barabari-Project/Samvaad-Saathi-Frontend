@@ -248,10 +248,9 @@ export default function HomePage() {
                               {interview.summaryReportAvailable ? (
                                 <Link
                                   href={`/report-summary?interviewId=${interview.interviewId}`}
+                                  className="btn btn-outline btn-sm"
                                 >
-                                  <button className="btn btn-outline btn-sm">
-                                    View Report
-                                  </button>
+                                  View Report
                                 </Link>
                               ) : (
                                 <button
@@ -261,10 +260,11 @@ export default function HomePage() {
                                   Report Pending
                                 </button>
                               )}
-                              <Link href="interview-start">
-                                <button className="btn btn-primary btn-sm">
-                                  Reattempt
-                                </button>
+                              <Link
+                                href={`/reattempt-interview?interviewId=${interview.interviewId}&role=${interview.track}&attemptsCount=${interview.attemptsCount}`}
+                                className="btn btn-neutral btn-sm"
+                              >
+                                Reattempt
                               </Link>
                             </>
                           ) : interview.status.toLowerCase() === "active" ? (
