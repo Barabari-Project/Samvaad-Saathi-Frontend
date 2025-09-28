@@ -243,6 +243,7 @@ const InterviewPage = () => {
   const resetStatesAndMoveNext = useCallback(() => {
     setAnswerSubmitted(false); // Reset submitted state when moving to next question
     setPendingTranscription(false); // Reset pending transcription state
+    setAudioUploaded(false); // Reset audio uploaded state when moving to next question
     // Reset audio blob by clearing recording
     if (recorderControls.recordedBlob) {
       recorderControls.clearCanvas();
@@ -281,9 +282,8 @@ const InterviewPage = () => {
       try {
         await transcribeMutation(formData);
 
-        // Move to next question after successful transcription
-        setAudioUploaded(false); // Reset audio uploaded state
-        resetStatesAndMoveNext();
+        // Mark audio as uploaded but don't move to next question automatically
+        setAudioUploaded(true);
 
         analysisMutation({
           analysisTypes: ["domain", "communication", "pace", "pause"],
@@ -528,13 +528,9 @@ const InterviewPage = () => {
                         type="button"
                         className="btn btn-primary btn-sm disabled:opacity-50"
                         onClick={handleNext}
-                        disabled={
-                          !audioUploaded ||
-                          isTranscribing ||
-                          pendingTranscription
-                        }
+                        disabled={!audioUploaded || isTranscribing}
                       >
-                        {isTranscribing || pendingTranscription ? (
+                        {isTranscribing ? (
                           <>
                             <span className="loading loading-spinner loading-xs"></span>
                             Uploading...
