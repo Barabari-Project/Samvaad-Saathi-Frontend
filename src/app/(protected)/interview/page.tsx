@@ -13,10 +13,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
 
 type Question = {
-  interviewQuestionId: string;
+  interviewQuestionId: string | number;
   text: string;
   topic: string;
-  difficulty: string;
+  difficulty?: string;
   category: string;
 };
 
@@ -71,6 +71,8 @@ const InterviewPage = () => {
   const interviewId = searchParams.get("interviewId");
   const useResume = searchParams.get("useResume") === "true";
   const role = searchParams.get("role");
+  const isReattempt = searchParams.get("reattempt") === "true";
+  const selectedQuestionsParam = searchParams.get("selectedQuestions");
 
   const apiClient = createApiClient(APIService.INTERVIEWS);
   const transcribeClient = createApiClient(APIService.TRANSCRIBE);
@@ -158,12 +160,23 @@ const InterviewPage = () => {
   });
 
   // Extract questions from the response data
-  const questions = useMemo(() => questionsData?.items || [], [questionsData]);
+  const questions = useMemo(() => {
+    if (isReattempt && selectedQuestionsParam) {
+      // Parse the selected questions from URL parameter
+      try {
+        return JSON.parse(selectedQuestionsParam);
+      } catch (error) {
+        console.error("Failed to parse selected questions:", error);
+        return [];
+      }
+    }
+    return questionsData?.items || [];
+  }, [questionsData, isReattempt, selectedQuestionsParam]);
 
   const isLast = currentIndex === questions.length - 1;
 
   const generateQuestions = useCallback(async () => {
-    if (!interviewId) {
+    if (!interviewId || isReattempt) {
       return;
     }
 
@@ -175,10 +188,10 @@ const InterviewPage = () => {
     } catch (error) {
       console.error("Failed to generate questions:", error);
     }
-  }, [interviewId, useResume, generateQuestionsMutation]);
+  }, [interviewId, useResume, generateQuestionsMutation, isReattempt]);
 
   const startQuestionAttempt = useCallback(
-    async (questionId: string) => {
+    async (questionId: string | number) => {
       if (!interviewId) {
         return;
       }
@@ -186,20 +199,21 @@ const InterviewPage = () => {
       try {
         const response = await startQuestionAttemptMutation({
           interviewId: parseInt(interviewId),
-          questionId: parseInt(questionId),
+          questionId:
+            typeof questionId === "string" ? parseInt(questionId) : questionId,
         });
         setQuestionAttemptId(response.questionAttemptId);
       } catch (error) {
         console.error("Failed to start question attempt:", error);
       }
     },
-    [interviewId, startQuestionAttemptMutation]
+    [interviewId]
   );
 
   // Generate questions when component mounts
   useEffect(() => {
     generateQuestions();
-  }, []);
+  }, [generateQuestions]);
 
   // Start question attempt when current question changes
   useEffect(() => {
@@ -226,6 +240,16 @@ const InterviewPage = () => {
     };
   }, [transcribeAbortController]);
 
+  const resetStatesAndMoveNext = useCallback(() => {
+    setAnswerSubmitted(false); // Reset submitted state when moving to next question
+    setPendingTranscription(false); // Reset pending transcription state
+    // Reset audio blob by clearing recording
+    if (recorderControls.recordedBlob) {
+      recorderControls.clearCanvas();
+    }
+    if (!isLast) setCurrentIndex((i) => i + 1);
+  }, [isLast, recorderControls]);
+
   const handleAnswer = () => {
     // Start recording for this question
     setAnswerSubmitted(false); // Reset the submitted state when starting new recording
@@ -233,7 +257,7 @@ const InterviewPage = () => {
     startRecording();
   };
 
-  const handleSubmitAnswer = async () => {
+  const handleSubmitAnswer = useCallback(async () => {
     // Stop recording and show the message
 
     setAnswerSubmitted(true);
@@ -279,23 +303,13 @@ const InterviewPage = () => {
     } else {
       setPendingTranscription(true);
     }
-  };
+  }, [recordedBlob, questionAttemptId]);
 
   useEffect(() => {
     if (recordedBlob && questionAttemptId !== null) {
       handleSubmitAnswer();
     }
-  }, [recordedBlob, questionAttemptId]);
-
-  const resetStatesAndMoveNext = () => {
-    setAnswerSubmitted(false); // Reset submitted state when moving to next question
-    setPendingTranscription(false); // Reset pending transcription state
-    // Reset audio blob by clearing recording
-    if (recorderControls.recordedBlob) {
-      recorderControls.clearCanvas();
-    }
-    if (!isLast) setCurrentIndex((i) => i + 1);
-  };
+  }, [recordedBlob, questionAttemptId, handleSubmitAnswer]);
 
   const handleNext = () => {
     resetStatesAndMoveNext();

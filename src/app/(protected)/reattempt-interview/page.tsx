@@ -3,7 +3,7 @@
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 
 interface QuestionItem {
@@ -23,6 +23,7 @@ interface QuestionsResponse {
 }
 
 const ReAttemptInterview = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { useQuery } = createApiClient(APIService.INTERVIEWS);
 
@@ -81,11 +82,23 @@ const ReAttemptInterview = () => {
       alert("Please select at least one question to reattempt.");
       return;
     }
-    // TODO: Implement reattempt logic
-    console.log(
-      "Selected questions for reattempt:",
-      Array.from(selectedQuestions)
-    );
+
+    // Get selected question objects
+    const selectedQuestionObjects =
+      questionsData?.items.filter((question) =>
+        selectedQuestions.has(question.interviewQuestionId)
+      ) || [];
+
+    // Navigate to interview page with selected questions
+    const queryParams = new URLSearchParams({
+      interviewId: interviewId || "",
+      role: role || "",
+      useResume: "false",
+      reattempt: "true",
+      selectedQuestions: JSON.stringify(selectedQuestionObjects),
+    });
+
+    router.push(`/interview?${queryParams.toString()}`);
   };
 
   if (isLoading) {
