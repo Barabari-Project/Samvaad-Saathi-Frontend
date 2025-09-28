@@ -411,9 +411,24 @@ const InterviewPage = () => {
           ) : (
             <div className="mx-auto mt-16 rounded-xl border border-black/10 shadow-[0_6px_24px_rgba(0,0,0,0.08)] bg-white/90 backdrop-blur p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] px-2 py-0.5 rounded border border-blue-300 text-blue-700 bg-blue-50">
-                  {questions[currentIndex]?.category?.toUpperCase() ||
-                    "Question"}
+                <span
+                  className={`badge ${
+                    questions[currentIndex]?.category?.toLowerCase() === "tech"
+                      ? "badge-primary"
+                      : questions[currentIndex]?.category?.toLowerCase() ===
+                        "behavioral"
+                      ? "badge-warning"
+                      : questions[currentIndex]?.category?.toLowerCase() ===
+                        "tech_allied"
+                      ? "badge-success"
+                      : "badge-secondary"
+                  }`}
+                >
+                  {questions[currentIndex]?.category
+                    ? questions[currentIndex]?.category
+                        ?.replaceAll("_", " ")
+                        ?.toUpperCase()
+                    : "QUESTION"}
                 </span>
                 <span className="text-[10px] text-black/60">
                   {currentIndex + 1}/{questions.length}

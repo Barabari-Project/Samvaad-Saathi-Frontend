@@ -361,7 +361,7 @@ export default function ProfilePage() {
 
         <div className="flex justify-between items-center font-semibold gap-8 text-primary">
           <span>Interviews attempted:</span>
-          <span>20</span>
+          <span>{user.authorizedUser.totalAttempts ?? 0}</span>
         </div>
 
         <div className="divider" />

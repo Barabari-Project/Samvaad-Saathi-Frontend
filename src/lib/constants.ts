@@ -30,3 +30,9 @@ export const EXPERIENCE_OPTIONS = ["0", "1", "2", "3", "4", "5"] as const;
 export const RESUME_FILE_TYPES = ".pdf,.doc,.docx";
 export const MAX_RESUME_SIZE_MB = 5; // 5MB for onboarding
 export const MAX_PROFILE_RESUME_SIZE_MB = 1; // 1MB for profile updates
+
+export const QUESTION_CATEGORIES = [
+  "tech",
+  "tech_allied",
+  "behavioral",
+] as const;

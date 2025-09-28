@@ -11,5 +11,6 @@ export interface UserProfile {
     targetPosition: string | null;
     yearsExperience: number | null;
     isOnboarded: boolean;
+    totalAttempts: number;
   };
 }

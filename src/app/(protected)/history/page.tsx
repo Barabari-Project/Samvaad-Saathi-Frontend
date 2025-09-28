@@ -6,7 +6,8 @@ import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import dayjs from "dayjs";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 interface InterviewItem {
   interviewId: number;
@@ -16,6 +17,8 @@ interface InterviewItem {
   createdAt: string;
   knowledgePercentage?: number;
   speechFluencyPercentage?: number;
+  resumeUsed: boolean;
+  attemptsCount: number;
 }
 
 interface InterviewsListResponse {
@@ -28,7 +31,25 @@ type InterviewStatus = "incomplete" | "completed";
 
 export default function InterviewHistory() {
   const [activeTab, setActiveTab] = useState<InterviewStatus>("incomplete");
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { useQuery } = createApiClient(APIService.INTERVIEWS);
+
+  // Read tab from query params on component mount
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && (tabParam === "incomplete" || tabParam === "completed")) {
+      setActiveTab(tabParam as InterviewStatus);
+    }
+  }, [searchParams]);
+
+  // Helper function to update tab and query params
+  const handleTabChange = (tab: InterviewStatus) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
 
   const {
     data: interviewsData,
@@ -64,19 +85,6 @@ export default function InterviewHistory() {
 
   const formatDate = (dateString: string) => {
     return dayjs(dateString).format("DD MMM , YYYY");
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case "hard":
-        return "text-red-600";
-      case "easy":
-        return "text-green-600";
-      case "medium":
-        return "text-yellow-600";
-      default:
-        return "text-gray-600";
-    }
   };
 
   if (isLoading) {
@@ -127,7 +135,7 @@ export default function InterviewHistory() {
                 ? "tab-active shadow-2xl rounded-xl"
                 : ""
             }`}
-            onClick={() => setActiveTab("incomplete")}
+            onClick={() => handleTabChange("incomplete")}
           >
             Incomplete
           </a>
@@ -136,7 +144,7 @@ export default function InterviewHistory() {
             className={`tab flex-1 ${
               activeTab === "completed" ? "tab-active" : ""
             }`}
-            onClick={() => setActiveTab("completed")}
+            onClick={() => handleTabChange("completed")}
           >
             Completed
           </a>
@@ -172,9 +180,15 @@ export default function InterviewHistory() {
                     {/* Difficulty Label - Top Right */}
                     <div className="absolute top-4 right-4">
                       <span
-                        className={`text-sm font-medium capitalize ${getDifficultyColor(
-                          item.difficulty
-                        )}`}
+                        className={`badge badge-soft ${
+                          item.difficulty?.toLowerCase() === "hard"
+                            ? "badge-error"
+                            : item.difficulty?.toLowerCase() === "easy"
+                            ? "badge-success"
+                            : item.difficulty?.toLowerCase() === "medium"
+                            ? "badge-warning"
+                            : "badge-neutral"
+                        }`}
                       >
                         {item.difficulty?.toUpperCase()}
                       </span>
@@ -183,7 +197,7 @@ export default function InterviewHistory() {
                     {/* Complete Interview Button - Bottom Right */}
                     <div className="flex justify-end">
                       <Link
-                        href={`/interview?interviewId=${item.interviewId}&useResume=false`}
+                        href={`/interview?interviewId=${item.interviewId}&useResume=${item.resumeUsed}`}
                         className="px-4 py-2 border border-black rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-50 transition-colors"
                       >
                         Complete Interview
@@ -207,55 +221,68 @@ export default function InterviewHistory() {
               <div className="space-y-3">
                 {completed.map((item) => (
                   <div
-                    key={item.interviewId}
+                    key={item?.interviewId}
                     className="bg-white rounded-xl shadow-lg p-4 relative"
                   >
                     {/* Role Title - Top Left */}
                     <h3 className="text-lg font-bold text-black mb-2">
-                      {item.track}
+                      {item?.track}
                     </h3>
 
                     {/* Date and Attempt - Below Title */}
                     <p className="text-sm text-black mb-4">
-                      {formatDate(item.createdAt)} / Attempt-1
+                      {formatDate(item?.createdAt)} / Attempt:{" "}
+                      {item?.attemptsCount}
                     </p>
 
                     {/* Difficulty Label - Top Right */}
                     <div className="absolute top-4 right-4">
                       <span
-                        className={`text-sm font-medium capitalize ${getDifficultyColor(
-                          item.difficulty
-                        )}`}
+                        className={`badge badge-soft ${
+                          item?.difficulty?.toLowerCase() === "hard"
+                            ? "badge-error"
+                            : item?.difficulty?.toLowerCase() === "easy"
+                            ? "badge-success"
+                            : item?.difficulty?.toLowerCase() === "medium"
+                            ? "badge-warning"
+                            : "badge-neutral"
+                        }`}
                       >
-                        {item.difficulty?.toUpperCase()}
+                        {item?.difficulty?.toUpperCase()}
                       </span>
                     </div>
 
                     {/* Progress indicators */}
-                    {(item.knowledgePercentage !== undefined ||
-                      item.speechFluencyPercentage !== undefined) && (
+                    {(item?.knowledgePercentage !== undefined ||
+                      item?.speechFluencyPercentage !== undefined) && (
                       <div className="flex items-center gap-4 mb-4">
                         <ConcentricRadialProgress
-                          size={120}
+                          size={150}
                           rings={[
                             {
                               value: item.knowledgePercentage ?? 0,
                               color: "#3b82f6",
                               ariaLabel: "Technical Knowledge progress",
+                              trackColor: "#3b82f6",
                             },
                             {
                               value: item.speechFluencyPercentage ?? 0,
                               color: "#6b7280",
                               ariaLabel: "Speech Fluency progress",
+                              trackColor: "#6b7280",
                             },
                           ]}
                           centerRender={(rings) => (
                             <div className="leading-4">
-                              <div className="text-lg font-medium">
-                                {Math.round(rings[0]?.value ?? 0)}%
+                              <div className="text-sm text-blue-500">
+                                {rings[0]?.value
+                                  ? `${Math.round(rings[0].value)}%`
+                                  : "-- %"}
                               </div>
-                              <div className="text-lg font-medium">
-                                {Math.round(rings[1]?.value ?? 0)}%
+                              <div className="text-sm">
+                                {rings[1]?.value
+                                  ? `${Math.round(rings[1].value)}%`
+                                  : "-- %"}
                               </div>
                             </div>
                           )}
@@ -286,10 +313,16 @@ export default function InterviewHistory() {
                     )}
 
                     {/* View Report Button - Bottom Right */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-2">
+                      <Link
+                        href={`/reattempt-interview?interviewId=${item.interviewId}`}
+                        className="btn btn-neutral btn-sm"
+                      >
+                        Reattempt
+                      </Link>
                       <Link
                         href={`/report-summary?interviewId=${item.interviewId}`}
-                        className="px-4 py-2 border border-black rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-50 transition-colors"
+                        className="btn btn-outline btn-sm"
                       >
                         View Report
                       </Link>

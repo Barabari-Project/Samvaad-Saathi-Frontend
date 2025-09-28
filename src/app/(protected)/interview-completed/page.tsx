@@ -78,7 +78,7 @@ const InterviewCompleted = () => {
 
           {/* Success Message */}
           <p className="py-4 sm:py-6 text-base sm:text-lg md:text-xl">
-            You have successfully completed your
+            You have successfully completed your{" "}
             <span className="text-primary font-semibold">{role}</span> interview
           </p>
 
