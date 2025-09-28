@@ -4,6 +4,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import { ClockIcon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
 import useEmblaCarousel from "embla-carousel-react";
 import Image from "next/image";
@@ -56,7 +57,7 @@ export default function HomePage() {
 
   // Helper function to format date
   const formatDate = (dateString: string) => {
-    return dayjs(dateString).format("DD MMM , YYYY");
+    return dayjs(dateString).format("DD MMM, YYYY");
   };
 
   // Helper function to get difficulty color
@@ -169,77 +170,106 @@ export default function HomePage() {
                           </div>
                         </div>
 
-                        {/* Radial Progress Chart */}
-                        <div className="flex items-center gap-4 mb-4">
-                          <ConcentricRadialProgress
-                            size={120}
-                            rings={[
-                              {
-                                value: interview.knowledgePercentage ?? 0,
-                                color: "#3b82f6",
-                                ariaLabel: "Technical Knowledge progress",
-                                trackColor: "#e5e7eb",
-                                thickness: 10,
-                              },
-                              {
-                                value: interview.speechFluencyPercentage ?? 0,
-                                color: "#6b7280",
-                                ariaLabel: "Speech Fluency progress",
-                                trackColor: "#e5e7eb",
-                                thickness: 8,
-                              },
-                            ]}
-                            centerRender={(rings) => (
-                              <div className="text-center">
-                                <div className="text-xs text-blue-500 font-bold">
-                                  {rings[0]?.value
-                                    ? `${Math.round(rings[0].value)}%`
-                                    : "0%"}
-                                </div>
-                                <div className="text-xs text-gray-500 font-bold">
-                                  {rings[1]?.value
-                                    ? `${Math.round(rings[1].value)}%`
-                                    : "0%"}
-                                </div>
+                        {/* Show completion message for active interviews, otherwise show progress data */}
+                        {interview.status.toLowerCase() === "active" ? (
+                          <div className="text-center py-8">
+                            <div className="mb-4">
+                              <div className="size-10 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <ClockIcon className="size-6 text-yellow-600" />
                               </div>
-                            )}
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-600 mb-2 font-semibold">
-                              Performance Score
-                            </p>
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                                <span className="text-sm text-gray-700">
-                                  Technical Knowledge
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                                <span className="text-sm text-gray-700">
-                                  Speech Fluency
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                            Actionable Insights
-                          </h4>
-                          {interview.topActionItems.map((item) => (
-                            <div key={item} className="flex items-start gap-2">
-                              <div className="flex-shrink-0 mt-1">
-                                <div className="size-1.5 bg-primary rounded-full"></div>
-                              </div>
-                              <p className="text-xs font-semibold text-gray-700">
-                                {item}
+                              <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                                Complete Your Interview
+                              </h4>
+                              <p className="text-sm text-gray-600 mb-2">
+                                Finish your interview to see detailed
+                                performance insights and actionable
+                                recommendations.
+                              </p>
+                              <p className="text-xs text-blue-600 font-medium italic">
+                                Every expert was once a beginner. Every pro was
+                                once an amateur. Keep going! 💪
                               </p>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Radial Progress Chart */}
+                            <div className="flex items-center gap-4 mb-4">
+                              <ConcentricRadialProgress
+                                size={120}
+                                rings={[
+                                  {
+                                    value: interview.knowledgePercentage ?? 0,
+                                    color: "#3b82f6",
+                                    ariaLabel: "Technical Knowledge progress",
+                                    trackColor: "#e5e7eb",
+                                    thickness: 10,
+                                  },
+                                  {
+                                    value:
+                                      interview.speechFluencyPercentage ?? 0,
+                                    color: "#6b7280",
+                                    ariaLabel: "Speech Fluency progress",
+                                    trackColor: "#e5e7eb",
+                                    thickness: 8,
+                                  },
+                                ]}
+                                centerRender={(rings) => (
+                                  <div className="text-center">
+                                    <div className="text-xs text-blue-500 font-bold">
+                                      {rings[0]?.value
+                                        ? `${Math.round(rings[0].value)}%`
+                                        : "0%"}
+                                    </div>
+                                    <div className="text-xs text-gray-500 font-bold">
+                                      {rings[1]?.value
+                                        ? `${Math.round(rings[1].value)}%`
+                                        : "0%"}
+                                    </div>
+                                  </div>
+                                )}
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-600 mb-2 font-semibold">
+                                  Performance Score
+                                </p>
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                                    <span className="text-sm text-gray-700">
+                                      Technical Knowledge
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                                    <span className="text-sm text-gray-700">
+                                      Speech Fluency
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                                Actionable Insights
+                              </h4>
+                              {interview.topActionItems.map((item) => (
+                                <div
+                                  key={item}
+                                  className="flex items-start gap-2"
+                                >
+                                  <div className="flex-shrink-0 mt-1">
+                                    <div className="size-1.5 bg-primary rounded-full"></div>
+                                  </div>
+                                  <p className="text-xs font-semibold text-gray-700">
+                                    {item}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
 
                         {/* Action buttons */}
                         <div className="card-actions justify-end">
