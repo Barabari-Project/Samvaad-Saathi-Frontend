@@ -69,10 +69,7 @@ export default function SignupPage() {
 
   if (isProcessing) {
     return (
-      <div
-        className="flex flex-col justify-center items-center w-full h-screen bg-cover bg-center bg-no-repeat px-4"
-        style={{ backgroundImage: "url('/welcome-bg.png')" }}
-      >
+      <div className="auth-page flex flex-col justify-center items-center w-full h-screen px-4">
         <div className="text-white text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-lg">Setting up your account...</p>
@@ -82,10 +79,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div
-      className="flex flex-col justify-center items-center w-full h-screen bg-cover bg-center bg-no-repeat px-4"
-      style={{ backgroundImage: "url('/welcome-bg.png')" }}
-    >
+    <div className="auth-page flex flex-col justify-center items-center w-full h-screen px-4">
       {/* Logo */}
       <Image
         src="/barabari_logo.png"

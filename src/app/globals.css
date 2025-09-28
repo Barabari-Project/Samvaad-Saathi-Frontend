@@ -25,6 +25,12 @@ body {
   font-family: var(--font-body), sans-serif;
   margin: 0;
   padding: 0;
+  background-image: url("/background-image.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 /* Apply heading font to all headings */
@@ -35,6 +41,15 @@ h4,
 h5,
 h6 {
   font-family: var(--font-heading), sans-serif;
+}
+
+/* Override background for auth pages */
+.auth-page {
+  background-image: url("/welcome-bg.png") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
 }
 
 /* Embla Carousel styles */

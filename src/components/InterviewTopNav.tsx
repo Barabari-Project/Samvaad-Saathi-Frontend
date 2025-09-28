@@ -18,7 +18,7 @@ export default function InterviewTopNav({
     <div className="fixed top-0 left-0 w-full">
       <div
         className={cn(
-          "flex items-center justify-between gap-2 p-4 bg-white",
+          "flex items-center justify-between gap-2 p-4 bg-white shadow",
           className
         )}
       >
