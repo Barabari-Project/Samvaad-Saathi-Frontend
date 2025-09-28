@@ -6,7 +6,6 @@ import { APIService } from "@/lib/api-config/src/config";
 import {
   EXPERIENCE_OPTIONS,
   MAX_RESUME_SIZE_MB,
-  RESUME_FILE_TYPES,
   ROLE_OPTIONS,
 } from "@/lib/constants";
 import { XMarkIcon } from "@heroicons/react/24/outline";
@@ -14,26 +13,20 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface Step2Props {
-  onNext: (data: {
-    target_position: string;
-    years_experience: string;
-    resume: File | null;
-  }) => void;
-  onBack: () => void;
+  onNext: (data: { target_position: string; years_experience: string }) => void;
   isLoading?: boolean;
 }
 
 // Create RESUME API client
 const resumeApiClient = createApiClient(APIService.RESUME);
 
-export default function Step2({
-  onNext,
-  onBack,
-  isLoading = false,
-}: Step2Props) {
+export default function Step2({ onNext, isLoading = false }: Step2Props) {
   const [role, setRole] = useState("");
   const [experience, setExperience] = useState("");
   const [resume, setResume] = useState<File | null>(null);
+
+  const roles = ROLE_OPTIONS;
+  const experiences = EXPERIENCE_OPTIONS;
 
   // Set up mutation for resume extraction
   const extractResumeMutation = resumeApiClient.useMutation({
@@ -48,9 +41,6 @@ export default function Step2({
     },
   });
 
-  const roles = ROLE_OPTIONS;
-  const experiences = EXPERIENCE_OPTIONS;
-
   const handleSubmit = async () => {
     // Call resume extraction API if resume is selected
     if (resume) {
@@ -58,25 +48,35 @@ export default function Step2({
         const formData = new FormData();
         formData.append("file", resume);
         await extractResumeMutation.mutateAsync(formData);
-      } catch (error) {
+      } catch {
         toast.error("Resume extraction failed");
         // Don't prevent form submission if extraction fails
       }
     }
 
+    // Pass data to parent component for profile API call
     onNext({
       target_position: role,
       years_experience: experience,
-      resume,
     });
   };
 
   const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.size <= MAX_RESUME_SIZE_MB * 1024 * 1024) {
+    if (file) {
+      // Check file type - only allow PDF
+      if (file.type !== "application/pdf") {
+        toast.error("Please select a PDF file only");
+        return;
+      }
+
+      // Check file size
+      if (file.size > MAX_RESUME_SIZE_MB * 1024 * 1024) {
+        toast.error(`File size must be less than ${MAX_RESUME_SIZE_MB}MB`);
+        return;
+      }
+
       setResume(file);
-    } else if (file) {
-      toast.error(`File size must be less than ${MAX_RESUME_SIZE_MB}MB`);
     }
   };
 
@@ -125,7 +125,7 @@ export default function Step2({
         {/* Experience Dropdown */}
         <div className="mb-6">
           <label className="block mb-3 text-[16px] font-noto font-[600] text-gray-800">
-            Experience Level
+            Years of Experience
           </label>
           <select
             value={experience}
@@ -133,11 +133,13 @@ export default function Step2({
             className="select select-bordered w-full h-[60px] text-gray-800 font-noto text-[16px] rounded-xl"
           >
             <option value="" disabled>
-              Select Experience Level
+              Select Years of Experience
             </option>
             {experiences.map((opt) => (
               <option key={opt} value={opt}>
-                {opt}
+                {opt === "0"
+                  ? "0 (Fresher)"
+                  : `${opt} year${opt === "1" ? "" : "s"}`}
               </option>
             ))}
           </select>
@@ -146,11 +148,11 @@ export default function Step2({
         {/* Resume Upload */}
         <div className="mb-6">
           <label className="block mb-3 text-[16px] font-noto font-[600] text-gray-800">
-            Resume (Optional, Max {MAX_RESUME_SIZE_MB}MB)
+            Resume (Optional, PDF only, Max {MAX_RESUME_SIZE_MB}MB)
           </label>
           <input
             type="file"
-            accept={RESUME_FILE_TYPES}
+            accept=".pdf"
             onChange={handleResumeUpload}
             className="file-input file-input-bordered w-full h-[60px] text-gray-800 font-noto text-[16px] rounded-xl"
           />
@@ -163,7 +165,7 @@ export default function Step2({
               <button
                 type="button"
                 onClick={handleRemoveResume}
-                className="text-red-500 hover:text-red-700 transition-colors"
+                className="btn btn-error btn-xs btn-soft"
                 title="Remove file"
               >
                 <XMarkIcon className="h-5 w-5" />
@@ -174,17 +176,24 @@ export default function Step2({
 
         <button
           onClick={handleSubmit}
-          disabled={!role || !experience || isLoading}
+          disabled={
+            !role || !experience || isLoading || extractResumeMutation.isPending
+          }
           className={`flex-1 py-6 rounded-xl btn btn-neutral btn-block mt-6 ${
-            role && experience && !isLoading
+            role && experience && !isLoading && !extractResumeMutation.isPending
               ? " hover:shadow-lg"
               : "bg-gray-300 cursor-not-allowed"
           }`}
         >
-          {isLoading ? (
-            <span className="loading loading-spinner loading-md"></span>
+          {isLoading || extractResumeMutation.isPending ? (
+            <span className="flex items-center gap-2">
+              <span className="loading loading-spinner loading-md"></span>
+              {extractResumeMutation.isPending
+                ? "Processing Resume..."
+                : "Creating Profile..."}
+            </span>
           ) : (
-            "Submit"
+            "Complete Setup"
           )}
         </button>
       </div>

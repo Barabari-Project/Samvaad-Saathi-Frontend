@@ -23,7 +23,6 @@ export default function Onboarding() {
     degree: "",
     university: "",
     target_position: "",
-    resume: null as File | null,
     years_experience: "",
   });
 
@@ -31,11 +30,10 @@ export default function Onboarding() {
   const updateProfileMutation = usersApiClient.useMutation({
     url: ENDPOINTS.USERS.PROFILE,
     method: "put",
-    successMessage: "Profile created successfully!",
     errorMessage: "Failed to create profile. Please try again.",
     options: {
       onSuccess: () => {
-        console.log("redirecting to home");
+        toast.success("Profile created successfully!");
 
         router.push("/home");
       },
@@ -47,24 +45,19 @@ export default function Onboarding() {
     setStep((prev) => prev + 1);
   };
 
-  const handleBack = () => setStep((prev) => prev - 1);
-
   const handleSubmit = async (data: {
     target_position: string;
     years_experience: string;
-    resume: File | null;
   }) => {
     setFormData((prev) => ({ ...prev, ...data }));
 
-    // Create FormData for the API call
-    const submitData = new FormData();
-    submitData.append("degree", formData.degree);
-    submitData.append("university", formData.university);
-    submitData.append("target_position", data.target_position);
-    submitData.append("years_experience", data.years_experience);
-    if (data.resume) {
-      submitData.append("resume", data.resume);
-    }
+    // Create object for the PROFILE API call (no file upload here)
+    const submitData = {
+      degree: formData.degree,
+      university: formData.university,
+      target_position: data.target_position,
+      years_experience: data.years_experience,
+    };
 
     try {
       await updateProfileMutation.mutateAsync(submitData);
@@ -139,7 +132,6 @@ export default function Onboarding() {
         {step === 2 && (
           <Step2
             onNext={handleSubmit}
-            onBack={handleBack}
             isLoading={updateProfileMutation.isPending}
           />
         )}

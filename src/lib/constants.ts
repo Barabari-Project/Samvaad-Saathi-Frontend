@@ -24,12 +24,7 @@ export const ROLE_OPTIONS = [
   "JavaScript Developer",
 ] as const;
 
-export const EXPERIENCE_OPTIONS = [
-  "Fresher",
-  "1-2 years",
-  "2-5 years",
-  "5+ years",
-] as const;
+export const EXPERIENCE_OPTIONS = ["0", "1", "2", "3", "4", "5"] as const;
 
 // File upload constants
 export const RESUME_FILE_TYPES = ".pdf,.doc,.docx";

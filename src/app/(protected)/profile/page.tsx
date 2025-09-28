@@ -448,7 +448,7 @@ export default function ProfilePage() {
 
             <div className="form-control">
               <label className="label flex justify-between items-center mb-2">
-                <span className="label-text">Experience Level</span>
+                <span className="label-text">Years of Experience</span>
 
                 {isEditingYearsExperience ? (
                   <button
@@ -493,7 +493,9 @@ export default function ProfilePage() {
                 <option value="">Not specified</option>
                 {EXPERIENCE_OPTIONS.map((exp) => (
                   <option key={exp} value={exp}>
-                    {exp}
+                    {exp === "0"
+                      ? "0 (Fresher)"
+                      : `${exp} year${exp === "1" ? "" : "s"}`}
                   </option>
                 ))}
               </select>
