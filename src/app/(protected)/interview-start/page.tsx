@@ -3,6 +3,7 @@
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import { ROLE_OPTIONS } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -44,14 +45,6 @@ export default function InterviewStartPage() {
       },
     },
   });
-
-  const roles = [
-    "Frontend Developer",
-    "Backend Developer",
-    "Full-Stack Developer",
-    "Data Scientist",
-    "DevOps Engineer",
-  ];
 
   const handleToggleResume = (checked: boolean) => {
     setUseResume(checked);
@@ -104,7 +97,7 @@ export default function InterviewStartPage() {
           <option value="" disabled>
             Select a role
           </option>
-          {roles.map((role) => (
+          {ROLE_OPTIONS.map((role) => (
             <option key={role} value={role}>
               {role}
             </option>

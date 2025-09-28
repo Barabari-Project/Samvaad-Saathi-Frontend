@@ -43,8 +43,8 @@ export default function HomePage() {
     {
       loop: true,
       align: "center",
-    },
-    [Autoplay({ delay: 4000, stopOnInteraction: false })]
+    }
+    // [Autoplay({ delay: 4000, stopOnInteraction: false })]
   );
 
   // Fetch interviews with summary data

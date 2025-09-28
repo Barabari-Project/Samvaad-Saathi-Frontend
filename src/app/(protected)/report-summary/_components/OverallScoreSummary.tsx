@@ -48,24 +48,6 @@ const OverallScoreSummary: React.FC<OverallScoreSummaryProps> = ({
             </div>
           </div>
           <ScoreBar label="Average" score={knowledgeCompetence.averagePct} />
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <ScoreBar
-              label="Accuracy"
-              score={knowledgeCompetence.breakdown.accuracy}
-            />
-            <ScoreBar
-              label="Depth"
-              score={knowledgeCompetence.breakdown.depth}
-            />
-            <ScoreBar
-              label="Coverage"
-              score={knowledgeCompetence.breakdown.coverage}
-            />
-            <ScoreBar
-              label="Relevance"
-              score={knowledgeCompetence.breakdown.relevance}
-            />
-          </div>
         </div>
 
         <div className="space-y-3">
@@ -88,24 +70,6 @@ const OverallScoreSummary: React.FC<OverallScoreSummaryProps> = ({
             </div>
           </div>
           <ScoreBar label="Average" score={speechStructure.averagePct} />
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <ScoreBar
-              label="Pacing"
-              score={speechStructure.breakdown.pacing * 20}
-            />
-            <ScoreBar
-              label="Structure"
-              score={speechStructure.breakdown.structure * 20}
-            />
-            <ScoreBar
-              label="Pauses"
-              score={speechStructure.breakdown.pauses * 20}
-            />
-            <ScoreBar
-              label="Grammar"
-              score={speechStructure.breakdown.grammar * 20}
-            />
-          </div>
         </div>
       </div>
     </SectionCard>

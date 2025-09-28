@@ -1,5 +1,6 @@
 "use client";
 
+import ConcentricRadialProgress from "@/components/ConcentricRadialProgress";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
@@ -13,6 +14,8 @@ interface InterviewItem {
   difficulty: string;
   status: string;
   createdAt: string;
+  knowledgePercentage?: number;
+  speechFluencyPercentage?: number;
 }
 
 interface InterviewsListResponse {
@@ -227,6 +230,60 @@ export default function InterviewHistory() {
                         {item.difficulty?.toUpperCase()}
                       </span>
                     </div>
+
+                    {/* Progress indicators */}
+                    {(item.knowledgePercentage !== undefined ||
+                      item.speechFluencyPercentage !== undefined) && (
+                      <div className="flex items-center gap-4 mb-4">
+                        <ConcentricRadialProgress
+                          size={120}
+                          rings={[
+                            {
+                              value: item.knowledgePercentage ?? 0,
+                              color: "#3b82f6",
+                              ariaLabel: "Technical Knowledge progress",
+                            },
+                            {
+                              value: item.speechFluencyPercentage ?? 0,
+                              color: "#6b7280",
+                              ariaLabel: "Speech Fluency progress",
+                            },
+                          ]}
+                          centerRender={(rings) => (
+                            <div className="leading-4">
+                              <div className="text-lg font-medium">
+                                {Math.round(rings[0]?.value ?? 0)}%
+                              </div>
+                              <div className="text-lg font-medium">
+                                {Math.round(rings[1]?.value ?? 0)}%
+                              </div>
+                            </div>
+                          )}
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-600 mb-2">
+                            Total Average Score
+                          </p>
+                          <p className="text-sm text-gray-600 mb-3">
+                            Total no. of attempts - 1
+                          </p>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                              <span className="text-sm text-gray-700">
+                                Technical Knowledge
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                              <span className="text-sm text-gray-700">
+                                Speech Fluency
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* View Report Button - Bottom Right */}
                     <div className="flex justify-end">

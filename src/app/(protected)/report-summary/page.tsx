@@ -8,7 +8,6 @@ import React from "react";
 import ActionableSteps from "./_components/ActionableSteps";
 import FinalSummary from "./_components/FinalSummary";
 import OverallScoreSummary from "./_components/OverallScoreSummary";
-import PerQuestionAnalysis from "./_components/PerQuestionAnalysis";
 import SkeletonLoader from "./_components/SkeletonLoader";
 import SummaryOverview from "./_components/SummaryOverview";
 import TopicHighlights from "./_components/TopicHighlights";
@@ -139,8 +138,6 @@ const ReportSummaryPage: React.FC = () => {
           reportData.actionableSteps.speechStructureFluency
         }
       />
-
-      <PerQuestionAnalysis perQuestion={reportData.perQuestion} />
 
       <TopicHighlights
         strengthsTopics={reportData.topicHighlights.strengthsTopics}
