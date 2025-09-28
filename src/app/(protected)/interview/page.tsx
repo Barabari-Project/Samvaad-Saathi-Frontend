@@ -53,6 +53,8 @@ const InterviewPage = () => {
   );
   const [pendingTranscription, setPendingTranscription] = useState(false);
   const [audioUploaded, setAudioUploaded] = useState(false);
+  const [transcribeAbortController, setTranscribeAbortController] =
+    useState<AbortController | null>(null);
 
   // Use the microphone permission hook
   const {
@@ -108,8 +110,8 @@ const InterviewPage = () => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        signal: transcribeAbortController?.signal,
       },
-      errorMessage: "Failed to transcribe audio. Please try again.",
     });
 
   // Complete interview mutation
@@ -211,6 +213,15 @@ const InterviewPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Cleanup: Cancel any ongoing transcribe request when component unmounts
+  useEffect(() => {
+    return () => {
+      if (transcribeAbortController) {
+        transcribeAbortController.abort();
+      }
+    };
+  }, [transcribeAbortController]);
+
   const handleAnswer = () => {
     // Start recording for this question
     setAnswerSubmitted(false); // Reset the submitted state when starting new recording
@@ -226,6 +237,11 @@ const InterviewPage = () => {
     // If we already have the blob, process it immediately
     if (recordedBlob && questionAttemptId !== null) {
       setPendingTranscription(true);
+
+      // Create new AbortController for this transcribe request
+      const abortController = new AbortController();
+      setTranscribeAbortController(abortController);
+
       const resampledBlob = await resampleAudioTo16kHz(recordedBlob);
 
       const formData = new FormData();
@@ -234,16 +250,28 @@ const InterviewPage = () => {
 
       formData.append("file", resampledBlob);
 
-      await transcribeMutation(formData);
+      try {
+        await transcribeMutation(formData);
 
-      // Move to next question after successful transcription
-      setAudioUploaded(false); // Reset audio uploaded state
-      resetStatesAndMoveNext();
+        // Move to next question after successful transcription
+        setAudioUploaded(false); // Reset audio uploaded state
+        resetStatesAndMoveNext();
 
-      analysisMutation({
-        analysisTypes: ["domain", "communication", "pace", "pause"],
-        questionAttemptId: questionAttemptId,
-      });
+        analysisMutation({
+          analysisTypes: ["domain", "communication", "pace", "pause"],
+          questionAttemptId: questionAttemptId,
+        });
+      } catch (error) {
+        // Handle cancellation or other errors
+        if (error instanceof Error && error.name === "AbortError") {
+          console.log("Transcribe request was cancelled");
+        } else {
+          console.error("Transcribe error:", error);
+        }
+      } finally {
+        // Clear the abort controller
+        setTranscribeAbortController(null);
+      }
     } else {
       setPendingTranscription(true);
     }
@@ -281,6 +309,26 @@ const InterviewPage = () => {
 
   const cancelSkip = () => {
     setShowSkipModal(false);
+  };
+
+  const handleRedo = () => {
+    // Cancel ongoing transcribe request if it exists
+    if (transcribeAbortController) {
+      transcribeAbortController.abort();
+      setTranscribeAbortController(null);
+    }
+
+    const questionId = `${currentIndex}`;
+    setRecordedAnswers((prev) => {
+      const copy = { ...prev };
+      delete copy[questionId];
+      return copy;
+    });
+    setAnswerSubmitted(false); // Reset submitted state when redoing
+    setPendingTranscription(false); // Reset pending transcription state
+    setAudioUploaded(false); // Reset audio uploaded state
+    // allow re-recording immediately
+    setTimeout(() => startRecording(), 0);
   };
 
   const handleSubmit = async () => {
@@ -369,7 +417,7 @@ const InterviewPage = () => {
                     mainBarColor="#1F285B"
                     secondaryBarColor="#1F285B"
                     isControlPanelShown={false}
-                    isProgressIndicatorShown={false}
+                    isProgressIndicatorShown={true}
                   />
                   <div className="flex items-center justify-end gap-2">
                     <button
@@ -416,17 +464,7 @@ const InterviewPage = () => {
                     <button
                       type="button"
                       className="btn btn-outline btn-sm"
-                      onClick={() => {
-                        const questionId = `${currentIndex}`;
-                        setRecordedAnswers((prev) => {
-                          const copy = { ...prev };
-                          delete copy[questionId];
-                          return copy;
-                        });
-                        setAnswerSubmitted(false); // Reset submitted state when redoing
-                        // allow re-recording immediately
-                        setTimeout(() => startRecording(), 0);
-                      }}
+                      onClick={handleRedo}
                     >
                       Redo
                     </button>
