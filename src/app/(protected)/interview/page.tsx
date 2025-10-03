@@ -291,6 +291,19 @@ const InterviewPage = () => {
     setTimeLeft(TIMER_DURATION);
   };
 
+  useEffect(() => {
+    // If the timer reaches 0, submit the answer
+    if (timeLeft === 0) {
+      console.log("isLast :", isLast);
+      if (isLast) {
+        handleSubmitClick();
+      } else {
+        stopRecording();
+        handleSubmitAnswer();
+      }
+    }
+  }, [timeLeft]);
+
   const resetStatesAndMoveNext = useCallback(() => {
     setAnswerSubmitted(false); // Reset submitted state when moving to next question
     setPendingTranscription(false); // Reset pending transcription state
