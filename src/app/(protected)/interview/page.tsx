@@ -8,7 +8,7 @@ import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import { resampleAudioTo16kHz } from "@/lib/audio-utils";
 import { MicrophoneIcon } from "@heroicons/react/24/solid";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
 
@@ -39,6 +39,8 @@ type TranscribeResponse = {
   saveError: string;
 };
 
+const TIMER_DURATION = 120; // 2 min
+
 const InterviewPage = () => {
   const router = useRouter();
   const [showGreeting, setShowGreeting] = useState(true);
@@ -56,6 +58,12 @@ const InterviewPage = () => {
   const [audioUploaded, setAudioUploaded] = useState(false);
   const [transcribeAbortController, setTranscribeAbortController] =
     useState<AbortController | null>(null);
+
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState(TIMER_DURATION); // TIMER_DURATION seconds
+  const [isActive, setIsActive] = useState(false);
+
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use the microphone permission hook
   const {
@@ -241,10 +249,53 @@ const InterviewPage = () => {
     };
   }, [transcribeAbortController]);
 
+  useEffect(() => {
+    // Start the timer when isActive becomes true
+    if (isActive) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prevSeconds) => {
+          if (prevSeconds <= 1) {
+            // Timer reaches zero, clear the interval
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+            }
+            setIsActive(false);
+            return 0;
+          }
+          return prevSeconds - 1;
+        });
+      }, 1000);
+    } else if (!isActive && timeLeft !== 0) {
+      // Pause the timer and clear the interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    }
+
+    // Cleanup function: clear the interval when the component unmounts
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isActive, timeLeft]);
+
+  // Function to toggle between start and pause
+  const handleStartPause = () => {
+    setIsActive(!isActive);
+  };
+
+  // Function to reset the timer to 2 minutes
+  const handleReset = () => {
+    setIsActive(false);
+    setTimeLeft(TIMER_DURATION);
+  };
+
   const resetStatesAndMoveNext = useCallback(() => {
     setAnswerSubmitted(false); // Reset submitted state when moving to next question
     setPendingTranscription(false); // Reset pending transcription state
     setAudioUploaded(false); // Reset audio uploaded state when moving to next question
+    handleReset(); // Reset timer for next question
     // Reset audio blob by clearing recording
     if (recorderControls.recordedBlob) {
       recorderControls.clearCanvas();
@@ -257,11 +308,12 @@ const InterviewPage = () => {
     setAnswerSubmitted(false); // Reset the submitted state when starting new recording
     setAudioUploaded(false); // Reset audio uploaded state
     startRecording();
+    handleStartPause(); // Start the timer
   };
 
   const handleSubmitAnswer = useCallback(async () => {
     // Stop recording and show the message
-
+    handleStartPause(); // Stop the timer
     setAnswerSubmitted(true);
 
     // If we already have the blob, process it immediately
@@ -359,8 +411,12 @@ const InterviewPage = () => {
     setAnswerSubmitted(false); // Reset submitted state when redoing
     setPendingTranscription(false); // Reset pending transcription state
     setAudioUploaded(false); // Reset audio uploaded state
+    handleReset(); // Reset timer for re-recording
     // allow re-recording immediately
-    setTimeout(() => startRecording(), 0);
+    setTimeout(() => {
+      startRecording();
+      handleStartPause(); // Start timer again for re-recording
+    }, 0);
   };
 
   const handleSubmit = async () => {
@@ -457,6 +513,21 @@ const InterviewPage = () => {
               {/* Recording / Playback UI */}
               {isRecordingInProgress || isPausedRecording ? (
                 <div className="mt-4 space-y-3">
+                  {/* Timer Display */}
+                  <div className="flex items-center justify-center">
+                    <div
+                      className={`text-lg font-mono font-bold px-3 py-1 rounded-full ${
+                        timeLeft <= 30
+                          ? "bg-red-100 text-red-700"
+                          : timeLeft <= 60
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {Math.floor(timeLeft / 60)}:
+                      {(timeLeft % 60).toString().padStart(2, "0")}
+                    </div>
+                  </div>
                   <VoiceVisualizer
                     controls={recorderControls}
                     height={50}
