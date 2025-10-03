@@ -600,16 +600,17 @@ const InterviewPage = () => {
                         type="button"
                         className="btn btn-primary btn-sm disabled:opacity-50"
                         onClick={handleNext}
-                        disabled={!audioUploaded || isTranscribing}
+                        // disabled={!audioUploaded || isTranscribing}
                       >
-                        {isTranscribing ? (
+                        {/* {isTranscribing ? (
                           <>
                             <span className="loading loading-spinner loading-xs"></span>
                             Uploading...
                           </>
                         ) : (
                           "Next ➜"
-                        )}
+                        )} */}
+                        Next ➜
                       </button>
                     )}
                   </div>
