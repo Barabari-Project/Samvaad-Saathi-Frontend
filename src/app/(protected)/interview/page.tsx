@@ -189,7 +189,7 @@ const InterviewPage = () => {
     } catch (error) {
       console.error("Failed to generate questions:", error);
     }
-  }, [interviewId, useResume, isReattempt, isResumed]);
+  }, [interviewId, useResume, isReattempt, isResumed]); // eslint-disable-line
 
   const startQuestionAttempt = useCallback(
     async (questionId: string | number) => {
@@ -208,7 +208,7 @@ const InterviewPage = () => {
         console.error("Failed to start question attempt:", error);
       }
     },
-    [interviewId]
+    [interviewId] // eslint-disable-line
   );
 
   // Generate questions when component mounts
@@ -224,7 +224,7 @@ const InterviewPage = () => {
         startQuestionAttempt(currentQuestion.interviewQuestionId);
       }
     }
-  }, [currentIndex, questions]);
+  }, [currentIndex, questions]); // eslint-disable-line
 
   // Show greeting for 1.5 seconds
   useEffect(() => {
@@ -304,7 +304,7 @@ const InterviewPage = () => {
     } else {
       setPendingTranscription(true);
     }
-  }, [recordedBlob, questionAttemptId]);
+  }, [recordedBlob, questionAttemptId]); // eslint-disable-line
 
   useEffect(() => {
     if (recordedBlob && questionAttemptId !== null) {

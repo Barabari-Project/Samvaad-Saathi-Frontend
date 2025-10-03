@@ -95,6 +95,12 @@ export const createApiClient = (service: APIService) => {
         }
       },
       onError: (error) => {
+        // Skip error handling for aborted requests
+        if (error.name === "CanceledError" || error.code === "ERR_CANCELED") {
+          console.log("Request was cancelled");
+          return;
+        }
+
         console.log("error :", error);
         if (errorMessage) toast.error(errorMessage);
 
