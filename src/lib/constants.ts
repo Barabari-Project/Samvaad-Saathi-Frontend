@@ -13,6 +13,7 @@ export const UNIVERSITY_OPTIONS = [
   "Government City College",
   "GDC Husaini Alam",
   "GDC Narayanguda",
+  "Others",
 ] as const;
 
 export const ROLE_OPTIONS = [

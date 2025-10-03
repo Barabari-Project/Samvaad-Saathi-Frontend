@@ -48,6 +48,7 @@ export default function ProfilePage() {
   const [isEditingDegree, setIsEditingDegree] = useState(false);
   const [isEditingUniversity, setIsEditingUniversity] = useState(false);
   const [isEditingResume, setIsEditingResume] = useState(false);
+  const [customUniversity, setCustomUniversity] = useState("");
   const [tempData, setTempData] = useState<ProfileFormData>({
     targetPosition: "",
     yearsExperience: "",
@@ -94,10 +95,19 @@ export default function ProfilePage() {
 
   const handleUniversityEdit = () => {
     setIsEditingUniversity(true);
+    const currentUniversity = user?.authorizedUser.university || "";
+    // Check if current university is in the predefined options
+    const isCustomUniversity =
+      currentUniversity &&
+      !UNIVERSITY_OPTIONS.includes(
+        currentUniversity as (typeof UNIVERSITY_OPTIONS)[number]
+      );
+
     setTempData((prev) => ({
       ...prev,
-      university: user?.authorizedUser.university || "",
+      university: isCustomUniversity ? "Others" : currentUniversity,
     }));
+    setCustomUniversity(isCustomUniversity ? currentUniversity : "");
   };
 
   const handleResumeEdit = () => {
@@ -142,13 +152,18 @@ export default function ProfilePage() {
         return;
       }
     } else {
+      const value =
+        field === "university" && tempData.university === "Others"
+          ? customUniversity
+          : tempData[field];
+
       submitData.append(
         field === "targetPosition"
           ? "target_position"
           : field === "yearsExperience"
           ? "years_experience"
           : field,
-        tempData[field]
+        value
       );
     }
 
@@ -216,6 +231,7 @@ export default function ProfilePage() {
       ...prev,
       university: user?.authorizedUser.university || "",
     }));
+    setCustomUniversity("");
   };
 
   const handleResumeCancel = () => {
@@ -430,7 +446,9 @@ export default function ProfilePage() {
                   handleInputChange("targetPosition", e.target.value)
                 }
               >
-                <option value="">Not specified</option>
+                <option value="" disabled>
+                  Not specified
+                </option>
                 {ROLE_OPTIONS.map((role) => (
                   <option key={role} value={role}>
                     {role}
@@ -490,7 +508,9 @@ export default function ProfilePage() {
                   handleInputChange("yearsExperience", e.target.value)
                 }
               >
-                <option value="">Not specified</option>
+                <option value="" disabled>
+                  Not specified
+                </option>
                 {EXPERIENCE_OPTIONS.map((exp) => (
                   <option key={exp} value={exp}>
                     {exp === "0"
@@ -550,7 +570,9 @@ export default function ProfilePage() {
                 }
                 onChange={(e) => handleInputChange("degree", e.target.value)}
               >
-                <option value="">Not specified</option>
+                <option value="" disabled>
+                  Not specified
+                </option>
                 {DEGREE_OPTIONS.map((degree) => (
                   <option key={degree} value={degree}>
                     {degree}
@@ -606,17 +628,33 @@ export default function ProfilePage() {
                     ? tempData.university
                     : user.authorizedUser.university || ""
                 }
-                onChange={(e) =>
-                  handleInputChange("university", e.target.value)
-                }
+                onChange={(e) => {
+                  handleInputChange("university", e.target.value);
+                  if (e.target.value !== "Others") {
+                    setCustomUniversity("");
+                  }
+                }}
               >
-                <option value="">Not specified</option>
+                <option value="" disabled>
+                  Not specified
+                </option>
                 {UNIVERSITY_OPTIONS.map((university) => (
                   <option key={university} value={university}>
                     {university}
                   </option>
                 ))}
               </select>
+              {isEditingUniversity && tempData.university === "Others" && (
+                <input
+                  type="text"
+                  placeholder="Enter university name"
+                  className={`input input-bordered w-full mt-2 ${
+                    errors.university ? "input-error" : ""
+                  }`}
+                  value={customUniversity}
+                  onChange={(e) => setCustomUniversity(e.target.value)}
+                />
+              )}
               {errors.university && (
                 <label className="label">
                   <span className="label-text-alt text-error">

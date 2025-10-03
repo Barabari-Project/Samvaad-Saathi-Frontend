@@ -9,6 +9,7 @@ interface Step1Props {
 export default function Step1({ onNext }: Step1Props) {
   const [degree, setDegree] = useState("");
   const [university, setUniversity] = useState("");
+  const [customUniversity, setCustomUniversity] = useState("");
 
   const degrees = DEGREE_OPTIONS;
   const universities = UNIVERSITY_OPTIONS;
@@ -52,7 +53,12 @@ export default function Step1({ onNext }: Step1Props) {
           </label>
           <select
             value={university}
-            onChange={(e) => setUniversity(e.target.value)}
+            onChange={(e) => {
+              setUniversity(e.target.value);
+              if (e.target.value !== "Others") {
+                setCustomUniversity("");
+              }
+            }}
             className="select select-bordered w-full h-[60px] text-gray-800 font-noto text-[16px] rounded-xl"
           >
             <option value="" disabled>
@@ -64,11 +70,30 @@ export default function Step1({ onNext }: Step1Props) {
               </option>
             ))}
           </select>
+          {university === "Others" && (
+            <input
+              type="text"
+              placeholder="Enter university name"
+              value={customUniversity}
+              onChange={(e) => setCustomUniversity(e.target.value)}
+              className="input input-bordered w-full h-[60px] text-gray-800 font-noto text-[16px] rounded-xl mt-3"
+            />
+          )}
         </div>
 
         <button
-          onClick={() => onNext({ degree, university })}
-          disabled={!degree || !university}
+          onClick={() =>
+            onNext({
+              degree,
+              university:
+                university === "Others" ? customUniversity : university,
+            })
+          }
+          disabled={
+            !degree ||
+            !university ||
+            (university === "Others" && !customUniversity.trim())
+          }
           className="btn btn-neutral btn-block p-6 rounded-xl mt-6"
         >
           Continue to Next Step

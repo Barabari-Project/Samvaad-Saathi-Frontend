@@ -8,7 +8,7 @@ import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import { resampleAudioTo16kHz } from "@/lib/audio-utils";
 import { MicrophoneIcon } from "@heroicons/react/24/solid";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
 
@@ -39,6 +39,8 @@ type TranscribeResponse = {
   saveError: string;
 };
 
+const TIMER_DURATION = 120; // 2 min
+
 const InterviewPage = () => {
   const router = useRouter();
   const [showGreeting, setShowGreeting] = useState(true);
@@ -56,6 +58,12 @@ const InterviewPage = () => {
   const [audioUploaded, setAudioUploaded] = useState(false);
   const [transcribeAbortController, setTranscribeAbortController] =
     useState<AbortController | null>(null);
+
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState(TIMER_DURATION); // TIMER_DURATION seconds
+  const [isActive, setIsActive] = useState(false);
+
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use the microphone permission hook
   const {
@@ -189,7 +197,7 @@ const InterviewPage = () => {
     } catch (error) {
       console.error("Failed to generate questions:", error);
     }
-  }, [interviewId, useResume, isReattempt, isResumed]);
+  }, [interviewId, useResume, isReattempt, isResumed]); // eslint-disable-line
 
   const startQuestionAttempt = useCallback(
     async (questionId: string | number) => {
@@ -208,7 +216,7 @@ const InterviewPage = () => {
         console.error("Failed to start question attempt:", error);
       }
     },
-    [interviewId]
+    [interviewId] // eslint-disable-line
   );
 
   // Generate questions when component mounts
@@ -224,7 +232,7 @@ const InterviewPage = () => {
         startQuestionAttempt(currentQuestion.interviewQuestionId);
       }
     }
-  }, [currentIndex, questions]);
+  }, [currentIndex, questions]); // eslint-disable-line
 
   // Show greeting for 1.5 seconds
   useEffect(() => {
@@ -241,10 +249,66 @@ const InterviewPage = () => {
     };
   }, [transcribeAbortController]);
 
+  useEffect(() => {
+    // Start the timer when isActive becomes true
+    if (isActive) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prevSeconds) => {
+          if (prevSeconds <= 1) {
+            // Timer reaches zero, clear the interval
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+            }
+            setIsActive(false);
+            return 0;
+          }
+          return prevSeconds - 1;
+        });
+      }, 1000);
+    } else if (!isActive && timeLeft !== 0) {
+      // Pause the timer and clear the interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    }
+
+    // Cleanup function: clear the interval when the component unmounts
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isActive, timeLeft]);
+
+  // Function to toggle between start and pause
+  const handleStartPause = () => {
+    setIsActive(!isActive);
+  };
+
+  // Function to reset the timer to 2 minutes
+  const handleReset = () => {
+    setIsActive(false);
+    setTimeLeft(TIMER_DURATION);
+  };
+
+  useEffect(() => {
+    // If the timer reaches 0, submit the answer
+    if (timeLeft === 0) {
+      console.log("isLast :", isLast);
+      if (isLast) {
+        handleSubmitClick();
+      } else {
+        stopRecording();
+        handleSubmitAnswer();
+      }
+    }
+  }, [timeLeft]);
+
   const resetStatesAndMoveNext = useCallback(() => {
     setAnswerSubmitted(false); // Reset submitted state when moving to next question
     setPendingTranscription(false); // Reset pending transcription state
     setAudioUploaded(false); // Reset audio uploaded state when moving to next question
+    handleReset(); // Reset timer for next question
     // Reset audio blob by clearing recording
     if (recorderControls.recordedBlob) {
       recorderControls.clearCanvas();
@@ -257,11 +321,12 @@ const InterviewPage = () => {
     setAnswerSubmitted(false); // Reset the submitted state when starting new recording
     setAudioUploaded(false); // Reset audio uploaded state
     startRecording();
+    handleStartPause(); // Start the timer
   };
 
   const handleSubmitAnswer = useCallback(async () => {
     // Stop recording and show the message
-
+    handleStartPause(); // Stop the timer
     setAnswerSubmitted(true);
 
     // If we already have the blob, process it immediately
@@ -304,7 +369,7 @@ const InterviewPage = () => {
     } else {
       setPendingTranscription(true);
     }
-  }, [recordedBlob, questionAttemptId]);
+  }, [recordedBlob, questionAttemptId]); // eslint-disable-line
 
   useEffect(() => {
     if (recordedBlob && questionAttemptId !== null) {
@@ -359,8 +424,12 @@ const InterviewPage = () => {
     setAnswerSubmitted(false); // Reset submitted state when redoing
     setPendingTranscription(false); // Reset pending transcription state
     setAudioUploaded(false); // Reset audio uploaded state
+    handleReset(); // Reset timer for re-recording
     // allow re-recording immediately
-    setTimeout(() => startRecording(), 0);
+    setTimeout(() => {
+      startRecording();
+      handleStartPause(); // Start timer again for re-recording
+    }, 0);
   };
 
   const handleSubmit = async () => {
@@ -457,6 +526,21 @@ const InterviewPage = () => {
               {/* Recording / Playback UI */}
               {isRecordingInProgress || isPausedRecording ? (
                 <div className="mt-4 space-y-3">
+                  {/* Timer Display */}
+                  <div className="flex items-center justify-center">
+                    <div
+                      className={`text-lg font-mono font-bold px-3 py-1 rounded-full ${
+                        timeLeft <= 30
+                          ? "bg-red-100 text-red-700"
+                          : timeLeft <= 60
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {Math.floor(timeLeft / 60)}:
+                      {(timeLeft % 60).toString().padStart(2, "0")}
+                    </div>
+                  </div>
                   <VoiceVisualizer
                     controls={recorderControls}
                     height={50}
@@ -529,16 +613,17 @@ const InterviewPage = () => {
                         type="button"
                         className="btn btn-primary btn-sm disabled:opacity-50"
                         onClick={handleNext}
-                        disabled={!audioUploaded || isTranscribing}
+                        // disabled={!audioUploaded || isTranscribing}
                       >
-                        {isTranscribing ? (
+                        {/* {isTranscribing ? (
                           <>
                             <span className="loading loading-spinner loading-xs"></span>
                             Uploading...
                           </>
                         ) : (
                           "Next ➜"
-                        )}
+                        )} */}
+                        Next ➜
                       </button>
                     )}
                   </div>
