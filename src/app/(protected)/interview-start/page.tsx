@@ -4,6 +4,12 @@ import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import { ROLE_OPTIONS } from "@/lib/constants";
+import {
+  trackDifficultySelected,
+  trackResumeToggleClick,
+  trackRoleSelected,
+  trackStartInterviewButtonClick,
+} from "@/lib/posthog/tracking.utils";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -50,6 +56,7 @@ export default function InterviewStartPage() {
 
   const handleToggleResume = (checked: boolean) => {
     setUseResume(checked);
+    trackResumeToggleClick(checked);
 
     if (checked) {
       toast.success("Resume will be considered for this interview");
@@ -63,6 +70,9 @@ export default function InterviewStartPage() {
       // You could add toast notification here
       return;
     }
+
+    // Track start interview button click
+    trackStartInterviewButtonClick(selectedRole, difficulty, useResume);
 
     try {
       // Create the interview and redirect on success
@@ -93,7 +103,10 @@ export default function InterviewStartPage() {
         </label>
         <select
           value={selectedRole}
-          onChange={(e) => setSelectedRole(e.target.value)}
+          onChange={(e) => {
+            setSelectedRole(e.target.value);
+            trackRoleSelected(e.target.value);
+          }}
           className="select select-bordered w-full"
         >
           <option value="" disabled>
@@ -127,7 +140,10 @@ export default function InterviewStartPage() {
                 name="difficulty"
                 value={opt.key}
                 checked={difficulty === opt.key}
-                onChange={(e) => setDifficulty(e.target.value)}
+                onChange={(e) => {
+                  setDifficulty(e.target.value);
+                  trackDifficultySelected(e.target.value);
+                }}
                 className="radio radio-sm"
               />
               <span className="text-[14px] text-black font-noto">
