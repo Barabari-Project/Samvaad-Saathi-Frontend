@@ -4,6 +4,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import { trackGetStartedButtonClick } from "@/lib/posthog/tracking.utils";
 import { ClockIcon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
 import useEmblaCarousel from "embla-carousel-react";
@@ -382,7 +383,10 @@ export default function HomePage() {
       </div>
 
       <Link href="interview-start">
-        <button className="btn btn-neutral btn-block btn-lg rounded-lg">
+        <button
+          className="btn btn-neutral btn-block btn-lg rounded-lg"
+          onClick={trackGetStartedButtonClick}
+        >
           Get Started
         </button>
       </Link>
