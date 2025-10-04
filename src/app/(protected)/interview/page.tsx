@@ -7,15 +7,13 @@ import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import { resampleAudioTo16kHz } from "@/lib/audio-utils";
 import {
-  trackAnswerRecorded,
   trackAnswerStartClick,
-  trackAudioPlayClick,
   trackInterviewQuestionView,
   trackRedoButtonClick,
   trackSkipQuestionClick,
   trackSubmitInterviewClick,
 } from "@/lib/posthog/tracking.utils";
-import { MicrophoneIcon, SpeakerWaveIcon } from "@heroicons/react/24/solid";
+import { MicrophoneIcon } from "@heroicons/react/24/solid";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

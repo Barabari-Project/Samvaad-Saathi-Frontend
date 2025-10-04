@@ -2,9 +2,14 @@
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import {
+  trackReportGenerationError,
+  trackReportGenerationStart,
+  trackScreenView,
+} from "@/lib/posthog/tracking.utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 const InterviewCompleted = () => {
@@ -15,6 +20,11 @@ const InterviewCompleted = () => {
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
 
   const apiClient = createApiClient(APIService.ANALYSIS);
+
+  // Track screen view on component mount
+  useEffect(() => {
+    trackScreenView("congratulations_page", interviewId || "");
+  }, [interviewId]);
 
   // Generate final report mutation
   const { mutateAsync: generateFinalReport, isPending: isGeneratingReport } =
@@ -27,6 +37,12 @@ const InterviewCompleted = () => {
         onSuccess: () => {
           router.push(`/report-summary?interviewId=${interviewId}`);
         },
+        onError: (error) => {
+          // Track report generation error
+          trackReportGenerationError(
+            error?.message || "Unknown error occurred"
+          );
+        },
       },
     });
 
@@ -36,6 +52,9 @@ const InterviewCompleted = () => {
       toast.error("No interview ID available");
       return;
     }
+
+    // Track report generation start
+    trackReportGenerationStart();
 
     // Set up timeout for 1 minute
     const timeoutId = setTimeout(() => {
