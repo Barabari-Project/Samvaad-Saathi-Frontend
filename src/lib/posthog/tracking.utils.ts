@@ -779,3 +779,85 @@ export const trackReportGenerationError = (errorDetails: string): void => {
     error_details: errorDetails,
   });
 };
+
+// Profile tracking functions
+/**
+ * Track profile edit button clicks
+ *
+ * @param fieldName - The name of the field being edited
+ *
+ * @example
+ * ```typescript
+ * trackProfileEditButtonClick("targetPosition");
+ * trackProfileEditButtonClick("degree");
+ * trackProfileEditButtonClick("resume");
+ * ```
+ */
+export const trackProfileEditButtonClick = (fieldName: string): void => {
+  trackEvent(EVENTS.PROFILE_EDIT_BUTTON_CLICK, {
+    field_name: fieldName,
+  });
+};
+
+/**
+ * Track profile field value changes
+ *
+ * @param fieldName - The name of the field being changed
+ * @param newValue - The new value being set
+ *
+ * @example
+ * ```typescript
+ * trackProfileFieldValueChanged("targetPosition", "Software Engineer");
+ * trackProfileFieldValueChanged("degree", "Bachelor of Technology");
+ * ```
+ */
+export const trackProfileFieldValueChanged = (
+  fieldName: string,
+  newValue: string
+): void => {
+  trackEvent(EVENTS.PROFILE_FIELD_VALUE_CHANGED, {
+    field_name: fieldName,
+    new_value: newValue,
+  });
+};
+
+/**
+ * Track profile update button clicks
+ *
+ * @param fieldName - The name of the field being updated
+ *
+ * @example
+ * ```typescript
+ * trackProfileUpdateButtonClick("targetPosition");
+ * trackProfileUpdateButtonClick("resume");
+ * ```
+ */
+export const trackProfileUpdateButtonClick = (fieldName: string): void => {
+  trackEvent(EVENTS.PROFILE_UPDATE_BUTTON_CLICK, {
+    field_name: fieldName,
+  });
+};
+
+/**
+ * Track profile help button clicks
+ *
+ * @example
+ * ```typescript
+ * trackProfileHelpButtonClick();
+ * ```
+ */
+export const trackProfileHelpButtonClick = (): void => {
+  trackEvent(EVENTS.PROFILE_HELP_BUTTON_CLICK);
+};
+
+/**
+ * Track profile support button clicks
+ *
+ * @example
+ * ```typescript
+ * trackProfileSupportButtonClick();
+ * ```
+ */
+export const trackProfileSupportButtonClick = (): void => {
+  trackEvent(EVENTS.PROFILE_SUPPORT_BUTTON_CLICK);
+};

@@ -47,9 +47,17 @@ export const EVENTS = {
   REPORT_GENERATION_START: "report_generation_start",
   VIEW_REPORT_BUTTON_CLICK: "view_report_button_click",
   REPORT_GENERATION_ERROR: "report_generation_error",
+
+  // Profile events
+  PROFILE_EDIT_BUTTON_CLICK: "profile_edit_button_click",
+  PROFILE_FIELD_VALUE_CHANGED: "profile_field_value_changed",
+  PROFILE_UPDATE_BUTTON_CLICK: "profile_update_button_click",
+  PROFILE_HELP_BUTTON_CLICK: "profile_help_button_click",
+  PROFILE_SUPPORT_BUTTON_CLICK: "profile_support_button_click",
 } as const;
 
 export const SCREEN_VIEW = {
+  SIGNUP_PAGE: "signup_page",
   HOME_PAGE: "home_page",
   ONBOARDING_SETUP_PAGE: "onboarding_setup_page",
   PROFILE_PAGE: "profile_page",

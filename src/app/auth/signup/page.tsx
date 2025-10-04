@@ -1,10 +1,12 @@
 "use client";
 
 import { ENDPOINTS } from "@/lib/api-config";
+import { SCREEN_VIEW } from "@/lib/posthog/events";
 import {
   trackLoginAttempt,
   trackLoginFailure,
   trackLoginSuccess,
+  trackScreenView,
 } from "@/lib/posthog/tracking.utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,6 +19,10 @@ export default function SignupPage() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasTrackedLoginAttempt, setHasTrackedLoginAttempt] = useState(false);
+
+  useEffect(() => {
+    trackScreenView(SCREEN_VIEW.SIGNUP_PAGE);
+  }, []);
 
   useEffect(() => {
     const handleTokenExtraction = () => {
