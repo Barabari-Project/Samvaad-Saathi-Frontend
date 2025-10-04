@@ -48,3 +48,14 @@ export const EVENTS = {
   VIEW_REPORT_BUTTON_CLICK: "view_report_button_click",
   REPORT_GENERATION_ERROR: "report_generation_error",
 } as const;
+
+export const SCREEN_VIEW = {
+  HOME_PAGE: "home_page",
+  ONBOARDING_SETUP_PAGE: "onboarding_setup_page",
+  PROFILE_PAGE: "profile_page",
+  INTERVIEW_PAGE: "interview_page",
+  INTERVIEW_COMPLETED_PAGE: "interview_completed_page",
+  CONGRATULATIONS_PAGE: "congratulations_page",
+  OVERALL_REPORT_PAGE: "overall_report_page",
+  DASHBOARD: "dashboard",
+} as const;
