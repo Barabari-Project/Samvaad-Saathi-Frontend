@@ -1,3 +1,4 @@
+import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import AppProvider from "@/components/providers/app-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import type { Metadata } from "next";
@@ -161,7 +162,9 @@ export default function RootLayout({
       >
         <AppProvider>
           <AuthProvider>
-            <Suspense fallback={null}>{children}</Suspense>
+            <AnalyticsProvider>
+              <Suspense fallback={null}>{children}</Suspense>
+            </AnalyticsProvider>
             <Toaster />
           </AuthProvider>
         </AppProvider>
