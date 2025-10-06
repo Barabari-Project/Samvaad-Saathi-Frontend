@@ -1,52 +1,19 @@
 "use client";
 
-import ConcentricRadialProgress from "@/components/ConcentricRadialProgress";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import dayjs from "dayjs";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-
-interface InterviewItem {
-  interviewId: number;
-  track: string;
-  difficulty: string;
-  status: string;
-  createdAt: string;
-  knowledgePercentage?: number;
-  speechFluencyPercentage?: number;
-  resumeUsed: boolean;
-  attemptsCount: number;
-}
-
-interface InterviewsListResponse {
-  items: InterviewItem[];
-  nextCursor: number | null;
-  limit: number;
-}
-
-interface ResumeInterviewQuestion {
-  interviewQuestionId: number;
-  text: string;
-  topic: string;
-  category: string;
-  status: string;
-  resumeUsed: boolean;
-}
-
-interface ResumeInterviewResponse {
-  interviewId: number;
-  track: string;
-  difficulty: string;
-  questions: ResumeInterviewQuestion[];
-  totalQuestions: number;
-  attemptedQuestions: number;
-  remainingQuestions: number;
-}
-
-type InterviewStatus = "incomplete" | "completed";
+import CompletedInterviewsTab from "./_components/CompletedInterviewsTab";
+import IncompleteInterviewsTab from "./_components/IncompleteInterviewsTab";
+import {
+  InterviewItem,
+  InterviewStatus,
+  InterviewsListResponse,
+  ResumeInterviewResponse,
+} from "./_components/types";
 
 export default function InterviewHistory() {
   const [activeTab, setActiveTab] = useState<InterviewStatus>("incomplete");
@@ -81,13 +48,15 @@ export default function InterviewHistory() {
   });
 
   // Mutation for resume interview
-  const { loading: isResumingInterview, mutateAsync: resumeInterviewMutation } =
-    useMutation<ResumeInterviewResponse, { interviewId: number }>({
-      url: ENDPOINTS.INTERVIEWS.RESUME_INTERVIEW,
-      method: "post",
-      successMessage: "Interview resumed successfully!",
-      errorMessage: "Failed to resume interview. Please try again.",
-    });
+  const { mutateAsync: resumeInterviewMutation } = useMutation<
+    ResumeInterviewResponse,
+    { interviewId: number }
+  >({
+    url: ENDPOINTS.INTERVIEWS.RESUME_INTERVIEW,
+    method: "post",
+    successMessage: "Interview resumed successfully!",
+    errorMessage: "Failed to resume interview. Please try again.",
+  });
 
   const { incomplete, completed } = useMemo(() => {
     if (!interviewsData?.items) {
@@ -111,28 +80,22 @@ export default function InterviewHistory() {
     };
   }, [interviewsData]);
 
-  const formatDate = (dateString: string) => {
-    return dayjs(dateString).format("DD MMM , YYYY");
-  };
-
   // Handle complete interview
-  const handleCompleteInterview = async (interviewId: number) => {
-    try {
-      const response = await resumeInterviewMutation({ interviewId });
+  const handleCompleteInterview = async (
+    interviewId: number
+  ): Promise<void> => {
+    const response = await resumeInterviewMutation({ interviewId });
 
-      // Navigate to interview page with resumed questions
-      const resumeParams = new URLSearchParams({
-        interviewId: response.interviewId.toString(),
-        role: response.track,
-        useResume: "true",
-        selectedQuestions: JSON.stringify(response.questions),
-        resumed: "true",
-      });
+    // Navigate to interview page with resumed questions
+    const resumeParams = new URLSearchParams({
+      interviewId: response.interviewId.toString(),
+      role: response.track,
+      useResume: "true",
+      selectedQuestions: JSON.stringify(response.questions),
+      resumed: "true",
+    });
 
-      router.push(`/interview?${resumeParams.toString()}`);
-    } catch (error) {
-      console.error("Failed to resume interview:", error);
-    }
+    router.push(`/interview?${resumeParams.toString()}`);
   };
 
   if (isLoading) {
@@ -199,197 +162,12 @@ export default function InterviewHistory() {
         </div>
 
         {activeTab === "incomplete" ? (
-          <div>
-            <p className="text-[12px] text-black/60 mb-3">
-              This page lists all interviews you have put on hold.
-            </p>
-
-            {incomplete.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No incomplete interviews found.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {incomplete.map((item) => (
-                  <div
-                    key={item.interviewId}
-                    className="bg-white rounded-xl shadow-lg p-4 relative"
-                  >
-                    {/* Role Title - Top Left */}
-                    <h3 className="text-lg font-bold text-black mb-2">
-                      {item.track}
-                    </h3>
-
-                    {/* Date and Attempt - Below Title */}
-                    <p className="text-sm text-black mb-4">
-                      {formatDate(item.createdAt)} / Attempt-1
-                    </p>
-
-                    {/* Difficulty Label - Top Right */}
-                    <div className="absolute top-4 right-4">
-                      <span
-                        className={`badge badge-xs badge-soft ${
-                          item.difficulty?.toLowerCase() === "hard"
-                            ? "badge-error"
-                            : item.difficulty?.toLowerCase() === "easy"
-                            ? "badge-success"
-                            : item.difficulty?.toLowerCase() === "medium"
-                            ? "badge-warning"
-                            : "badge-neutral"
-                        }`}
-                      >
-                        {item.difficulty?.toUpperCase()}
-                      </span>
-                    </div>
-
-                    {/* Complete Interview Button - Bottom Right */}
-                    <div className="flex justify-end">
-                      <button
-                        onClick={() =>
-                          handleCompleteInterview(item.interviewId)
-                        }
-                        disabled={isResumingInterview}
-                        className="px-4 py-2 border border-black rounded-lg bg-white text-black font-bold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isResumingInterview ? (
-                          <>
-                            <span className="loading loading-spinner loading-xs mr-2"></span>
-                            Resuming...
-                          </>
-                        ) : (
-                          "Complete Interview"
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <IncompleteInterviewsTab
+            incomplete={incomplete}
+            onCompleteInterview={handleCompleteInterview}
+          />
         ) : (
-          <div>
-            <p className="text-[12px] text-black/60 mb-3">
-              Access Your Interview History
-            </p>
-            {completed.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No completed interviews found.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {completed.map((item) => (
-                  <div
-                    key={item?.interviewId}
-                    className="bg-white rounded-xl shadow-lg p-4 relative"
-                  >
-                    {/* Role Title - Top Left */}
-                    <h3 className="text-lg font-bold text-black mb-2">
-                      {item?.track}
-                    </h3>
-
-                    {/* Date and Attempt - Below Title */}
-                    <p className="text-sm text-black mb-4">
-                      {formatDate(item?.createdAt)} / Attempt:{" "}
-                      {item?.attemptsCount}
-                    </p>
-
-                    {/* Difficulty Label - Top Right */}
-                    <div className="absolute top-4 right-4">
-                      <span
-                        className={`badge badge-xs badge-soft ${
-                          item?.difficulty?.toLowerCase() === "hard"
-                            ? "badge-error"
-                            : item?.difficulty?.toLowerCase() === "easy"
-                            ? "badge-success"
-                            : item?.difficulty?.toLowerCase() === "medium"
-                            ? "badge-warning"
-                            : "badge-neutral"
-                        }`}
-                      >
-                        {item?.difficulty?.toUpperCase()}
-                      </span>
-                    </div>
-
-                    {/* Progress indicators */}
-                    {(item?.knowledgePercentage !== undefined ||
-                      item?.speechFluencyPercentage !== undefined) && (
-                      <div className="flex items-center gap-4 mb-4">
-                        <ConcentricRadialProgress
-                          size={150}
-                          rings={[
-                            {
-                              value: item.knowledgePercentage ?? 0,
-                              color: "#3b82f6",
-                              ariaLabel: "Technical Knowledge progress",
-                              trackColor: "#3b82f6",
-                            },
-                            {
-                              value: item.speechFluencyPercentage ?? 0,
-                              color: "#6b7280",
-                              ariaLabel: "Speech Fluency progress",
-                              trackColor: "#6b7280",
-                            },
-                          ]}
-                          centerRender={(rings) => (
-                            <div className="leading-4">
-                              <div className="text-sm text-blue-500">
-                                {rings[0]?.value
-                                  ? `${Math.round(rings[0].value)}%`
-                                  : "-- %"}
-                              </div>
-                              <div className="text-sm">
-                                {rings[1]?.value
-                                  ? `${Math.round(rings[1].value)}%`
-                                  : "-- %"}
-                              </div>
-                            </div>
-                          )}
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-600 mb-2">
-                            Total Average Score
-                          </p>
-                          <p className="text-sm text-gray-600 mb-3">
-                            Total no. of attempts - 1
-                          </p>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                              <span className="text-sm text-gray-700">
-                                Technical Knowledge
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                              <span className="text-sm text-gray-700">
-                                Speech Fluency
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* View Report Button - Bottom Right */}
-                    <div className="flex justify-end gap-2">
-                      <Link
-                        href={`/reattempt-interview?interviewId=${item.interviewId}&role=${item.track}&attemptsCount=${item.attemptsCount}`}
-                        className="btn btn-neutral btn-sm"
-                      >
-                        Reattempt
-                      </Link>
-                      <Link
-                        href={`/report-summary?interviewId=${item.interviewId}`}
-                        className="btn btn-outline btn-sm"
-                      >
-                        View Report
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <CompletedInterviewsTab completed={completed} />
         )}
       </div>
     </div>
