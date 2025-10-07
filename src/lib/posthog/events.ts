@@ -54,6 +54,9 @@ export const EVENTS = {
   PROFILE_UPDATE_BUTTON_CLICK: "profile_update_button_click",
   PROFILE_HELP_BUTTON_CLICK: "profile_help_button_click",
   PROFILE_SUPPORT_BUTTON_CLICK: "profile_support_button_click",
+
+  // Error events
+  API_ERROR: "api_error",
 } as const;
 
 export const SCREEN_VIEW = {

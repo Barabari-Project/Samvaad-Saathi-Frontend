@@ -147,7 +147,6 @@ export default function HomePage() {
     <div className="flex flex-col py-6">
       <div className="flex justify-between items-center relative">
         <h2 className="text-2xl font-bold">Hi {userName},</h2>
-
         <Image
           width={50}
           height={50}

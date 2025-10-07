@@ -109,6 +109,54 @@ export const trackError = (
 };
 
 /**
+ * Track API errors with context
+ *
+ * @param error - The API error object
+ * @param context - Additional context about the API call
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const response = await apiCall();
+ * } catch (error) {
+ *   trackApiError(error as AxiosError, {
+ *     endpoint: "/api/interviews",
+ *     method: "POST",
+ *     operation: "create_interview",
+ *     status_code: error.response?.status
+ *   });
+ * }
+ * ```
+ *
+ * @note This function automatically tracks API errors in both mutation and query operations
+ * when using the createApiClient hook. You can also call it manually for custom error handling.
+ */
+export const trackApiError = (
+  error: Error,
+  context: {
+    endpoint?: string;
+    method?: string;
+    operation?: string;
+    status_code?: number;
+    request_id?: string;
+    user_id?: string;
+  } = {}
+): void => {
+  if (typeof window !== "undefined") {
+    const errorProperties = {
+      error_type: "api_error",
+      error_message: error.message,
+      error_stack: error.stack,
+      ...context,
+    };
+
+    posthog.captureException(error, errorProperties);
+    // Also track as a custom event for better filtering
+    trackEvent(EVENTS.API_ERROR, errorProperties);
+  }
+};
+
+/**
  * Track sign up events (useful for funnels)
  *
  * @param method - The signup method used (default: "email")
