@@ -1,5 +1,6 @@
 "use client";
 
+import { trackBottomNavClick } from "@/lib/posthog/tracking.utils";
 import { HomeIcon, ListBulletIcon, UserIcon } from "@heroicons/react/24/solid";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -24,6 +25,12 @@ export default function BottomNav({ className = "" }: { className?: string }) {
     "flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 hover:text-white";
   const isActive = (key: string) => active === key;
 
+  // Handle navigation with tracking
+  const handleNavigation = (destination: string) => {
+    trackBottomNavClick(destination);
+    router.push(`/${destination}`);
+  };
+
   return (
     <nav
       className={`fixed bottom-0 left-0 w-full h-16 bg-[#1F285B] rounded-t-[14px] flex justify-around items-center ${className}`}
@@ -33,30 +40,30 @@ export default function BottomNav({ className = "" }: { className?: string }) {
         className={`${baseItemClass} ${
           isActive("history") ? "text-white" : "text-gray-400"
         }`}
-        onClick={() => router.push("/history")}
+        onClick={() => handleNavigation("history")}
         aria-label="Go to history"
       >
-        <ListBulletIcon className="w-7 h-7" />
+        <ListBulletIcon className="size-7" />
       </button>
 
       <button
         className={`${baseItemClass} ${
           isActive("home") ? "text-white" : "text-gray-400"
         }`}
-        onClick={() => router.push("/home")}
+        onClick={() => handleNavigation("home")}
         aria-label="Go to home"
       >
-        <HomeIcon className="w-7 h-7" />
+        <HomeIcon className="size-7" />
       </button>
 
       <button
         className={`${baseItemClass} ${
           isActive("profile") ? "text-white" : "text-gray-400"
         }`}
-        onClick={() => router.push("/profile")}
+        onClick={() => handleNavigation("profile")}
         aria-label="Go to profile"
       >
-        <UserIcon className="w-7 h-7" />
+        <UserIcon className="size-7" />
       </button>
     </nav>
   );

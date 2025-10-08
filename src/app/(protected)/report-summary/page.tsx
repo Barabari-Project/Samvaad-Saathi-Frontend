@@ -3,8 +3,10 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import { EVENTS, SCREEN_VIEW } from "@/lib/posthog/events";
+import { trackScreenView } from "@/lib/posthog/tracking.utils";
 import { useSearchParams } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 import ActionableSteps from "./_components/ActionableSteps";
 import FinalSummary from "./_components/FinalSummary";
 import OverallScoreSummary from "./_components/OverallScoreSummary";
@@ -131,6 +133,10 @@ const ReportSummaryPage: React.FC = () => {
     url: ENDPOINTS.ANALYSIS.GET_SUMMARY_REPORT(interviewId || ""),
     enabled: !!interviewId,
   });
+
+  useEffect(() => {
+    trackScreenView(SCREEN_VIEW.OVERALL_REPORT_PAGE, interviewId || "");
+  }, [interviewId]);
 
   if (isLoading) {
     return <SkeletonLoader />;
