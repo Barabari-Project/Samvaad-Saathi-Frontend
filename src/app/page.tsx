@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 
 export default function HomePage() {
   const { user, loading } = useAuth();
-  console.log("user :", user);
   const router = useRouter();
   const [shouldRedirect, setShouldRedirect] = useState<string | null>(null);
 
@@ -23,7 +22,6 @@ export default function HomePage() {
     }
 
     if (user.authorizedUser.isOnboarded) {
-      console.log("redirecting to home");
       setShouldRedirect("/home");
       return;
     } else {

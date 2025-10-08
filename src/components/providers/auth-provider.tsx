@@ -49,7 +49,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // If user is loaded and NOT onboarded, redirect to onboarding
     if (user && !loading && !user.authorizedUser.isOnboarded) {
-      console.log("redirecting to onboarding");
       setShouldRedirect("/onboarding");
       return;
     }
