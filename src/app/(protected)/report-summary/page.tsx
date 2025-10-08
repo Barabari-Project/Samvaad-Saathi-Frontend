@@ -10,6 +10,7 @@ import React, { useEffect } from "react";
 import ActionableSteps from "./_components/ActionableSteps";
 import FinalSummary from "./_components/FinalSummary";
 import OverallScoreSummary from "./_components/OverallScoreSummary";
+import PerQuestionAnalysis from "./_components/PerQuestionAnalysis";
 import SkeletonLoader from "./_components/SkeletonLoader";
 import SummaryOverview from "./_components/SummaryOverview";
 import TopicHighlights from "./_components/TopicHighlights";
@@ -17,7 +18,8 @@ import TopicHighlights from "./_components/TopicHighlights";
 // API Response Types
 interface ReportResponse {
   interviewId: number;
-  overallScoreSummary: {
+  track: string;
+  metrics: {
     knowledgeCompetence: {
       average5pt: number;
       averagePct: number;
@@ -39,34 +41,37 @@ interface ReportResponse {
       };
     };
   };
-  finalSummary: {
-    strengths: {
-      knowledgeRelated: string[];
-      speechFluencyRelated: string[];
-    };
-    areasOfImprovement: {
-      knowledgeRelated: string[];
-      speechFluencyRelated: string[];
-    };
+  strengths: {
+    heading: string;
+    subtitle: string | null;
+    groups: Array<{
+      label: string;
+      items: string[];
+    }>;
   };
-  actionableSteps: {
-    knowledgeDevelopment: {
-      targetedConceptReinforcement: string[];
-      examplePractice: string[];
-      conceptualDepth: string[];
-    };
-    speechStructureFluency: {
-      fluencyDrills: string[];
-      grammarPractice: string[];
-      structureFramework: string[];
-    };
+  areasOfImprovement: {
+    heading: string;
+    subtitle: string | null;
+    groups: Array<{
+      label: string;
+      items: string[];
+    }>;
+  };
+  actionableInsights: {
+    heading: string;
+    subtitle: string | null;
+    groups: Array<{
+      label: string;
+      items: string[];
+    }>;
   };
   metadata: {
     totalQuestions: number;
     usedQuestions: number;
     model: string;
     latencyMs: number;
-    generatedAt: string | null;
+    generatedAt: string;
+    resumeUsed: boolean;
   };
   perQuestion: Array<{
     questionAttemptId: number;
@@ -75,11 +80,41 @@ interface ReportResponse {
     knowledgeScorePct: number;
     speechScorePct: number;
   }>;
+  perQuestionAnalysis: Array<{
+    questionAttemptId: number;
+    questionText: string;
+    keyTakeaways: string[];
+    knowledgeScorePct: number | null;
+    speechScorePct: number;
+    strengths: {
+      heading: string;
+      subtitle: string;
+      groups: Array<{
+        label: string;
+        items: string[];
+      }>;
+    };
+    areasOfImprovement: {
+      heading: string;
+      subtitle: string;
+      groups: Array<{
+        label: string;
+        items: string[];
+      }>;
+    };
+    actionableInsights: {
+      heading: string;
+      subtitle: string;
+      groups: Array<{
+        label: string;
+        items: string[];
+      }>;
+    };
+  }>;
   topicHighlights: {
     strengthsTopics: string[];
     improvementTopics: string[];
   };
-  track: string;
 }
 
 const ReportSummaryPage: React.FC = () => {
@@ -119,7 +154,7 @@ const ReportSummaryPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-6 py-4 sm:py-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold">
           {reportData?.track
@@ -136,25 +171,19 @@ const ReportSummaryPage: React.FC = () => {
       />
 
       <OverallScoreSummary
-        knowledgeCompetence={reportData.overallScoreSummary.knowledgeCompetence}
-        speechStructure={reportData.overallScoreSummary.speechStructure}
+        knowledgeCompetence={reportData.metrics.knowledgeCompetence}
+        speechStructure={reportData.metrics.speechStructure}
       />
 
       <FinalSummary
-        strengths={reportData.finalSummary.strengths}
-        areasOfImprovement={reportData.finalSummary.areasOfImprovement}
+        strengths={reportData.strengths}
+        areasOfImprovement={reportData.areasOfImprovement}
       />
 
-      <ActionableSteps
-        knowledgeDevelopment={reportData.actionableSteps.knowledgeDevelopment}
-        speechStructureFluency={
-          reportData.actionableSteps.speechStructureFluency
-        }
-      />
+      <ActionableSteps actionableInsights={reportData.actionableInsights} />
 
-      <TopicHighlights
-        strengthsTopics={reportData.topicHighlights.strengthsTopics}
-        improvementTopics={reportData.topicHighlights.improvementTopics}
+      <PerQuestionAnalysis
+        perQuestionAnalysis={reportData.perQuestionAnalysis}
       />
     </div>
   );

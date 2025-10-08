@@ -37,7 +37,6 @@ export const createAxiosInstance = (baseURL: string) => {
   axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
-      console.log("error :", error);
       const originalRequest = error.config;
 
       // Handle TOKEN_EXPIRED - try to refresh
@@ -48,7 +47,6 @@ export const createAxiosInstance = (baseURL: string) => {
           const refreshToken = getRefreshTokenFromCookies();
 
           if (!refreshToken) {
-            console.log("No refresh token available, logging out user");
             logoutUser();
             return Promise.reject(error);
           }
@@ -85,8 +83,6 @@ export const createAxiosInstance = (baseURL: string) => {
           // Retry original request after refresh
           return axiosInstance(originalRequest);
         } catch (err: unknown) {
-          console.log("Refresh token error:", err);
-
           // Check if it's an AxiosError
           if (err && typeof err === "object" && "response" in err) {
             const axiosError = err as AxiosError<ErrorResponse>;
