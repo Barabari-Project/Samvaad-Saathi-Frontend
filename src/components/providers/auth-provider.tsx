@@ -1,6 +1,11 @@
 "use client";
 
 import { apiClient, ENDPOINTS } from "@/lib/api-config";
+import {
+  identifyUser,
+  resetUser,
+  trackLogoutButtonClick,
+} from "@/lib/posthog/tracking.utils";
 import { UserProfile } from "@/lib/types/user";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -29,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     enabled: !!cookies.token,
   });
 
-  // Handle redirects using useEffect to avoid render-time side effects
+  // Handle user identification and redirects
   useEffect(() => {
     const token = cookies.token;
     const refreshToken = cookies.refresh_token;
@@ -47,11 +52,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // If user is loaded and NOT onboarded, redirect to onboarding
-    if (user && !loading && !user.authorizedUser.isOnboarded) {
-      console.log("redirecting to onboarding");
-      setShouldRedirect("/onboarding");
-      return;
+    // If user is loaded, identify them in PostHog
+    if (user && !loading) {
+      const userProperties = {
+        email: user.authorizedUser.email,
+        name: user.authorizedUser.name,
+        degree: user.authorizedUser.degree,
+        university: user.authorizedUser.university,
+        target_position: user.authorizedUser.targetPosition,
+        years_experience: user.authorizedUser.yearsExperience,
+        is_onboarded: user.authorizedUser.isOnboarded,
+        total_attempts: user.authorizedUser.totalAttempts,
+        created_at: user.authorizedUser.createdAt,
+      };
+
+      identifyUser(user.userId, userProperties);
+
+      // If user is NOT onboarded, redirect to onboarding
+      if (!user.authorizedUser.isOnboarded) {
+        console.log("redirecting to onboarding");
+        setShouldRedirect("/onboarding");
+        return;
+      }
     }
 
     // Clear any pending redirects if conditions don't match
@@ -70,6 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = () => {
+    // Track logout event
+    trackLogoutButtonClick();
+
+    // Reset user identification in PostHog
+    resetUser();
+
     // Clear all cookies
     removeCookie("token", { path: "/" });
     removeCookie("refresh_token", { path: "/" });

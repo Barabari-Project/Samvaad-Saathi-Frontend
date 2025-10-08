@@ -6,6 +6,13 @@ import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import { resampleAudioTo16kHz } from "@/lib/audio-utils";
+import {
+  trackAnswerStartClick,
+  trackInterviewQuestionView,
+  trackRedoButtonClick,
+  trackSkipQuestionClick,
+  trackSubmitInterviewClick,
+} from "@/lib/posthog/tracking.utils";
 import { MicrophoneIcon } from "@heroicons/react/24/solid";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -62,6 +69,11 @@ const InterviewPage = () => {
   // Timer state
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION); // TIMER_DURATION seconds
   const [isActive, setIsActive] = useState(false);
+
+  // Tracking state
+  const [questionAttempts, setQuestionAttempts] = useState<
+    Record<string, number>
+  >({});
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -230,6 +242,13 @@ const InterviewPage = () => {
       const currentQuestion = questions[currentIndex];
       if (currentQuestion?.interviewQuestionId) {
         startQuestionAttempt(currentQuestion.interviewQuestionId);
+
+        trackInterviewQuestionView(
+          currentQuestion?.interviewQuestionId,
+          currentIndex + 1,
+          currentQuestion.category,
+          interviewId || ""
+        );
       }
     }
   }, [currentIndex, questions]); // eslint-disable-line
@@ -291,19 +310,6 @@ const InterviewPage = () => {
     setTimeLeft(TIMER_DURATION);
   };
 
-  useEffect(() => {
-    // If the timer reaches 0, submit the answer
-    if (timeLeft === 0) {
-      console.log("isLast :", isLast);
-      if (isLast) {
-        handleSubmitClick();
-      } else {
-        stopRecording();
-        handleSubmitAnswer();
-      }
-    }
-  }, [timeLeft]);
-
   const resetStatesAndMoveNext = useCallback(() => {
     setAnswerSubmitted(false); // Reset submitted state when moving to next question
     setPendingTranscription(false); // Reset pending transcription state
@@ -317,6 +323,9 @@ const InterviewPage = () => {
   }, [isLast, recorderControls]);
 
   const handleAnswer = () => {
+    // Track answer start click
+    trackAnswerStartClick();
+
     // Start recording for this question
     setAnswerSubmitted(false); // Reset the submitted state when starting new recording
     setAudioUploaded(false); // Reset audio uploaded state
@@ -382,6 +391,7 @@ const InterviewPage = () => {
   };
 
   const handleSkip = () => {
+    trackSkipQuestionClick();
     setShowSkipModal(true);
   };
 
@@ -409,13 +419,26 @@ const InterviewPage = () => {
   };
 
   const handleRedo = () => {
+    // Track redo button click
+    const currentQuestion = questions[currentIndex];
+    const questionId = String(
+      currentQuestion?.interviewQuestionId || currentIndex
+    );
+    const attemptNumber = (questionAttempts[questionId] || 0) + 1;
+    trackRedoButtonClick(questionId, attemptNumber);
+
+    // Update attempt count
+    setQuestionAttempts((prev) => ({
+      ...prev,
+      [questionId]: attemptNumber,
+    }));
+
     // Cancel ongoing transcribe request if it exists
     if (transcribeAbortController) {
       transcribeAbortController.abort();
       setTranscribeAbortController(null);
     }
 
-    const questionId = `${currentIndex}`;
     setRecordedAnswers((prev) => {
       const copy = { ...prev };
       delete copy[questionId];
@@ -437,6 +460,9 @@ const InterviewPage = () => {
       console.error("No interview ID available");
       return;
     }
+
+    // Track submit interview click
+    trackSubmitInterviewClick();
 
     try {
       await completeInterviewMutation({

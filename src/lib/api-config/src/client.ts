@@ -1,5 +1,6 @@
 "use client";
 
+import { trackApiError } from "@/lib/posthog/tracking.utils";
 import { getTokenFromCookies } from "@/lib/token-utils";
 import {
   InvalidateQueryFilters,
@@ -102,6 +103,19 @@ export const createApiClient = (service: APIService) => {
         }
 
         console.log("error :", error);
+
+        // TODO: replace x-request-id with the correct value
+
+        // Track API error with PostHog
+        trackApiError(error, {
+          endpoint: url,
+          method: method.toUpperCase(),
+          status_code: error.response?.status,
+          request_id:
+            error.response?.headers?.["x-request-id"] ||
+            error.config?.headers?.["x-request-id"],
+        });
+
         if (errorMessage) toast.error(errorMessage);
 
         // } else if (typeof error.response?.data?.detail === 'string') {
@@ -139,21 +153,47 @@ export const createApiClient = (service: APIService) => {
     const [cookies] = useCookies(["token"]);
 
     const fetchData = async (): Promise<TData> => {
-      // Try to get token from cookies first, fallback to react-cookie
-      const token = getTokenFromCookies() || cookies.token;
+      try {
+        // Try to get token from cookies first, fallback to react-cookie
+        const token = getTokenFromCookies() || cookies.token;
 
-      const res = await axiosInstance({
-        url,
-        method,
-        params,
-        data,
-        ...config,
-        headers: {
-          ...config?.headers,
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      return res.data;
+        const res = await axiosInstance({
+          url,
+          method,
+          params,
+          data,
+          ...config,
+          headers: {
+            ...config?.headers,
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        return res.data;
+      } catch (error) {
+        // Skip error handling for aborted requests
+        if (
+          (error as Error).name === "CanceledError" ||
+          (error as AxiosError).code === "ERR_CANCELED"
+        ) {
+          console.log("Query was cancelled");
+          throw error;
+        }
+
+        // Track API error with PostHog
+        const axiosError = error as AxiosError;
+        console.log("axiosError :", axiosError);
+        trackApiError(error as Error, {
+          endpoint: url,
+          method: method.toUpperCase(),
+          status_code: axiosError.response?.status,
+          request_id:
+            axiosError.response?.headers?.["x-request-id"] ||
+            axiosError.config?.headers?.["x-request-id"],
+          operation: "query",
+        });
+
+        throw error;
+      }
     };
 
     const queryResult = useQuery<TData, AxiosError>({

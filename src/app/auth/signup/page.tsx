@@ -1,6 +1,13 @@
 "use client";
 
 import { ENDPOINTS } from "@/lib/api-config";
+import { SCREEN_VIEW } from "@/lib/posthog/events";
+import {
+  trackLoginAttempt,
+  trackLoginFailure,
+  trackLoginSuccess,
+  trackScreenView,
+} from "@/lib/posthog/tracking.utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,6 +18,11 @@ export default function SignupPage() {
   const [cookies, setCookie] = useCookies(["token", "refresh_token"]);
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [hasTrackedLoginAttempt, setHasTrackedLoginAttempt] = useState(false);
+
+  useEffect(() => {
+    trackScreenView(SCREEN_VIEW.SIGNUP_PAGE);
+  }, []);
 
   useEffect(() => {
     const handleTokenExtraction = () => {
@@ -38,6 +50,9 @@ export default function SignupPage() {
       if (token && refreshToken) {
         setIsProcessing(true);
 
+        // Track successful login
+        trackLoginSuccess("Google");
+
         // Set secure cookies with tokens
         const cookieOptions = {
           path: "/",
@@ -61,11 +76,22 @@ export default function SignupPage() {
         setTimeout(() => {
           router.push("/");
         }, 1000);
+      } else if (hasTrackedLoginAttempt) {
+        // If we tracked a login attempt but no tokens were received, track failure
+        const params = new URLSearchParams(window.location.search);
+        const error = params.get("error");
+        trackLoginFailure(error || "google_login_error");
       }
     };
 
     handleTokenExtraction();
-  }, [setCookie, router, cookies.token, cookies.refresh_token]);
+  }, [cookies.token, cookies.refresh_token, hasTrackedLoginAttempt]); //eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle continue button click
+  const handleContinueClick = () => {
+    trackLoginAttempt("Google", "create_account");
+    setHasTrackedLoginAttempt(true);
+  };
 
   if (isProcessing) {
     return (
@@ -102,6 +128,7 @@ export default function SignupPage() {
       {/* Google Signup */}
       <Link
         href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/${ENDPOINTS.AUTH.COGNITO_LOGIN}`}
+        onClick={handleContinueClick}
       >
         <button className="w-72 h-11 bg-white rounded-lg flex items-center justify-center gap-3 active:scale-95 transition shadow-md">
           <span className="text-black text-sm font-semibold">Continue</span>

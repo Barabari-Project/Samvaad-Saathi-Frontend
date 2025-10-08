@@ -12,6 +12,15 @@ import {
   ROLE_OPTIONS,
   UNIVERSITY_OPTIONS,
 } from "@/lib/constants";
+import { SCREEN_VIEW } from "@/lib/posthog/events";
+import {
+  trackProfileEditButtonClick,
+  trackProfileFieldValueChanged,
+  trackProfileHelpButtonClick,
+  trackProfileSupportButtonClick,
+  trackProfileUpdateButtonClick,
+  trackScreenView,
+} from "@/lib/posthog/tracking.utils";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import {
   ArrowLeftStartOnRectangleIcon,
@@ -21,7 +30,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/solid";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 // Create API clients
@@ -57,6 +66,10 @@ export default function ProfilePage() {
   });
   const [errors, setErrors] = useState<Partial<ProfileFormData>>({});
 
+  useEffect(() => {
+    trackScreenView(SCREEN_VIEW.PROFILE_PAGE);
+  }, []);
+
   // Set up mutations
   const updateProfileMutation = usersApiClient.useMutation({
     url: ENDPOINTS.USERS.PROFILE,
@@ -70,6 +83,7 @@ export default function ProfilePage() {
 
   // Separate edit handlers for each field
   const handleTargetPositionEdit = () => {
+    trackProfileEditButtonClick("targetPosition");
     setIsEditingTargetPosition(true);
     setTempData((prev) => ({
       ...prev,
@@ -78,6 +92,7 @@ export default function ProfilePage() {
   };
 
   const handleYearsExperienceEdit = () => {
+    trackProfileEditButtonClick("yearsExperience");
     setIsEditingYearsExperience(true);
     setTempData((prev) => ({
       ...prev,
@@ -86,6 +101,7 @@ export default function ProfilePage() {
   };
 
   const handleDegreeEdit = () => {
+    trackProfileEditButtonClick("degree");
     setIsEditingDegree(true);
     setTempData((prev) => ({
       ...prev,
@@ -94,6 +110,7 @@ export default function ProfilePage() {
   };
 
   const handleUniversityEdit = () => {
+    trackProfileEditButtonClick("university");
     setIsEditingUniversity(true);
     const currentUniversity = user?.authorizedUser.university || "";
     // Check if current university is in the predefined options
@@ -111,10 +128,14 @@ export default function ProfilePage() {
   };
 
   const handleResumeEdit = () => {
+    trackProfileEditButtonClick("resume");
     setIsEditingResume(true);
   };
 
   const handleFieldSave = async (field: EditableField) => {
+    // Track update button click
+    trackProfileUpdateButtonClick(field);
+
     // Clear previous errors for this field
     if (field !== "resume") {
       setErrors((prev) => ({
@@ -249,6 +270,9 @@ export default function ProfilePage() {
   };
 
   const handleInputChange = (field: string, value: string) => {
+    // Track field value change
+    trackProfileFieldValueChanged(field, value);
+
     setTempData((prev) => ({
       ...prev,
       [field]: value,
@@ -282,10 +306,12 @@ export default function ProfilePage() {
   };
 
   const handleHelpClick = () => {
+    trackProfileHelpButtonClick();
     window.open("https://www.youtube.com", "_blank");
   };
 
   const handleSupportClick = () => {
+    trackProfileSupportButtonClick();
     const phoneNumber = "+918639322365";
     const message = "Hi, I need support with Samvaad Saathi app.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
