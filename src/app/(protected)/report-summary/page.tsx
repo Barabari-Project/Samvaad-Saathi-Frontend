@@ -175,16 +175,16 @@ const ReportSummaryPage: React.FC = () => {
         speechStructure={reportData.metrics.speechStructure}
       />
 
+      <PerQuestionAnalysis
+        perQuestionAnalysis={reportData.perQuestionAnalysis}
+      />
+
       <FinalSummary
         strengths={reportData.strengths}
         areasOfImprovement={reportData.areasOfImprovement}
       />
 
       <ActionableSteps actionableInsights={reportData.actionableInsights} />
-
-      <PerQuestionAnalysis
-        perQuestionAnalysis={reportData.perQuestionAnalysis}
-      />
     </div>
   );
 };
