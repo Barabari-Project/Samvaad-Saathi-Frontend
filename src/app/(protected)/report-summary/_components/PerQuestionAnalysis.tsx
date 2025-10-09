@@ -75,7 +75,7 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                         {question.strengths.heading}
                       </h4>
                       {question.strengths.subtitle && (
-                        <p className="text-sm text-base-content/70 mb-3">
+                        <p className="text-sm text-base-content/70 mb-3 font-bold">
                           {question.strengths.subtitle}
                         </p>
                       )}
@@ -84,7 +84,7 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                           (group, groupIndex) =>
                             group.items.length > 0 && (
                               <div key={groupIndex}>
-                                <h5 className="font-medium text-success/80 mb-1">
+                                <h5 className="font-bold text-base-content/70 mb-1">
                                   {group.label}
                                 </h5>
                                 <ul className="list-disc space-y-1 pl-5 text-sm">
@@ -105,7 +105,7 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                       {question.areasOfImprovement.heading}
                     </h4>
                     {question.areasOfImprovement.subtitle && (
-                      <p className="text-sm text-base-content/70 mb-3">
+                      <p className="text-sm text-base-content/70 mb-3 font-bold">
                         {question.areasOfImprovement.subtitle}
                       </p>
                     )}
@@ -113,7 +113,7 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                       {question.areasOfImprovement.groups.map(
                         (group, groupIndex) => (
                           <div key={groupIndex}>
-                            <h5 className="font-medium text-error/80 mb-1">
+                            <h5 className="font-bold text-base-content/70 mb-1">
                               {group.label}
                             </h5>
                             <ul className="list-disc space-y-1 pl-5 text-sm">
@@ -133,7 +133,7 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                       {question.actionableInsights.heading}
                     </h4>
                     {question.actionableInsights.subtitle && (
-                      <p className="text-sm text-base-content/70 mb-3">
+                      <p className="text-sm text-base-content/70 mb-3 font-bold">
                         {question.actionableInsights.subtitle}
                       </p>
                     )}
@@ -141,7 +141,7 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                       {question.actionableInsights.groups.map(
                         (group, groupIndex) => (
                           <div key={groupIndex}>
-                            <h5 className="font-medium text-info/80 mb-1">
+                            <h5 className="font-bold text-base-content/70 mb-1">
                               {group.label}
                             </h5>
                             <ul className="list-disc space-y-1 pl-5 text-sm">
