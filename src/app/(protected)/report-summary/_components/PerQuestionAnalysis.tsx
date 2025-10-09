@@ -1,109 +1,48 @@
 import React from "react";
-import SectionCard from "./SectionCard";
-
-type PerQuestionAnalysisProps = {
-  perQuestionAnalysis: Array<{
-    questionAttemptId: number;
-    questionText: string;
-    keyTakeaways: string[];
-    knowledgeScorePct: number | null;
-    speechScorePct: number;
-    strengths: {
-      heading: string;
-      subtitle: string;
-      groups: Array<{
-        label: string;
-        items: string[];
-      }>;
-    };
-    areasOfImprovement: {
-      heading: string;
-      subtitle: string;
-      groups: Array<{
-        label: string;
-        items: string[];
-      }>;
-    };
-    actionableInsights: {
-      heading: string;
-      subtitle: string;
-      groups: Array<{
-        label: string;
-        items: string[];
-      }>;
-    };
-  }>;
-};
+import { PerQuestionAnalysisProps } from "./types";
 
 const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
   perQuestionAnalysis,
 }) => {
-  const getQuestionTypeColor = (questionText: string) => {
-    const lowerText = questionText.toLowerCase();
-    if (
-      lowerText.includes("describe") ||
-      lowerText.includes("specific instance") ||
-      lowerText.includes("feedback")
-    ) {
-      return "badge-warning"; // Behavioral question
-    } else if (
-      lowerText.includes("react") ||
-      lowerText.includes("javascript") ||
-      lowerText.includes("css") ||
-      lowerText.includes("api")
-    ) {
-      return "badge-info"; // Technical question
-    } else {
-      return "badge-success"; // Technical Allied question
-    }
-  };
-
-  const getQuestionTypeLabel = (questionText: string) => {
-    const lowerText = questionText.toLowerCase();
-    if (
-      lowerText.includes("describe") ||
-      lowerText.includes("specific instance") ||
-      lowerText.includes("feedback")
-    ) {
-      return "Behavioral question";
-    } else if (
-      lowerText.includes("react") ||
-      lowerText.includes("javascript") ||
-      lowerText.includes("css") ||
-      lowerText.includes("api")
-    ) {
-      return "Technical question";
-    } else {
-      return "Technical Allied question";
-    }
-  };
-
   return (
     <>
       <div className="space-y-4">
         {perQuestionAnalysis.map((question, index) => {
-          const questionTypeColor = getQuestionTypeColor(question.questionText);
-          const questionTypeLabel = getQuestionTypeLabel(question.questionText);
-
           return (
             <div
               key={question.questionAttemptId}
               className="collapse collapse-arrow bg-base-100 border border-base-300 shadow-2xl"
             >
               <input type="radio" name="question-accordion" />
-              <div className="collapse-title">
+              <div className="collapse-title min-w-0">
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-3">
-                    <div className={`badge ${questionTypeColor}`}>
-                      {questionTypeLabel}
-                    </div>
+                    <span
+                      className={`badge badge-xs ${
+                        question.questionCategory?.toLowerCase() === "tech"
+                          ? "badge-primary"
+                          : question.questionCategory?.toLowerCase() ===
+                            "behavioral"
+                          ? "badge-warning"
+                          : question.questionCategory?.toLowerCase() ===
+                            "tech_allied"
+                          ? "badge-success"
+                          : "badge-secondary"
+                      }`}
+                    >
+                      {question.questionCategory
+                        ? question.questionCategory
+                            .replaceAll("_", " ")
+                            .toUpperCase()
+                        : "QUESTION"}
+                    </span>
                     <span className="text-sm text-base-content/70">
                       {index + 1}/{perQuestionAnalysis.length}
                     </span>
                   </div>
                 </div>
-                <div className="mt-2">
-                  <p className="text-sm text-base-content">
+                <div className="mt-2 min-w-0">
+                  <p className="text-sm text-base-content break-words overflow-wrap-anywhere whitespace-normal">
                     {question.questionText}
                   </p>
                 </div>

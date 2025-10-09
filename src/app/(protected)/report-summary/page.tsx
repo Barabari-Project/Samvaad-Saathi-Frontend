@@ -3,7 +3,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
-import { EVENTS, SCREEN_VIEW } from "@/lib/posthog/events";
+import { SCREEN_VIEW } from "@/lib/posthog/events";
 import { trackScreenView } from "@/lib/posthog/tracking.utils";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
@@ -13,109 +13,7 @@ import OverallScoreSummary from "./_components/OverallScoreSummary";
 import PerQuestionAnalysis from "./_components/PerQuestionAnalysis";
 import SkeletonLoader from "./_components/SkeletonLoader";
 import SummaryOverview from "./_components/SummaryOverview";
-import TopicHighlights from "./_components/TopicHighlights";
-
-// API Response Types
-interface ReportResponse {
-  interviewId: number;
-  track: string;
-  metrics: {
-    knowledgeCompetence: {
-      average5pt: number;
-      averagePct: number;
-      breakdown: {
-        accuracy: number;
-        depth: number;
-        coverage: number;
-        relevance: number;
-      };
-    };
-    speechStructure: {
-      average5pt: number;
-      averagePct: number;
-      breakdown: {
-        pacing: number;
-        structure: number;
-        pauses: number;
-        grammar: number;
-      };
-    };
-  };
-  strengths: {
-    heading: string;
-    subtitle: string | null;
-    groups: Array<{
-      label: string;
-      items: string[];
-    }>;
-  };
-  areasOfImprovement: {
-    heading: string;
-    subtitle: string | null;
-    groups: Array<{
-      label: string;
-      items: string[];
-    }>;
-  };
-  actionableInsights: {
-    heading: string;
-    subtitle: string | null;
-    groups: Array<{
-      label: string;
-      items: string[];
-    }>;
-  };
-  metadata: {
-    totalQuestions: number;
-    usedQuestions: number;
-    model: string;
-    latencyMs: number;
-    generatedAt: string;
-    resumeUsed: boolean;
-  };
-  perQuestion: Array<{
-    questionAttemptId: number;
-    questionText: string;
-    keyTakeaways: string[];
-    knowledgeScorePct: number;
-    speechScorePct: number;
-  }>;
-  perQuestionAnalysis: Array<{
-    questionAttemptId: number;
-    questionText: string;
-    keyTakeaways: string[];
-    knowledgeScorePct: number | null;
-    speechScorePct: number;
-    strengths: {
-      heading: string;
-      subtitle: string;
-      groups: Array<{
-        label: string;
-        items: string[];
-      }>;
-    };
-    areasOfImprovement: {
-      heading: string;
-      subtitle: string;
-      groups: Array<{
-        label: string;
-        items: string[];
-      }>;
-    };
-    actionableInsights: {
-      heading: string;
-      subtitle: string;
-      groups: Array<{
-        label: string;
-        items: string[];
-      }>;
-    };
-  }>;
-  topicHighlights: {
-    strengthsTopics: string[];
-    improvementTopics: string[];
-  };
-}
+import { ReportResponse } from "./_components/types";
 
 const ReportSummaryPage: React.FC = () => {
   const searchParams = useSearchParams();
