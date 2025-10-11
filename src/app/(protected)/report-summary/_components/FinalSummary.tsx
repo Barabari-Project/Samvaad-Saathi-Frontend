@@ -25,7 +25,7 @@ const FinalSummary: React.FC<FinalSummaryProps> = ({
   areasOfImprovement,
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="final-summary">
       {/* Strengths Section */}
       <SectionCard title={strengths.heading}>
         {strengths.subtitle && (
