@@ -41,11 +41,6 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                     {index + 1}/{question.totalQuestions}
                   </span>
                 </div>
-                {!hasFeedback && (
-                  <span className="badge badge-ghost badge-sm">
-                    No feedback
-                  </span>
-                )}
               </div>
               <div className="mt-2 min-w-0">
                 <p className="text-sm text-base-content break-words overflow-wrap-anywhere whitespace-normal">
@@ -119,7 +114,7 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
               ) : (
                 <div className="pt-4 text-center text-gray-500">
                   <p className="text-sm">
-                    No detailed feedback available for this question.
+                    No report available — question not attempted.
                   </p>
                 </div>
               )}
