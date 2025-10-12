@@ -1,76 +1,64 @@
 import React from "react";
-import SectionCard from "./SectionCard";
+import { FinalSummaryProps } from "./types";
 
-type FinalSummaryProps = {
-  strengths: {
-    heading: string;
-    subtitle: string | null;
-    groups: Array<{
-      label: string;
-      items: string[];
-    }>;
-  };
-  areasOfImprovement: {
-    heading: string;
-    subtitle: string | null;
-    groups: Array<{
-      label: string;
-      items: string[];
-    }>;
-  };
-};
-
-const FinalSummary: React.FC<FinalSummaryProps> = ({
-  strengths,
-  areasOfImprovement,
-}) => {
+const FinalSummary: React.FC<FinalSummaryProps> = ({ speechFluency }) => {
   return (
-    <div className="space-y-6" id="final-summary">
-      {/* Strengths Section */}
-      <SectionCard title={strengths.heading}>
-        {strengths.subtitle && (
-          <p className="text-sm text-gray-600 mb-4">{strengths.subtitle}</p>
-        )}
-        <div className="space-y-4">
-          {strengths.groups.map((group, groupIndex) => (
-            <div key={groupIndex}>
-              <h5 className="font-medium text-green-600 mb-2">{group.label}</h5>
-              <ul className="list-disc space-y-1 pl-5 text-sm">
-                {group.items.length > 0 ? (
-                  group.items.map((item, itemIndex) => (
-                    <li key={itemIndex}>{item}</li>
-                  ))
-                ) : (
-                  <li className="text-gray-500">
-                    No specific items identified
-                  </li>
-                )}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
+    <div id="final-summary">
+      <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+        {/* Main Title */}
+        <h2 className="text-2xl font-semibold text-fuchsia-600 mb-6">
+          Speech Fluency
+        </h2>
 
-      {/* Areas of Improvement Section */}
-      <SectionCard title={areasOfImprovement.heading}>
-        {areasOfImprovement.subtitle && (
-          <p className="text-sm text-gray-600 mb-4">
-            {areasOfImprovement.subtitle}
-          </p>
-        )}
-        <div className="space-y-4">
-          {areasOfImprovement.groups.map((group, groupIndex) => (
-            <div key={groupIndex}>
-              <h5 className="font-medium text-red-600 mb-2">{group.label}</h5>
-              <ul className="list-disc space-y-1 pl-5 text-sm">
-                {group.items.map((item, itemIndex) => (
-                  <li key={itemIndex}>{item}</li>
+        <div className="space-y-6">
+          {/* Strengths Section */}
+          {speechFluency.strengths.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-green-600 mb-3">
+                Strengths
+              </h3>
+              <ul className="list-disc space-y-2 pl-5 text-sm text-gray-700">
+                {speechFluency.strengths.map((item, index) => (
+                  <li key={index}>{item}</li>
                 ))}
               </ul>
             </div>
-          ))}
+          )}
+
+          {/* Areas of Improvement Section */}
+          {speechFluency.areasOfImprovement.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-red-600 mb-3">
+                Areas Of Improvement
+              </h3>
+              <ul className="list-disc space-y-2 pl-5 text-sm text-gray-700">
+                {speechFluency.areasOfImprovement.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Actionable Steps Section */}
+          {speechFluency.actionableSteps.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-blue-600 mb-3">
+                Actionable Steps
+              </h3>
+              <div className="space-y-4">
+                {speechFluency.actionableSteps.map((step, index) => (
+                  <div key={index}>
+                    <h4 className="font-bold text-black mb-1">{step.title}:</h4>
+                    <ul className="list-disc pl-5 text-sm text-gray-700">
+                      <li>{step.description}</li>
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      </SectionCard>
+      </div>
     </div>
   );
 };

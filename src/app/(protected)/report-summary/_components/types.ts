@@ -1,106 +1,84 @@
 // API Response Types
 export interface ReportResponse {
-  interviewId: number;
-  track: string;
-  metrics: {
+  reportId: string;
+  candidateInfo: {
+    name: string;
+    interviewDate: string;
+    roleTopic: string;
+  };
+  scoreSummary: {
     knowledgeCompetence: {
-      average5pt: number;
-      averagePct: number;
-      breakdown: {
+      score: number;
+      maxScore: number;
+      average: number;
+      maxAverage: number;
+      percentage: number;
+      criteria: {
         accuracy: number;
         depth: number;
-        coverage: number;
         relevance: number;
+        examples: number;
+        terminology: number;
       };
     };
-    speechStructure: {
-      average5pt: number;
-      averagePct: number;
-      breakdown: {
-        pacing: number;
+    speechAndStructure: {
+      score: number;
+      maxScore: number;
+      average: number;
+      maxAverage: number;
+      percentage: number;
+      criteria: {
+        fluency: number;
         structure: number;
-        pauses: number;
+        pacing: number;
         grammar: number;
       };
     };
   };
-  strengths: {
-    heading: string;
-    subtitle: string | null;
-    groups: Array<{
-      label: string;
-      items: string[];
-    }>;
+  overallFeedback: {
+    speechFluency: {
+      strengths: string[];
+      areasOfImprovement: string[];
+      actionableSteps: Array<{
+        title: string;
+        description: string;
+      }>;
+    };
   };
-  areasOfImprovement: {
-    heading: string;
-    subtitle: string | null;
-    groups: Array<{
-      label: string;
-      items: string[];
-    }>;
-  };
-  actionableInsights: {
-    heading: string;
-    subtitle: string | null;
-    groups: Array<{
-      label: string;
-      items: string[];
-    }>;
-  };
-  metadata: {
+  questionAnalysis: Array<{
+    id: number;
     totalQuestions: number;
-    usedQuestions: number;
-    model: string;
-    latencyMs: number;
-    generatedAt: string;
-    resumeUsed: boolean;
-  };
-  perQuestion: Array<{
-    questionAttemptId: number;
-    questionText: string;
-    keyTakeaways: string[];
-    knowledgeScorePct: number;
-    speechScorePct: number;
+    type: string;
+    question: string;
+    feedback: {
+      knowledgeRelated: {
+        strengths: string[];
+        areasOfImprovement: string[];
+        actionableInsights: Array<{
+          title: string;
+          description: string;
+        }>;
+      };
+    } | null;
   }>;
-  perQuestionAnalysis: Array<{
-    questionAttemptId: number;
-    questionText: string;
-    keyTakeaways: string[];
-    knowledgeScorePct: number | null;
-    speechScorePct: number;
-    questionCategory: string;
-    strengths: {
-      heading: string;
-      subtitle: string;
-      groups: Array<{
-        label: string;
-        items: string[];
-      }>;
-    };
-    areasOfImprovement: {
-      heading: string;
-      subtitle: string;
-      groups: Array<{
-        label: string;
-        items: string[];
-      }>;
-    };
-    actionableInsights: {
-      heading: string;
-      subtitle: string;
-      groups: Array<{
-        label: string;
-        items: string[];
-      }>;
-    };
-  }>;
-  topicHighlights: {
-    strengthsTopics: string[];
-    improvementTopics: string[];
-  };
 }
 
+// Component Props Types
+export type SummaryOverviewProps = {
+  candidateName: string;
+  role: string;
+  date: string;
+};
+
+export type OverallScoreSummaryProps = {
+  knowledgeCompetence: ReportResponse["scoreSummary"]["knowledgeCompetence"];
+  speechAndStructure: ReportResponse["scoreSummary"]["speechAndStructure"];
+};
+
+export type FinalSummaryProps = {
+  speechFluency: ReportResponse["overallFeedback"]["speechFluency"];
+};
+
 export type PerQuestionAnalysisProps = {
-  perQuestionAnalysis: ReportResponse["perQuestionAnalysis"];
+  questionAnalysis: ReportResponse["questionAnalysis"];
 };
