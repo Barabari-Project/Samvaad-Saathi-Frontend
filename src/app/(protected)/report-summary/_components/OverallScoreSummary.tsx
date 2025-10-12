@@ -1,5 +1,6 @@
 import { CpuChipIcon, MicrophoneIcon } from "@heroicons/react/24/solid";
 import React from "react";
+import SectionCard from "./SectionCard";
 import { OverallScoreSummaryProps } from "./types";
 
 const OverallScoreSummary: React.FC<OverallScoreSummaryProps> = ({
@@ -7,12 +8,7 @@ const OverallScoreSummary: React.FC<OverallScoreSummaryProps> = ({
   speechAndStructure,
 }) => {
   return (
-    <div className="bg-white p-6 border-2 border-stone-700/50 rounded-lg">
-      {/* Title */}
-      <h2 className="text-2xl font-bold text-black mb-6">
-        Overall Score Summary
-      </h2>
-
+    <SectionCard title="Overall Score Summary">
       <div className="space-y-8">
         {/* Knowledge Competence */}
         <div className="space-y-4">
@@ -108,7 +104,7 @@ const OverallScoreSummary: React.FC<OverallScoreSummaryProps> = ({
           <div className="divider" />
         </div>
       </div>
-    </div>
+    </SectionCard>
   );
 };
 
