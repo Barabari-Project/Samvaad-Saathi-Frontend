@@ -2,14 +2,28 @@ import React from "react";
 import { PerQuestionAnalysisProps } from "./types";
 
 const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
-  perQuestionAnalysis,
+  questionAnalysis,
 }) => {
+  const getQuestionTypeBadgeClass = (type: string) => {
+    const lowerType = type.toLowerCase();
+    if (lowerType.includes("technical question")) {
+      return "badge-primary";
+    } else if (lowerType.includes("technical allied")) {
+      return "badge-success";
+    } else if (lowerType.includes("behavioral")) {
+      return "badge-warning";
+    }
+    return "badge-secondary";
+  };
+
   return (
     <div className="space-y-4" id="per-question-analysis">
-      {perQuestionAnalysis.map((question, index) => {
+      {questionAnalysis.map((question, index) => {
+        const hasFeedback = question.feedback !== null;
+
         return (
           <div
-            key={question.questionAttemptId}
+            key={question.id}
             className="collapse collapse-arrow bg-base-100 border border-base-300 shadow-2xl"
           >
             <input type="radio" name="question-accordion" />
@@ -17,115 +31,98 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-3">
                   <span
-                    className={`badge badge-xs ${
-                      question.questionCategory?.toLowerCase() === "tech"
-                        ? "badge-primary"
-                        : question.questionCategory?.toLowerCase() ===
-                          "behavioral"
-                        ? "badge-warning"
-                        : question.questionCategory?.toLowerCase() ===
-                          "tech_allied"
-                        ? "badge-success"
-                        : "badge-secondary"
-                    }`}
+                    className={`badge badge-xs ${getQuestionTypeBadgeClass(
+                      question.type
+                    )}`}
                   >
-                    {question.questionCategory
-                      ? question.questionCategory
-                          .replaceAll("_", " ")
-                          .toUpperCase()
-                      : "QUESTION"}
+                    {question.type.toUpperCase()}
                   </span>
                   <span className="text-sm text-base-content/70">
-                    {index + 1}/{perQuestionAnalysis.length}
+                    {index + 1}/{question.totalQuestions}
                   </span>
                 </div>
+                {!hasFeedback && (
+                  <span className="badge badge-ghost badge-sm">
+                    No feedback
+                  </span>
+                )}
               </div>
               <div className="mt-2 min-w-0">
                 <p className="text-sm text-base-content break-words overflow-wrap-anywhere whitespace-normal">
-                  {question.questionText}
+                  {question.question}
                 </p>
               </div>
             </div>
 
             <div className="collapse-content">
-              <div className="space-y-6 pt-4">
-                {/* Strengths */}
-                {question.strengths.groups.some(
-                  (group) => group.items.length > 0
-                ) && (
-                  <div>
-                    <h4 className="font-semibold text-success mb-2">
-                      {question.strengths.heading}
-                    </h4>
+              {hasFeedback ? (
+                <div className="space-y-6 pt-4">
+                  {/* Strengths */}
+                  {question.feedback!.knowledgeRelated.strengths.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-lg text-green-700 mb-2">
+                        Strengths
+                      </h4>
+                      <ul className="list-disc space-y-1 pl-5 text-sm">
+                        {question.feedback!.knowledgeRelated.strengths.map(
+                          (item, itemIndex) => (
+                            <li key={itemIndex}>{item}</li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
 
-                    <div className="space-y-3">
-                      {question.strengths.groups.map(
-                        (group, groupIndex) =>
-                          group.items.length > 0 && (
-                            <div key={groupIndex}>
-                              <h5 className="font-bold text-base-content/70 mb-1">
-                                {group.label}
+                  {/* Areas of Improvement */}
+                  {question.feedback!.knowledgeRelated.areasOfImprovement
+                    .length > 0 && (
+                    <div>
+                      <h4 className="text-lg font-semibold text-error mb-2">
+                        Areas of Improvement
+                      </h4>
+                      <ul className="list-disc space-y-1 pl-5 text-sm">
+                        {question.feedback!.knowledgeRelated.areasOfImprovement.map(
+                          (item, itemIndex) => (
+                            <li key={itemIndex}>{item}</li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Actionable Insights */}
+                  {question.feedback!.knowledgeRelated.actionableInsights
+                    .length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-lg text-blue-700 mb-2">
+                        Actionable Insights
+                      </h4>
+                      <div className="space-y-3">
+                        {question.feedback!.knowledgeRelated.actionableInsights.map(
+                          (insight, insightIndex) => (
+                            <div key={insightIndex} className="">
+                              <h5 className="font-semibold  mb-1">
+                                {insight.title}
                               </h5>
                               <ul className="list-disc space-y-1 pl-5 text-sm">
-                                {group.items.map((item, itemIndex) => (
-                                  <li key={itemIndex}>{item}</li>
-                                ))}
+                                <li className="text-sm text-gray-700">
+                                  {insight.description}
+                                </li>
                               </ul>
                             </div>
                           )
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Areas of Improvement */}
-                <div>
-                  <h4 className="font-semibold text-error mb-2">
-                    {question.areasOfImprovement.heading}
-                  </h4>
-
-                  <div className="space-y-3">
-                    {question.areasOfImprovement.groups.map(
-                      (group, groupIndex) => (
-                        <div key={groupIndex}>
-                          <h5 className="font-bold text-base-content/70 mb-1">
-                            {group.label}
-                          </h5>
-                          <ul className="list-disc space-y-1 pl-5 text-sm">
-                            {group.items.map((item, itemIndex) => (
-                              <li key={itemIndex}>{item}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )
-                    )}
-                  </div>
+                  )}
                 </div>
-
-                {/* Actionable Insights */}
-                <div>
-                  <h4 className="font-semibold text-info mb-2">
-                    {question.actionableInsights.heading}
-                  </h4>
-
-                  <div className="space-y-3">
-                    {question.actionableInsights.groups.map(
-                      (group, groupIndex) => (
-                        <div key={groupIndex}>
-                          <h5 className="font-bold text-base-content/70 mb-1">
-                            {group.label}
-                          </h5>
-                          <ul className="list-disc space-y-1 pl-5 text-sm">
-                            {group.items.map((item, itemIndex) => (
-                              <li key={itemIndex}>{item}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )
-                    )}
-                  </div>
+              ) : (
+                <div className="pt-4 text-center text-gray-500">
+                  <p className="text-sm">
+                    No detailed feedback available for this question.
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         );

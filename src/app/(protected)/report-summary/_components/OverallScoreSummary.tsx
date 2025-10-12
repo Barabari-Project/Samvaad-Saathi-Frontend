@@ -1,66 +1,114 @@
-import {
-  ChatBubbleLeftEllipsisIcon,
-  StarIcon,
-} from "@heroicons/react/24/solid";
+import { CpuChipIcon, MicrophoneIcon } from "@heroicons/react/24/solid";
 import React from "react";
-import ScoreBar from "./ScoreBar";
-import SectionCard from "./SectionCard";
-
-type OverallScoreSummaryProps = {
-  knowledgeCompetence: {
-    average5pt: number;
-    averagePct: number;
-    breakdown: {
-      accuracy: number;
-      depth: number;
-      coverage: number;
-      relevance: number;
-    };
-  };
-  speechStructure: {
-    average5pt: number;
-    averagePct: number;
-    breakdown: {
-      pacing: number;
-      structure: number;
-      pauses: number;
-      grammar: number;
-    };
-  };
-};
+import { OverallScoreSummaryProps } from "./types";
 
 const OverallScoreSummary: React.FC<OverallScoreSummaryProps> = ({
   knowledgeCompetence,
-  speechStructure,
+  speechAndStructure,
 }) => {
   return (
-    <SectionCard title="Overall Score Summary">
-      <div className="space-y-6">
-        <div className="space-y-3">
+    <div className="bg-white p-6 border-2 border-stone-700/50 rounded-lg">
+      {/* Title */}
+      <h2 className="text-2xl font-bold text-black mb-6">
+        Overall Score Summary
+      </h2>
+
+      <div className="space-y-8">
+        {/* Knowledge Competence */}
+        <div className="space-y-4">
+          {/* Header */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="size-6 bg-blue-100 rounded-full flex items-center justify-center">
-                <StarIcon className="size-4 text-blue-600" />
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 flex items-center justify-center">
+                <CpuChipIcon className="w-5 h-5 text-red-500" />
               </div>
-              <h3 className="font-medium">Knowledge Competence</h3>
+              <h3 className="text-lg font-bold text-black">
+                Knowledge Competence
+              </h3>
             </div>
+            <span className="badge badge-ghost bg-stone-300">
+              {knowledgeCompetence.score}/{knowledgeCompetence.maxScore}
+            </span>
           </div>
-          <ScoreBar label="Average" score={knowledgeCompetence.averagePct} />
+
+          {/* Progress Bar */}
+          <progress
+            className="progress w-full"
+            value={knowledgeCompetence.percentage}
+            max="100"
+          ></progress>
+
+          {/* Criteria Breakdown - Horizontal */}
+          <div className="flex gap-4 text-sm text-gray-600 flex-wrap">
+            {Object.entries(knowledgeCompetence.criteria).map(
+              ([key, value]) => (
+                <span key={key} className="capitalize">
+                  {key} ({value})
+                </span>
+              )
+            )}
+          </div>
+
+          {/* Summary Scores */}
+          <div className="flex justify-between items-center">
+            <span className="text-black">
+              Average: {knowledgeCompetence.average}/
+              {knowledgeCompetence.maxAverage}
+            </span>
+            <span className="text-green-600 font-semibold text-lg">
+              {knowledgeCompetence.percentage}%
+            </span>
+          </div>
+          <div className="divider" />
         </div>
 
-        <div className="space-y-3">
+        {/* Speech & Structure */}
+        <div className="space-y-4">
+          {/* Header */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="size-6 bg-green-100 rounded-full flex items-center justify-center">
-                <ChatBubbleLeftEllipsisIcon className="size-4 text-green-600" />
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 flex items-center justify-center">
+                <MicrophoneIcon className="w-5 h-5 text-black" />
               </div>
-              <h3 className="font-medium">Speech & Structure</h3>
+              <h3 className="text-lg font-bold text-black">
+                Speech & Structure
+              </h3>
             </div>
+            <span className="badge badge-ghost bg-stone-300">
+              {speechAndStructure.score}/{speechAndStructure.maxScore}
+            </span>
           </div>
-          <ScoreBar label="Average" score={speechStructure.averagePct} />
+
+          {/* Progress Bar */}
+          <progress
+            className="progress w-full"
+            value={speechAndStructure.percentage}
+            max="100"
+          ></progress>
+
+          {/* Criteria Breakdown - Horizontal */}
+          <div className="flex gap-4 text-sm text-gray-600 flex-wrap">
+            {Object.entries(speechAndStructure.criteria).map(([key, value]) => (
+              <span key={key} className="capitalize">
+                {key} ({value})
+              </span>
+            ))}
+          </div>
+
+          {/* Summary Scores */}
+          <div className="flex justify-between items-center">
+            <span className="text-black">
+              Average: {speechAndStructure.average}/
+              {speechAndStructure.maxAverage}
+            </span>
+            <span className="text-green-600 font-semibold text-lg">
+              {speechAndStructure.percentage}%
+            </span>
+          </div>
+          <div className="divider" />
         </div>
       </div>
-    </SectionCard>
+    </div>
   );
 };
 

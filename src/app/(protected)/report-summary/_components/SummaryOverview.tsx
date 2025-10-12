@@ -1,16 +1,9 @@
 import dayjs from "dayjs";
 import React from "react";
 import SectionCard from "./SectionCard";
-
-type SummaryOverviewProps = {
-  interviewId: number;
-  candidateName: string;
-  role: string;
-  date: string;
-};
+import { SummaryOverviewProps } from "./types";
 
 const SummaryOverview: React.FC<SummaryOverviewProps> = ({
-  interviewId,
   candidateName,
   role,
   date,

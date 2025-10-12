@@ -1,5 +1,4 @@
 "use client";
-import { useAuth } from "@/components/providers/auth-provider";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
@@ -7,7 +6,6 @@ import { SCREEN_VIEW } from "@/lib/posthog/events";
 import { trackScreenView } from "@/lib/posthog/tracking.utils";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import ActionableSteps from "./_components/ActionableSteps";
 import FinalSummary from "./_components/FinalSummary";
 import OverallScoreSummary from "./_components/OverallScoreSummary";
 import PerQuestionAnalysis from "./_components/PerQuestionAnalysis";
@@ -20,7 +18,6 @@ type ReportTab = "per-question" | "final-summary";
 const ReportSummaryPage: React.FC = () => {
   const searchParams = useSearchParams();
   const interviewId = searchParams.get("interviewId");
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<ReportTab>("per-question");
 
   const apiClient = createApiClient(APIService.ANALYSIS);
@@ -66,22 +63,21 @@ const ReportSummaryPage: React.FC = () => {
     <div className="space-y-6 py-4 sm:py-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold">
-          {reportData?.track
-            ? `${reportData?.track} Interview Summary Report`
-            : "Web Development Interview Summary Report"}
+          {reportData.candidateInfo.roleTopic
+            ? `${reportData.candidateInfo.roleTopic} Interview Summary Report`
+            : "Interview Summary Report"}
         </h1>
       </div>
 
       <SummaryOverview
-        interviewId={reportData.interviewId}
-        candidateName={user?.authorizedUser?.name || "Unknown"}
-        role={reportData?.track ?? "Web Developer"}
-        date={reportData?.metadata?.generatedAt ?? ""}
+        candidateName={reportData.candidateInfo.name}
+        role={reportData.candidateInfo.roleTopic}
+        date={reportData.candidateInfo.interviewDate}
       />
 
       <OverallScoreSummary
-        knowledgeCompetence={reportData.metrics.knowledgeCompetence}
-        speechStructure={reportData.metrics.speechStructure}
+        knowledgeCompetence={reportData.scoreSummary.knowledgeCompetence}
+        speechAndStructure={reportData.scoreSummary.speechAndStructure}
       />
 
       <div
@@ -114,16 +110,9 @@ const ReportSummaryPage: React.FC = () => {
         </a>
       </div>
 
-      <PerQuestionAnalysis
-        perQuestionAnalysis={reportData.perQuestionAnalysis}
-      />
+      <PerQuestionAnalysis questionAnalysis={reportData.questionAnalysis} />
 
-      <FinalSummary
-        strengths={reportData.strengths}
-        areasOfImprovement={reportData.areasOfImprovement}
-      />
-
-      <ActionableSteps actionableInsights={reportData.actionableInsights} />
+      <FinalSummary speechFluency={reportData.overallFeedback.speechFluency} />
     </div>
   );
 };
