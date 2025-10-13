@@ -75,10 +75,10 @@ const ReportSummaryPage: React.FC = () => {
         date={reportData.candidateInfo.interviewDate}
       />
 
-      <OverallScoreSummary
+      {/* <OverallScoreSummary
         knowledgeCompetence={reportData.scoreSummary.knowledgeCompetence}
         speechAndStructure={reportData.scoreSummary.speechAndStructure}
-      />
+      /> */}
 
       <div
         role="tablist"

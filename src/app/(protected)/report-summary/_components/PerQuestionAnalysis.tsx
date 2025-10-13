@@ -1,4 +1,3 @@
-import { AccordionItem } from "@/components/accordion";
 import React from "react";
 import { PerQuestionAnalysisProps } from "./types";
 
@@ -23,10 +22,12 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
         const hasFeedback = question.feedback !== null;
 
         return (
-          <AccordionItem
+          <div
             key={question.id}
-            id={`question-${question.id}`}
-            question={
+            className="collapse collapse-arrow bg-base-200 rounded-xl shadow-sm"
+          >
+            <input type="checkbox" className="peer" />
+            <div className="collapse-title">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-2">
@@ -44,75 +45,71 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                 </div>
                 <p className="text-sm leading-relaxed">{question.question}</p>
               </div>
-            }
-          >
-            {hasFeedback ? (
-              <div className="space-y-6">
-                {/* Strengths */}
-                {question.feedback!.knowledgeRelated.strengths.length > 0 && (
-                  <section className="space-y-3">
-                    <h4 className="text-base font-semibold text-emerald-600">
-                      Strengths
-                    </h4>
-                    <ul className="list-disc pl-5 text-sm leading-relaxed space-y-1">
-                      {question.feedback!.knowledgeRelated.strengths.map(
-                        (item, itemIndex) => (
-                          <li key={itemIndex}>{item}</li>
-                        )
-                      )}
-                    </ul>
-                  </section>
-                )}
-
-                {/* Areas of Improvement */}
-                {question.feedback!.knowledgeRelated.areasOfImprovement.length >
-                  0 && (
-                  <section className="space-y-3">
-                    <h4 className="text-base font-semibold text-red-600">
-                      Areas of Improvement
-                    </h4>
-                    <ul className="list-disc pl-5 text-sm leading-relaxed space-y-1">
-                      {question.feedback!.knowledgeRelated.areasOfImprovement.map(
-                        (item, itemIndex) => (
-                          <li key={itemIndex}>{item}</li>
-                        )
-                      )}
-                    </ul>
-                  </section>
-                )}
-
-                {/* Actionable Insights */}
-                {question.feedback!.knowledgeRelated.actionableInsights.length >
-                  0 && (
-                  <section className="space-y-3">
-                    <h4 className="text-base font-semibold text-blue-600">
-                      Actionable Insights
-                    </h4>
-                    <div className="space-y-3">
-                      {question.feedback!.knowledgeRelated.actionableInsights.map(
-                        (insight, insightIndex) => (
-                          <div key={insightIndex}>
-                            <h5 className="font-semibold text-sm mb-1">
-                              {insight.title}
-                            </h5>
-                            <ul className="list-disc pl-5 text-sm leading-relaxed">
-                              <li>{insight.description}</li>
-                            </ul>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  </section>
-                )}
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground py-4">
-                <p className="text-sm">
-                  No report available — question not attempted.
-                </p>
-              </div>
-            )}
-          </AccordionItem>
+            </div>
+            <div className="collapse-content">
+              {hasFeedback ? (
+                <div className="space-y-6">
+                  {question.feedback!.knowledgeRelated.strengths.length > 0 && (
+                    <section className="space-y-3">
+                      <h4 className="text-base font-semibold text-emerald-600">
+                        Strengths
+                      </h4>
+                      <ul className="list-disc pl-5 text-sm leading-relaxed space-y-1">
+                        {question.feedback!.knowledgeRelated.strengths.map(
+                          (item, itemIndex) => (
+                            <li key={itemIndex}>{item}</li>
+                          )
+                        )}
+                      </ul>
+                    </section>
+                  )}
+                  {question.feedback!.knowledgeRelated.areasOfImprovement
+                    .length > 0 && (
+                    <section className="space-y-3">
+                      <h4 className="text-base font-semibold text-red-600">
+                        Areas of Improvement
+                      </h4>
+                      <ul className="list-disc pl-5 text-sm leading-relaxed space-y-1">
+                        {question.feedback!.knowledgeRelated.areasOfImprovement.map(
+                          (item, itemIndex) => (
+                            <li key={itemIndex}>{item}</li>
+                          )
+                        )}
+                      </ul>
+                    </section>
+                  )}
+                  {question.feedback!.knowledgeRelated.actionableInsights
+                    .length > 0 && (
+                    <section className="space-y-3">
+                      <h4 className="text-base font-semibold text-blue-600">
+                        Actionable Insights
+                      </h4>
+                      <div className="space-y-3">
+                        {question.feedback!.knowledgeRelated.actionableInsights.map(
+                          (insight, insightIndex) => (
+                            <div key={insightIndex}>
+                              <h5 className="font-semibold text-sm mb-1">
+                                {insight.title}
+                              </h5>
+                              <ul className="list-disc pl-5 text-sm leading-relaxed">
+                                <li>{insight.description}</li>
+                              </ul>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </section>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  <p className="text-sm">
+                    No report available — question not attempted.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         );
       })}
     </div>

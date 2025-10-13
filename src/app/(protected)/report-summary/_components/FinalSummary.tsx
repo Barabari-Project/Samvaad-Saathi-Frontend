@@ -4,7 +4,7 @@ import { FinalSummaryProps } from "./types";
 const FinalSummary: React.FC<FinalSummaryProps> = ({ speechFluency }) => {
   return (
     <div id="final-summary">
-      <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
+      <div className="bg-white p-6 rounded-lg shadow-lg ">
         {/* Main Title */}
         <h2 className="text-2xl font-semibold text-fuchsia-600 mb-6">
           Speech Fluency
