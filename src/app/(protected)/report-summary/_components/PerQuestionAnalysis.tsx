@@ -1,19 +1,20 @@
+import { AccordionItem } from "@/components/accordion";
 import React from "react";
 import { PerQuestionAnalysisProps } from "./types";
 
 const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
   questionAnalysis,
 }) => {
-  const getQuestionTypeBadgeClass = (type: string) => {
+  const getQuestionTypeBadgeColor = (type: string) => {
     const lowerType = type.toLowerCase();
     if (lowerType.includes("technical question")) {
-      return "badge-primary";
+      return "bg-blue-100 text-blue-700";
     } else if (lowerType.includes("technical allied")) {
-      return "badge-success";
+      return "bg-green-100 text-green-700";
     } else if (lowerType.includes("behavioral")) {
-      return "badge-warning";
+      return "bg-amber-100 text-amber-700";
     }
-    return "badge-secondary";
+    return "bg-gray-100 text-gray-700";
   };
 
   return (
@@ -22,105 +23,96 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
         const hasFeedback = question.feedback !== null;
 
         return (
-          <div
+          <AccordionItem
             key={question.id}
-            className="collapse collapse-arrow bg-base-100 border border-base-300 shadow-2xl"
-          >
-            <input type="radio" name="question-accordion" />
-            <div className="collapse-title min-w-0">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`badge badge-xs ${getQuestionTypeBadgeClass(
-                      question.type
-                    )}`}
-                  >
-                    {question.type.toUpperCase()}
+            id={`question-${question.id}`}
+            question={
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-xs ${getQuestionTypeBadgeColor(
+                        question.type
+                      )}`}
+                    >
+                      {question.type}
+                    </span>
                   </span>
-                  <span className="text-sm text-base-content/70">
+                  <span className="text-xs text-muted-foreground">
                     {index + 1}/{question.totalQuestions}
                   </span>
                 </div>
+                <p className="text-sm leading-relaxed">{question.question}</p>
               </div>
-              <div className="mt-2 min-w-0">
-                <p className="text-sm text-base-content break-words overflow-wrap-anywhere whitespace-normal">
-                  {question.question}
+            }
+          >
+            {hasFeedback ? (
+              <div className="space-y-6">
+                {/* Strengths */}
+                {question.feedback!.knowledgeRelated.strengths.length > 0 && (
+                  <section className="space-y-3">
+                    <h4 className="text-base font-semibold text-emerald-600">
+                      Strengths
+                    </h4>
+                    <ul className="list-disc pl-5 text-sm leading-relaxed space-y-1">
+                      {question.feedback!.knowledgeRelated.strengths.map(
+                        (item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        )
+                      )}
+                    </ul>
+                  </section>
+                )}
+
+                {/* Areas of Improvement */}
+                {question.feedback!.knowledgeRelated.areasOfImprovement.length >
+                  0 && (
+                  <section className="space-y-3">
+                    <h4 className="text-base font-semibold text-red-600">
+                      Areas of Improvement
+                    </h4>
+                    <ul className="list-disc pl-5 text-sm leading-relaxed space-y-1">
+                      {question.feedback!.knowledgeRelated.areasOfImprovement.map(
+                        (item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        )
+                      )}
+                    </ul>
+                  </section>
+                )}
+
+                {/* Actionable Insights */}
+                {question.feedback!.knowledgeRelated.actionableInsights.length >
+                  0 && (
+                  <section className="space-y-3">
+                    <h4 className="text-base font-semibold text-blue-600">
+                      Actionable Insights
+                    </h4>
+                    <div className="space-y-3">
+                      {question.feedback!.knowledgeRelated.actionableInsights.map(
+                        (insight, insightIndex) => (
+                          <div key={insightIndex}>
+                            <h5 className="font-semibold text-sm mb-1">
+                              {insight.title}
+                            </h5>
+                            <ul className="list-disc pl-5 text-sm leading-relaxed">
+                              <li>{insight.description}</li>
+                            </ul>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </section>
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground py-4">
+                <p className="text-sm">
+                  No report available — question not attempted.
                 </p>
               </div>
-              <div className="divider" />
-            </div>
-
-            <div className="collapse-content">
-              {hasFeedback ? (
-                <div className="space-y-6">
-                  {/* Strengths */}
-                  {question.feedback!.knowledgeRelated.strengths.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-lg text-green-700 mb-2">
-                        Strengths
-                      </h4>
-                      <ul className="list-disc space-y-1 pl-5 text-sm">
-                        {question.feedback!.knowledgeRelated.strengths.map(
-                          (item, itemIndex) => (
-                            <li key={itemIndex}>{item}</li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Areas of Improvement */}
-                  {question.feedback!.knowledgeRelated.areasOfImprovement
-                    .length > 0 && (
-                    <div>
-                      <h4 className="text-lg font-semibold text-error mb-2">
-                        Areas of Improvement
-                      </h4>
-                      <ul className="list-disc space-y-1 pl-5 text-sm">
-                        {question.feedback!.knowledgeRelated.areasOfImprovement.map(
-                          (item, itemIndex) => (
-                            <li key={itemIndex}>{item}</li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Actionable Insights */}
-                  {question.feedback!.knowledgeRelated.actionableInsights
-                    .length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-lg text-blue-700 mb-2">
-                        Actionable Insights
-                      </h4>
-                      <div className="space-y-3">
-                        {question.feedback!.knowledgeRelated.actionableInsights.map(
-                          (insight, insightIndex) => (
-                            <div key={insightIndex} className="">
-                              <h5 className="font-semibold  mb-1">
-                                {insight.title}
-                              </h5>
-                              <ul className="list-disc space-y-1 pl-5 text-sm">
-                                <li className="text-sm text-gray-700">
-                                  {insight.description}
-                                </li>
-                              </ul>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className=" text-center text-gray-500">
-                  <p className="text-sm">
-                    No report available — question not attempted.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+            )}
+          </AccordionItem>
         );
       })}
     </div>
