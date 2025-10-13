@@ -1,4 +1,4 @@
-import { CpuChipIcon, MicrophoneIcon } from "@heroicons/react/24/solid";
+import Image from "next/image";
 import React from "react";
 import SectionCard from "./SectionCard";
 import { OverallScoreSummaryProps } from "./types";
@@ -13,14 +13,17 @@ const OverallScoreSummary: React.FC<OverallScoreSummaryProps> = ({
         {/* Knowledge Competence */}
         <div className="space-y-4">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
               <div className="w-6 h-6 flex items-center justify-center">
-                <CpuChipIcon className="w-5 h-5 text-red-500" />
+                <Image
+                  src="/brain.png"
+                  alt="Knowledge Competence"
+                  width={20}
+                  height={20}
+                />
               </div>
-              <h3 className="text-lg font-bold text-black">
-                Knowledge Competence
-              </h3>
+              <h3 className="font-semibold text-black">Knowledge Competence</h3>
             </div>
             <span className="badge badge-ghost bg-stone-300">
               {knowledgeCompetence.score}/{knowledgeCompetence.maxScore}
@@ -61,14 +64,17 @@ const OverallScoreSummary: React.FC<OverallScoreSummaryProps> = ({
         {/* Speech & Structure */}
         <div className="space-y-4">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
               <div className="w-6 h-6 flex items-center justify-center">
-                <MicrophoneIcon className="w-5 h-5 text-black" />
+                <Image
+                  src="/text-to-speech.png"
+                  alt="Speech & Structure"
+                  width={20}
+                  height={20}
+                />
               </div>
-              <h3 className="text-lg font-bold text-black">
-                Speech & Structure
-              </h3>
+              <h3 className="font-semibold text-black">Speech & Structure</h3>
             </div>
             <span className="badge badge-ghost bg-stone-300">
               {speechAndStructure.score}/{speechAndStructure.maxScore}

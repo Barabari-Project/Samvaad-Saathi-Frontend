@@ -47,11 +47,12 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                   {question.question}
                 </p>
               </div>
+              <div className="divider" />
             </div>
 
             <div className="collapse-content">
               {hasFeedback ? (
-                <div className="space-y-6 pt-4">
+                <div className="space-y-6">
                   {/* Strengths */}
                   {question.feedback!.knowledgeRelated.strengths.length > 0 && (
                     <div>
@@ -112,7 +113,7 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="pt-4 text-center text-gray-500">
+                <div className=" text-center text-gray-500">
                   <p className="text-sm">
                     No report available — question not attempted.
                   </p>
