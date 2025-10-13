@@ -3,10 +3,10 @@
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
-import dayjs from "dayjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import CompletedInterviewsTab from "./_components/CompletedInterviewsTab";
+import HistorySkeletonLoader from "./_components/HistorySkeletonLoader";
 import IncompleteInterviewsTab from "./_components/IncompleteInterviewsTab";
 import {
   InterviewItem,
@@ -100,76 +100,62 @@ export default function InterviewHistory() {
 
   if (isLoading) {
     return (
-      <div className="min-h-[calc(100dvh-56px)] py-6">
-        <div className="max-w-md mx-auto">
-          <h2 className="text-[20px] font-semibold text-[#1F285B] mb-4">
-            History
-          </h2>
-          <div className="flex justify-center items-center h-32">
-            <span className="loading loading-spinner loading-md"></span>
-          </div>
-        </div>
+      <div className="max-w-md mx-auto pb-8">
+        <h2 className="text-[20px] font-semibold text-primary my-4">History</h2>
+        <HistorySkeletonLoader />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-[calc(100dvh-56px)] py-6">
-        <div className="max-w-md mx-auto">
-          <h2 className="text-[20px] font-semibold text-[#1F285B] mb-4">
-            History
-          </h2>
-          <div className="alert alert-error">
-            <span>Failed to load interviews. Please try again.</span>
-          </div>
+      <div className="max-w-md mx-auto">
+        <h2 className="text-[20px] font-semibold text-[#1F285B] mb-4">
+          History
+        </h2>
+        <div className="alert alert-error">
+          <span>Failed to load interviews. Please try again.</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[calc(100dvh-56px)] py-6">
-      <div className="max-w-md mx-auto">
-        <h2 className="text-[20px] font-semibold text-[#1F285B] mb-4">
-          History
-        </h2>
+    <div className="max-w-md mx-auto pb-8">
+      <h2 className="text-[20px] font-semibold text-primary my-4">History</h2>
 
-        <div
-          role="tablist"
-          className="tabs tabs-box mb-3 w-full bg-gray-200 p-2 font-bold text-2xl"
+      <div
+        role="tablist"
+        className="tabs tabs-box mb-3 w-full bg-gray-200 p-2 font-bold text-2xl"
+      >
+        <a
+          role="tab"
+          className={`tab flex-1 ${
+            activeTab === "incomplete" ? "tab-active shadow-2xl rounded-xl" : ""
+          }`}
+          onClick={() => handleTabChange("incomplete")}
         >
-          <a
-            role="tab"
-            className={`tab flex-1 ${
-              activeTab === "incomplete"
-                ? "tab-active shadow-2xl rounded-xl"
-                : ""
-            }`}
-            onClick={() => handleTabChange("incomplete")}
-          >
-            Incomplete
-          </a>
-          <a
-            role="tab"
-            className={`tab flex-1 ${
-              activeTab === "completed" ? "tab-active" : ""
-            }`}
-            onClick={() => handleTabChange("completed")}
-          >
-            Completed
-          </a>
-        </div>
-
-        {activeTab === "incomplete" ? (
-          <IncompleteInterviewsTab
-            incomplete={incomplete}
-            onCompleteInterview={handleCompleteInterview}
-          />
-        ) : (
-          <CompletedInterviewsTab completed={completed} />
-        )}
+          Incomplete
+        </a>
+        <a
+          role="tab"
+          className={`tab flex-1 ${
+            activeTab === "completed" ? "tab-active" : ""
+          }`}
+          onClick={() => handleTabChange("completed")}
+        >
+          Completed
+        </a>
       </div>
+
+      {activeTab === "incomplete" ? (
+        <IncompleteInterviewsTab
+          incomplete={incomplete}
+          onCompleteInterview={handleCompleteInterview}
+        />
+      ) : (
+        <CompletedInterviewsTab completed={completed} />
+      )}
     </div>
   );
 }
