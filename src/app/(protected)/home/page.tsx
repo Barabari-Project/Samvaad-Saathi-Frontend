@@ -72,7 +72,7 @@ export default function HomePage() {
     error: interviewsError,
   } = apiClient.useQuery<InterviewsResponse>({
     key: [ENDPOINTS.INTERVIEWS.WITH_SUMMARY, "interview-list"],
-    url: ENDPOINTS.INTERVIEWS.WITH_SUMMARY,
+    url: `${ENDPOINTS.INTERVIEWS.WITH_SUMMARY}?limit=3`,
     enabled: !loading, // Only fetch when auth is loaded
   });
 
@@ -283,14 +283,40 @@ export default function HomePage() {
                                   Performance Score
                                 </p>
                                 <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                                  <div className="flex items-center">
+                                    <div className="p-2">
+                                      <svg
+                                        width="8"
+                                        height="8"
+                                        viewBox="0 0 8 8"
+                                      >
+                                        <circle
+                                          cx="4"
+                                          cy="4"
+                                          r="4"
+                                          fill="#3b82f6"
+                                        />
+                                      </svg>
+                                    </div>
                                     <span className="text-sm text-gray-700">
                                       Technical Knowledge
                                     </span>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                                  <div className="flex items-center">
+                                    <div className="p-2">
+                                      <svg
+                                        width="8"
+                                        height="8"
+                                        viewBox="0 0 8 8"
+                                      >
+                                        <circle
+                                          cx="4"
+                                          cy="4"
+                                          r="4"
+                                          fill="#6b7280"
+                                        />
+                                      </svg>
+                                    </div>
                                     <span className="text-sm text-gray-700">
                                       Speech Fluency
                                     </span>
@@ -309,7 +335,14 @@ export default function HomePage() {
                                   className="flex items-start gap-2"
                                 >
                                   <div className="flex-shrink-0 mt-1">
-                                    <div className="size-1.5 bg-primary rounded-full"></div>
+                                    <svg width="6" height="6" viewBox="0 0 6 6">
+                                      <circle
+                                        cx="3"
+                                        cy="3"
+                                        r="3"
+                                        className="fill-primary"
+                                      />
+                                    </svg>
                                   </div>
                                   <p className="text-xs font-semibold text-gray-700">
                                     {item}
