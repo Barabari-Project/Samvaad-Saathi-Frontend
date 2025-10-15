@@ -235,7 +235,7 @@ export default function HomePage() {
                                     value: interview.knowledgePercentage ?? 0,
                                     color: "#3b82f6",
                                     ariaLabel: "Technical Knowledge progress",
-                                    trackColor: "#e5e7eb",
+                                    trackColor: "#e5e5e5",
                                     thickness: 10,
                                   },
                                   {
@@ -243,7 +243,7 @@ export default function HomePage() {
                                       interview.speechFluencyPercentage ?? 0,
                                     color: "#6b7280",
                                     ariaLabel: "Speech Fluency progress",
-                                    trackColor: "#e5e7eb",
+                                    trackColor: "#bedbff",
                                     thickness: 8,
                                   },
                                 ]}
