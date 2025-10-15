@@ -1,3 +1,4 @@
+import DifficultyTag from "@/components/DifficultyTag";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 import { InterviewItem } from "./types";
@@ -33,19 +34,7 @@ export default function IncompleteInterviewCard({
 
       {/* Difficulty Label - Top Right */}
       <div className="absolute top-4 right-4">
-        <span
-          className={`badge badge-xs badge-soft ${
-            item.difficulty?.toLowerCase() === "hard"
-              ? "badge-error"
-              : item.difficulty?.toLowerCase() === "easy"
-              ? "badge-success"
-              : item.difficulty?.toLowerCase() === "medium"
-              ? "badge-warning"
-              : "badge-neutral"
-          }`}
-        >
-          {item.difficulty?.toUpperCase()}
-        </span>
+        <DifficultyTag difficulty={item.difficulty} />
       </div>
 
       {/* Complete Interview Button - Bottom Right */}

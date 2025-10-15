@@ -1,4 +1,5 @@
 import ConcentricRadialProgress from "@/components/ConcentricRadialProgress";
+import DifficultyTag from "@/components/DifficultyTag";
 import Link from "next/link";
 
 import { formatDate } from "@/lib/utils";
@@ -23,19 +24,7 @@ export default function CompletedInterviewCard({
 
       {/* Difficulty Label - Top Right */}
       <div className="absolute top-4 right-4">
-        <span
-          className={`badge badge-xs badge-soft ${
-            item?.difficulty?.toLowerCase() === "hard"
-              ? "badge-error"
-              : item?.difficulty?.toLowerCase() === "easy"
-              ? "badge-success"
-              : item?.difficulty?.toLowerCase() === "medium"
-              ? "badge-warning"
-              : "badge-neutral"
-          }`}
-        >
-          {item?.difficulty?.toUpperCase()}
-        </span>
+        <DifficultyTag difficulty={item?.difficulty} />
       </div>
 
       {/* Progress indicators */}

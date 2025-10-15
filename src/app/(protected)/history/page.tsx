@@ -1,5 +1,6 @@
 "use client";
 
+import Empty from "@/components/Empty";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
@@ -108,16 +109,7 @@ export default function InterviewHistory() {
   }
 
   if (error) {
-    return (
-      <div className="max-w-md mx-auto">
-        <h2 className="text-[20px] font-semibold text-[#1F285B] mb-4">
-          History
-        </h2>
-        <div className="alert alert-error">
-          <span>Failed to load interviews. Please try again.</span>
-        </div>
-      </div>
-    );
+    return <Empty />;
   }
 
   return (

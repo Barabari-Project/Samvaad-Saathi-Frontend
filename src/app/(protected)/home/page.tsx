@@ -1,5 +1,6 @@
 "use client";
 import ConcentricRadialProgress from "@/components/ConcentricRadialProgress";
+import DifficultyTag from "@/components/DifficultyTag";
 import { useAuth } from "@/components/providers/auth-provider";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
@@ -88,20 +89,6 @@ export default function HomePage() {
   // Helper function to format date
   const formatDate = (dateString: string) => {
     return dayjs(dateString).format("DD MMM, YYYY");
-  };
-
-  // Helper function to get difficulty color
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return "badge-success";
-      case "medium":
-        return "badge-warning";
-      case "hard":
-        return "badge-error";
-      default:
-        return "badge-neutral";
-    }
   };
 
   // Handle continue interview
@@ -209,13 +196,10 @@ export default function HomePage() {
                             </p>
                           </div>
                           <div className="flex gap-2">
-                            <div
-                              className={`badge badge-xs ${getDifficultyColor(
-                                interview.difficulty
-                              )}`}
-                            >
-                              {interview.difficulty?.toUpperCase()}
-                            </div>
+                            <DifficultyTag
+                              difficulty={interview.difficulty}
+                              soft={false}
+                            />
                           </div>
                         </div>
 
