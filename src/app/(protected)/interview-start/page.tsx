@@ -23,6 +23,13 @@ interface CreateInterviewResponse {
   interviewId: string;
 }
 
+const DIFFICULTY_LEVEL = [
+  { key: "easy", label: "Easy" },
+  { key: "medium", label: "Medium" },
+  { key: "hard", label: "Hard" },
+  { key: "expert", label: "Expert" },
+];
+
 export default function InterviewStartPage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
@@ -126,11 +133,7 @@ export default function InterviewStartPage() {
         </label>
 
         <div className="space-y-2">
-          {[
-            { key: "easy", label: "Easy" },
-            { key: "medium", label: "Medium" },
-            { key: "hard", label: "Hard" },
-          ].map((opt) => (
+          {DIFFICULTY_LEVEL.map((opt) => (
             <label
               key={opt.key}
               className="flex items-center gap-3 cursor-pointer"
