@@ -59,6 +59,13 @@ export default function InterviewStartPage() {
         }
       },
     },
+    keyToInvalidate: {
+      queryKey: [
+        ENDPOINTS.AUTH.ABOUT_ME,
+        ENDPOINTS.INTERVIEWS.LIST,
+        ENDPOINTS.INTERVIEWS.WITH_SUMMARY,
+      ],
+    },
   });
 
   const handleToggleResume = (checked: boolean) => {

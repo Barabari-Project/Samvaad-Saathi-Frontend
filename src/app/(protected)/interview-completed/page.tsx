@@ -39,6 +39,12 @@ const InterviewCompleted = () => {
           );
         },
       },
+      keyToInvalidate: {
+        queryKey: [
+          ENDPOINTS.INTERVIEWS.LIST,
+          ENDPOINTS.INTERVIEWS.WITH_SUMMARY,
+        ],
+      },
     });
 
   // Track screen view on component mount
