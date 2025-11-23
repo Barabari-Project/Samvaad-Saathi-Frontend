@@ -2,11 +2,16 @@
 import useTouchDevice from "@/hooks/useTouchDevice";
 import React from "react";
 
-const Welcome = ({ role }: { role: string }) => {
+interface WelcomeProps {
+  role: string;
+  onStart: () => void;
+}
+
+const Welcome = ({ role, onStart }: WelcomeProps) => {
   const isTouchDevice = useTouchDevice();
 
   return (
-    <div className="h-full px-8 pt-8">
+    <div className="" onClick={() => isTouchDevice && onStart()}>
       <div className="flex-1">
         <h3 className="text-primary text-2xl font-bold tracking-wide uppercase">
           {role}
@@ -56,7 +61,10 @@ const Welcome = ({ role }: { role: string }) => {
 
             {!isTouchDevice && (
               <div className="mt-6 flex justify-center">
-                <button className="btn btn-primary px-8 text-lg">
+                <button
+                  onClick={onStart}
+                  className="btn btn-primary px-8 text-lg"
+                >
                   Click here to continue
                 </button>
               </div>

@@ -23,7 +23,7 @@ const Footer = () => {
         <div className="flex justify-between items-center animate-fade-in">
           <button
             onClick={handleAnswerClick}
-            className="btn bg-[#1f285b] hover:bg-[#161d42] text-white px-6 normal-case font-normal text-lg rounded-md border-none flex items-center gap-2"
+            className="btn bg-primary hover:bg-primary/90 text-white px-6 normal-case font-normal text-lg rounded-md border-none flex items-center gap-2"
           >
             Answer <HeroMicrophoneIcon className="h-5 w-5" />
           </button>
@@ -35,7 +35,7 @@ const Footer = () => {
       ) : (
         <>
           {/* Main container with gradient border and background */}
-          <div className="relative w-full max-w-4xl aspect-video rounded-3xl border-4 border-blue-400 overflow-hidden shadow-xl bg-gradient-to-b from-blue-100 via-purple-50 to-yellow-50">
+          <div className="relative w-full max-w-4xl aspect-video rounded-3xl border-4 border-blue-500/40 overflow-hidden shadow-xl bg-gradient-to-b from-blue-100 via-purple-50 to-yellow-50">
             {/* Listening text */}
             <div className="absolute top-8 left-0 right-0 flex justify-center">
               <h1 className="text-2xl font-semibold text-gray-800">
@@ -52,16 +52,16 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="flex justify-between items-center w-full">
+          <div className="flex justify-between items-center w-full mt-8">
             <button
               onClick={handleStopListening}
-              className="btn bg-[#1f285b] hover:bg-[#161d42] text-white px-8 min-w-[120px] border-none normal-case rounded-lg"
+              className="btn bg-primary hover:bg-primary/90 text-white px-8 min-w-[120px] border-none normal-case rounded-lg"
             >
               Redo
             </button>
             <button
               onClick={handleStopListening}
-              className="btn bg-[#1f285b] hover:bg-[#161d42] text-white px-8 min-w-[120px] border-none normal-case rounded-lg"
+              className="btn bg-primary hover:bg-primary/90 text-white px-8 min-w-[120px] border-none normal-case rounded-lg"
             >
               Done
             </button>

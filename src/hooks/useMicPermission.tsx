@@ -44,12 +44,11 @@ import toast from "react-hot-toast";
 type MicPermissionState = {
   hasPermission: boolean;
   isChecking: boolean;
-  error: string | null;
   showModal: boolean;
 };
 
 type MicPermissionActions = {
-  requestPermission: () => Promise<void>;
+  requestPermission: () => Promise<boolean>;
   showPermissionModal: () => void;
   hidePermissionModal: () => void;
   checkPermission: () => Promise<void>;
@@ -59,12 +58,10 @@ export const useMicPermission = (): MicPermissionState &
   MicPermissionActions => {
   const [hasPermission, setHasPermission] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
 
   const checkPermission = useCallback(async () => {
     setIsChecking(true);
-    setError(null);
 
     try {
       const result = await navigator.permissions.query({
@@ -78,11 +75,7 @@ export const useMicPermission = (): MicPermissionState &
         setHasPermission(false);
         setShowModal(false);
         toast.error(
-          "Microphone access denied. Please enable it in your browser settings.",
-          {
-            duration: 5000,
-            icon: <ExclamationTriangleIcon className="w-5 h-5" />,
-          }
+          "Microphone access denied. Please enable it in your browser settings."
         );
       } else {
         // Prompt state - permission not yet requested
@@ -98,7 +91,6 @@ export const useMicPermission = (): MicPermissionState &
 
   const requestPermission = useCallback(async () => {
     try {
-      setError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: AUDIO_CONSTRAINTS_16KHZ,
       });
@@ -108,20 +100,13 @@ export const useMicPermission = (): MicPermissionState &
       setHasPermission(true);
       setShowModal(false);
 
-      toast.success("Microphone access granted!", {
-        duration: 3000,
-        icon: <MicrophoneIcon className="w-5 h-5" />,
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Microphone permission denied";
-      setError(message);
+      toast.success("Microphone access granted!");
+      return true;
+    } catch {
       setHasPermission(false);
 
-      toast.error(`Failed to access microphone: ${message}`, {
-        duration: 5000,
-        icon: <ExclamationTriangleIcon className="w-5 h-5" />,
-      });
+      toast.error(`Failed to access microphone.`);
+      return false;
     }
   }, []);
 
@@ -131,7 +116,6 @@ export const useMicPermission = (): MicPermissionState &
 
   const hidePermissionModal = useCallback(() => {
     setShowModal(false);
-    setError(null);
   }, []);
 
   // Check permission on mount
@@ -142,7 +126,6 @@ export const useMicPermission = (): MicPermissionState &
   return {
     hasPermission,
     isChecking,
-    error,
     showModal,
     requestPermission,
     showPermissionModal,
@@ -156,12 +139,10 @@ export const MicPermissionModal = ({
   isOpen,
   onClose,
   onRequestPermission,
-  error,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onRequestPermission: () => void;
-  error: string | null;
+  onRequestPermission: () => Promise<boolean>;
 }) => {
   if (!isOpen) return null;
 
@@ -177,13 +158,6 @@ export const MicPermissionModal = ({
           To record your interview answers, we need access to your microphone.
           This will only be used to capture your responses during the interview.
         </p>
-
-        {error && (
-          <div className="alert alert-error mb-4">
-            <ExclamationTriangleIcon className="w-5 h-5" />
-            <span className="text-sm">{error}</span>
-          </div>
-        )}
 
         <div className="modal-action">
           <button className="btn btn-outline" onClick={onClose}>
