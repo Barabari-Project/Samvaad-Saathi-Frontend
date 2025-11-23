@@ -9,6 +9,7 @@
   --color-error: #d40303;
   --font-heading: var(--font-noto-sans-devanagari);
   --font-body: var(--font-anek-devanagari);
+  --font-orbitron: var(--font-orbitron);
 }
 
 /* Font utility classes */
@@ -18,6 +19,10 @@
 
 .font-body {
   font-family: var(--font-body), sans-serif;
+}
+
+.font-orbitron {
+  font-family: var(--font-orbitron), sans-serif;
 }
 
 /* Apply body font to all text by default */
