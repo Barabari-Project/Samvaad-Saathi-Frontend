@@ -21,9 +21,9 @@ export default defineComponent({
 
   return (
     <>
-      <div className="w-full max-w-2xl my-4">
+      <div className="w-full flex justify-center my-4">
         {/* Card Container */}
-        <div className="card bg-[#1e1e1e] shadow-xl rounded-lg overflow-hidden border border-gray-800">
+        <div className="card w-xl bg-[#1e1e1e] shadow-xl rounded-lg overflow-hidden border border-gray-800">
           {/* Header */}
           <div className="flex justify-between items-center px-4 py-2 bg-[#252526] border-b border-gray-800">
             <div className="flex items-center gap-2">

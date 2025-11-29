@@ -18,7 +18,7 @@ const Footer = () => {
   };
 
   return (
-    <div className="w-full py-4 transition-all duration-300 ease-in-out">
+    <div className="w-full py-4 transition-all duration-300 ease-in-out flex flex-col items-center justify-center">
       {!isListening ? (
         <div className="flex justify-between items-center animate-fade-in">
           <button
@@ -45,9 +45,9 @@ const Footer = () => {
 
             {/* Centered circular microphone button with gradient */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-40 h-40 rounded-full flex items-center justify-center shadow-2xl bg-gradient-to-br from-pink-300 via-pink-200 to-cyan-300">
+              <div className="relative size-20 rounded-full flex items-center justify-center shadow-2xl bg-gradient-to-br from-pink-300 via-pink-200 to-cyan-300">
                 {/* Microphone icon */}
-                <MicrophoneIcon className="w-20 h-20 text-blue-900" />
+                <MicrophoneIcon className="size-10 text-blue-900" />
               </div>
             </div>
           </div>

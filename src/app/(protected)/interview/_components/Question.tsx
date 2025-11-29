@@ -9,16 +9,16 @@ const Question = () => {
 
       {/* Question Text */}
       <div className="mb-8">
-        <h2 className="text-[28px] leading-[1.4] text-slate-900 font-normal">
+        <p className="text-xl leading-[1.4] text-slate-900 font-normal">
           This is a critical part of the challenge. How would you specifically
           address the performance issues associated with rendering thousands of
           items? Mention and explain at least two distinct techniques.
-        </h2>
+        </p>
       </div>
 
       {/* Tag */}
       <div className="flex">
-        <span className="badge badge-lg border-transparent bg-[#FDF89F] text-[#5F4B0C] rounded h-auto py-1.5 px-3 font-medium tracking-wide">
+        <span className="badge badge-lg badge-warning">
           Situational question
         </span>
       </div>
