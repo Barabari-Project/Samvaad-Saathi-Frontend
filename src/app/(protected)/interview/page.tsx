@@ -6,7 +6,10 @@ import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CodeView, Footer, Header, Question, Welcome } from "./_components";
-import { GenerateQuestionsResponse } from "./types";
+import {
+  GenerateQuestionsResponse,
+  StartQuestionAttemptResponse,
+} from "./types";
 
 const InterviewPage = () => {
   const searchParams = useSearchParams();
@@ -15,6 +18,7 @@ const InterviewPage = () => {
   const role = searchParams.get("role");
 
   const [hasStarted, setHasStarted] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // mic permission utils
   const {
@@ -25,35 +29,47 @@ const InterviewPage = () => {
     hidePermissionModal,
   } = useMicPermission();
 
+  const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
-   const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
-  
-    const {mutateAsync: generateQuestions, isPending:isGeneratingQuestions, data: generatedQuestions} = apiClient.useMutation<GenerateQuestionsResponse>({
-      url: ENDPOINTS_V2.GENERATE_QUESTIONS,
-      method: "post",
-    });
+  const {
+    mutateAsync: generateQuestions,
+    isPending: isGeneratingQuestions,
+    data: generatedQuestions,
+  } = apiClient.useMutation<GenerateQuestionsResponse>({
+    url: ENDPOINTS_V2.GENERATE_QUESTIONS,
+    method: "post",
+  });
 
-    const { mutateAsync: startQuestionAttempt, isPending: isStartingAttempt } = apiClient.useMutation({
-      url: ENDPOINTS.INTERVIEWS.START_QUESTION_ATTEMPT,
-      method: "post",
-    });
+  const {
+    mutateAsync: startQuestionAttempt,
+    isPending: isStartingAttempt,
+    data: questionAttemptResponse,
+  } = apiClient.useMutation<StartQuestionAttemptResponse>({
+    url: ENDPOINTS.INTERVIEWS.START_QUESTION_ATTEMPT,
+    method: "post",
+  });
 
-    useEffect(() => {
-      if (generatedQuestions?.items?.[0] && interviewId) {
-        startQuestionAttempt({
-          interviewId: Number(interviewId),
-          questionId: generatedQuestions.items[0].interviewQuestionId,
-        });
-      }
-    }, [generatedQuestions, interviewId, startQuestionAttempt]);
-
+  useEffect(() => {
+    if (generatedQuestions?.items?.[currentQuestionIndex] && interviewId) {
+      startQuestionAttempt({
+        interviewId: Number(interviewId),
+        questionId:
+          generatedQuestions.items[currentQuestionIndex].interviewQuestionId,
+      });
+    }
+  }, [
+    generatedQuestions,
+    interviewId,
+    startQuestionAttempt,
+    currentQuestionIndex,
+  ]);
 
   const handleInterviewStart = () => {
     if (hasPermission) {
       setHasStarted(true);
       generateQuestions({
-        useResume
-      })
+        useResume,
+      });
     } else {
       showPermissionModal();
     }
@@ -65,6 +81,15 @@ const InterviewPage = () => {
       setHasStarted(true);
     }
     return granted;
+  };
+
+  const handleNextQuestion = () => {
+    if (
+      generatedQuestions?.items &&
+      currentQuestionIndex < generatedQuestions.items.length - 1
+    ) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
   };
 
   return (
@@ -83,15 +108,23 @@ const InterviewPage = () => {
           <Header />
           <Question
             isLoading={isGeneratingQuestions}
-            question={generatedQuestions?.items?.[0]}
-            currentQuestionIndex={0}
+            question={generatedQuestions?.items?.[currentQuestionIndex]}
+            currentQuestionIndex={currentQuestionIndex}
             totalQuestions={generatedQuestions?.items?.length || 0}
           />
           <CodeView
             isLoading={isGeneratingQuestions}
-            code={generatedQuestions?.items?.[0]?.supplement || undefined}
+            code={
+              generatedQuestions?.items?.[currentQuestionIndex]?.supplement ||
+              undefined
+            }
           />
-          <Footer isLoading={isGeneratingQuestions} disabled={isStartingAttempt} />
+          <Footer
+            isLoading={isGeneratingQuestions}
+            disabled={isStartingAttempt}
+            question_attempt_id={questionAttemptResponse?.questionAttemptId}
+            onNext={handleNextQuestion}
+          />
         </div>
       )}
     </div>

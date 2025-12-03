@@ -20,3 +20,7 @@ export interface GenerateQuestionsResponse {
   llmLatencyMs: number | null;
   llmError: string | null;
 }
+
+export interface StartQuestionAttemptResponse {
+  questionAttemptId: number;
+}

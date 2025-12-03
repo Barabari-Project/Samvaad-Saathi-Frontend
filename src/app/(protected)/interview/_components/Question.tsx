@@ -4,7 +4,7 @@ import { GenerateQuestionsResponse } from "../types";
 
 interface QuestionProps {
   isLoading: boolean;
-  question: GenerateQuestionsResponse['items'][number] | undefined;
+  question: GenerateQuestionsResponse["items"][number] | undefined;
   currentQuestionIndex: number;
   totalQuestions: number;
 }
@@ -15,11 +15,6 @@ const Question = ({
   currentQuestionIndex = 0,
   totalQuestions = 0,
 }: QuestionProps) => {
-   console.log("question", question);
-
-   
-
-
   if (isLoading) {
     return (
       <div className="w-full py-6 animate-pulse">
