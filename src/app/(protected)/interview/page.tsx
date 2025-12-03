@@ -92,6 +92,24 @@ const InterviewPage = () => {
     }
   };
 
+  const { mutateAsync: completeInterview } = apiClient.useMutation({
+    url: ENDPOINTS.INTERVIEWS.COMPLETE,
+    method: "post",
+    options: {
+      onSuccess: () => {
+        window.location.href = "/interview-completed";
+      },
+    },
+  });
+
+  const handleInterviewSubmit = () => {
+    if (interviewId) {
+      completeInterview({
+        interviewId: Number(interviewId),
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-8 max-w-6xl">
       {!hasStarted ? (
@@ -124,6 +142,11 @@ const InterviewPage = () => {
             disabled={isStartingAttempt}
             question_attempt_id={questionAttemptResponse?.questionAttemptId}
             onNext={handleNextQuestion}
+            isLastQuestion={
+              generatedQuestions?.items &&
+              currentQuestionIndex === generatedQuestions.items.length - 1
+            }
+            onSubmit={handleInterviewSubmit}
           />
         </div>
       )}

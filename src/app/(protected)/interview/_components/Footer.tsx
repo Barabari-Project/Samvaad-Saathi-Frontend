@@ -16,6 +16,8 @@ interface FooterProps {
   disabled?: boolean;
   question_attempt_id?: number;
   onNext?: () => void;
+  isLastQuestion?: boolean;
+  onSubmit?: () => void;
 }
 
 const Footer = ({
@@ -23,10 +25,13 @@ const Footer = ({
   disabled = false,
   question_attempt_id,
   onNext,
+  isLastQuestion = false,
+  onSubmit,
 }: FooterProps) => {
   const [isListening, setIsListening] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -147,43 +152,94 @@ const Footer = ({
     }
   };
 
+  const handleSubmitClick = () => {
+    setShowSubmitModal(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    setShowSubmitModal(false);
+    if (onSubmit) {
+      onSubmit();
+    }
+  };
+
   const handleConfirmSkip = () => {
     setShowSkipModal(false);
-    if (onNext) {
-      onNext();
-      setHasAnswered(false);
+    if (isLastQuestion) {
+      setShowSubmitModal(true);
+    } else {
+      if (onNext) {
+        onNext();
+        setHasAnswered(false);
+      }
     }
   };
 
   return (
     <div className="w-full py-4 transition-all duration-300 ease-in-out flex flex-col items-center justify-center">
       {/* Skip Confirmation Modal */}
-      {showSkipModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl p-6 shadow-2xl max-w-sm w-full mx-4 animate-scale-in">
-            <h3 className="text-lg font-semibold text-slate-800 mb-2">
-              Skip Question?
-            </h3>
-            <p className="text-slate-600 mb-6">
-              Are you sure you want to skip this question?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowSkipModal(false)}
-                className="btn btn-ghost text-slate-600 hover:bg-slate-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmSkip}
-                className="btn bg-primary text-white hover:bg-primary/90 border-none"
-              >
-                Yes, Skip
-              </button>
-            </div>
+      <dialog
+        className={`modal ${
+          showSkipModal ? "modal-open" : ""
+        } backdrop-blur-sm`}
+      >
+        <div className="modal-box">
+          <h3 className="font-bold text-lg text-slate-800">Skip Question?</h3>
+          <p className="py-4 text-slate-600">
+            Are you sure you want to skip this question?
+          </p>
+          <div className="modal-action">
+            <button
+              onClick={() => setShowSkipModal(false)}
+              className="btn btn-ghost text-slate-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmSkip}
+              className="btn bg-primary text-white hover:bg-primary/90 border-none"
+            >
+              Yes, Skip
+            </button>
           </div>
         </div>
-      )}
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => setShowSkipModal(false)}>close</button>
+        </form>
+      </dialog>
+
+      {/* Submit Confirmation Modal */}
+      <dialog
+        className={`modal ${
+          showSubmitModal ? "modal-open" : ""
+        } backdrop-blur-sm`}
+      >
+        <div className="modal-box">
+          <h3 className="font-bold text-lg text-slate-800">
+            Submit Interview?
+          </h3>
+          <p className="py-4 text-slate-600">
+            Are you sure you want to submit the interview?
+          </p>
+          <div className="modal-action">
+            <button
+              onClick={() => setShowSubmitModal(false)}
+              className="btn btn-ghost text-slate-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmSubmit}
+              className="btn bg-primary text-white hover:bg-primary/90 border-none"
+            >
+              Yes, Submit
+            </button>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={() => setShowSubmitModal(false)}>close</button>
+        </form>
+      </dialog>
 
       {isLoading ? (
         <div className="flex justify-between items-center w-full animate-pulse">
@@ -196,7 +252,7 @@ const Footer = ({
             <button
               onClick={handleAnswerClick}
               disabled={disabled || isUploading}
-              className="btn bg-primary hover:bg-primary/90 text-white px-6 normal-case font-normal text-lg rounded-md border-none flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn bg-primary hover:bg-primary/90 text-white "
             >
               Answer <HeroMicrophoneIcon className="h-5 w-5" />
             </button>
@@ -204,19 +260,29 @@ const Footer = ({
             <button
               onClick={handleRedo}
               disabled={disabled || isUploading}
-              className="btn bg-primary hover:bg-primary/90 text-white px-6 normal-case font-normal text-lg rounded-md border-none flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn bg-primary hover:bg-primary/90 text-white"
             >
               Redo <HeroMicrophoneIcon className="h-5 w-5" />
             </button>
           )}
 
-          <button
-            onClick={handleNextClick}
-            disabled={disabled || isUploading}
-            className="btn btn-outline px-8 normal-case font-normal text-lg rounded-md hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
+          {isLastQuestion ? (
+            <button
+              onClick={handleSubmitClick}
+              disabled={disabled || isUploading}
+              className="btn btn-primary text-white"
+            >
+              Submit
+            </button>
+          ) : (
+            <button
+              onClick={handleNextClick}
+              disabled={disabled || isUploading}
+              className="btn btn-outline"
+            >
+              Next
+            </button>
+          )}
         </div>
       ) : (
         <>
