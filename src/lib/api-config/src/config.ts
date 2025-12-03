@@ -24,6 +24,10 @@ export enum APIService {
   ANALYSIS = "ANALYSIS",
 }
 
+export enum APIServiceV2 {
+    INTERVIEWS = "INTERVIEWS",
+}
+
 export const createAxiosInstance = (baseURL: string) => {
   const axiosInstance = axios.create({
     baseURL,

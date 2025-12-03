@@ -5,19 +5,40 @@ import React, { useRef } from "react";
 interface CodeViewProps {
   code?: string;
   fileName?: string;
+  isLoading?: boolean;
 }
 
 const CodeView: React.FC<CodeViewProps> = ({
-  code = `import { defineComponent } from 'vue'
+  code,
+  fileName = "Demo.jsx",
+  isLoading = false,
+}) => {
+  const modalRef = useRef<HTMLDialogElement>(null);
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex justify-center my-4 animate-pulse">
+        <div className="card w-xl bg-[#1e1e1e] shadow-xl rounded-lg overflow-hidden border border-gray-800 h-48">
+          <div className="flex justify-between items-center px-4 py-2 bg-[#252526] border-b border-gray-800">
+            <div className="h-4 w-24 bg-gray-700 rounded"></div>
+          </div>
+          <div className="p-4 space-y-2">
+            <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-700 rounded w-5/6"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const displayCode = code || `import { defineComponent } from 'vue'
 
 export default defineComponent({
   setup() {
     return () => <div>$0</div>
   },
-})`,
-  fileName = "Demo.jsx",
-}) => {
-  const modalRef = useRef<HTMLDialogElement>(null);
+})`;
 
   return (
     <>
@@ -45,7 +66,7 @@ export default defineComponent({
             onClick={() => modalRef.current?.showModal()}
           >
             <pre className="font-mono text-sm leading-relaxed text-gray-300 overflow-hidden max-h-32">
-              <code>{code}</code>
+              <code>{displayCode}</code>
             </pre>
             {/* Gradient overlay */}
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#1e1e1e] to-transparent pointer-events-none flex items-end justify-center pb-2">
@@ -76,7 +97,7 @@ export default defineComponent({
           {/* Full Code */}
           <div className="p-6 overflow-x-auto">
             <pre className="font-mono text-sm leading-relaxed text-gray-300">
-              <code>{code}</code>
+              <code>{displayCode}</code>
             </pre>
           </div>
         </div>

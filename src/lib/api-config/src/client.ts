@@ -13,7 +13,7 @@ import {
 import { AxiosError, AxiosRequestConfig } from "axios";
 import { useCookies } from "react-cookie";
 import toast from "react-hot-toast";
-import { APIService, AUTH_BASE_URL, createAxiosInstance } from "./config";
+import { APIService, APIServiceV2, AUTH_BASE_URL, createAxiosInstance } from "./config";
 
 interface UseQueryApiProps<TData> {
   key: unknown[];
@@ -54,7 +54,7 @@ const baseUrls = {
 };
 
 // Hook-based API client that uses react-cookie
-export const createApiClient = (service: APIService) => {
+export const createApiClient = (service: APIService | APIServiceV2) => {
   const axiosInstance = createAxiosInstance(baseUrls[service]);
 
   const useMutationApi = <TData, TParams = unknown>({

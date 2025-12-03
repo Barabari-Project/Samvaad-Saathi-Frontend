@@ -4,14 +4,14 @@ import React from "react";
 
 interface WelcomeProps {
   role: string;
-  onStart: () => void;
+  onInterviewStart: () => void;
 }
 
-const Welcome = ({ role, onStart }: WelcomeProps) => {
+const Welcome = ({ role, onInterviewStart }: WelcomeProps) => {
   const isTouchDevice = useTouchDevice();
 
   return (
-    <div className="" onClick={() => isTouchDevice && onStart()}>
+    <div className="" onClick={() => isTouchDevice && onInterviewStart()}>
       <div className="flex-1">
         <h3 className="text-primary text-2xl font-bold tracking-wide uppercase">
           {role}
@@ -62,7 +62,7 @@ const Welcome = ({ role, onStart }: WelcomeProps) => {
             {!isTouchDevice && (
               <div className="mt-6 flex justify-center">
                 <button
-                  onClick={onStart}
+                  onClick={onInterviewStart}
                   className="btn btn-primary px-8 text-lg"
                 >
                   Click here to continue

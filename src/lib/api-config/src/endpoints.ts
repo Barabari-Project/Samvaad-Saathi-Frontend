@@ -36,3 +36,10 @@ export const ENDPOINTS = {
       `summary-report/${interviewId}`,
   },
 };
+
+export const ENDPOINTS_V2 = {
+  CREATE_INTERVIEW: "v2/interviews/create",
+  GENERATE_QUESTIONS: "v2/interviews/generate-questions",
+  SUPPLEMENTS: (interviewId: string) =>
+    `v2/interviews/${interviewId}/supplements`,
+};
