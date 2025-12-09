@@ -13,7 +13,12 @@ export interface GenerateQuestionsResponse {
     isFollowUp: boolean;
     parentQuestionId: number | null;
     followUpStrategy: string | null;
-    supplement: string | null;
+    supplement: {
+      content: string;
+      format: string;
+      questionId: string;
+      supplementType: string;
+    } | null;
   }[];
   cached: boolean;
   llmModel: string | null;

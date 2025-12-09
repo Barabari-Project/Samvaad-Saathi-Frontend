@@ -10,6 +10,7 @@ import {
   GenerateQuestionsResponse,
   StartQuestionAttemptResponse,
 } from "./types";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const InterviewPage = () => {
   const searchParams = useSearchParams();
@@ -124,6 +125,11 @@ const InterviewPage = () => {
       ) : (
         <div>
           <Header />
+
+          <div className="w-48 h-48 mx-auto mb-6">
+            <DotLottieReact src="/assets/lottie/Speaker.lottie" autoplay loop />
+          </div>
+
           <Question
             isLoading={isGeneratingQuestions}
             question={generatedQuestions?.items?.[currentQuestionIndex]}
@@ -133,8 +139,8 @@ const InterviewPage = () => {
           <CodeView
             isLoading={isGeneratingQuestions}
             code={
-              generatedQuestions?.items?.[currentQuestionIndex]?.supplement ||
-              undefined
+              generatedQuestions?.items?.[currentQuestionIndex]?.supplement
+                ?.content || undefined
             }
           />
           <Footer
