@@ -69,7 +69,7 @@ const InterviewPage = () => {
     if (hasPermission) {
       setHasStarted(true);
       generateQuestions({
-        useResume,
+        useResume: useResume === "true",
       });
     } else {
       showPermissionModal();
@@ -81,7 +81,7 @@ const InterviewPage = () => {
     if (granted) {
       setHasStarted(true);
       generateQuestions({
-        useResume,
+        useResume: useResume === "true",
       });
     }
     return granted;
