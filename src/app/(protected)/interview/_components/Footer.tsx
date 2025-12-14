@@ -3,7 +3,11 @@ import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import {
   AUDIO_CONSTRAINTS_16KHZ,
+  cleanupAudioAnalysis,
+  createAudioAnalysisContext,
   resampleAudioTo16kHz,
+  startWaveformAnimation,
+  type AudioAnalysisContext,
 } from "@/lib/audio-utils";
 import {
   MicrophoneIcon as HeroMicrophoneIcon,
@@ -33,9 +37,12 @@ const Footer = ({
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(180); // 3 minutes in seconds
+  const [waveformBars, setWaveformBars] = useState<number[]>(Array(20).fill(0));
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioAnalysisRef = useRef<AudioAnalysisContext | null>(null);
+  const stopWaveformAnimationRef = useRef<(() => void) | null>(null);
 
   const apiClient = createApiClient(APIService.TRANSCRIBE);
 
@@ -47,6 +54,16 @@ const Footer = ({
       .toString()
       .padStart(2, "0")}`;
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (stopWaveformAnimationRef.current) {
+        stopWaveformAnimationRef.current();
+      }
+      cleanupAudioAnalysis(audioAnalysisRef.current);
+    };
+  }, []);
 
   // Reset timer when question changes
   useEffect(() => {
@@ -155,10 +172,15 @@ const Footer = ({
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: AUDIO_CONSTRAINTS_16KHZ,
       });
+
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
       setTimeRemaining(180); // Reset timer to 3 minutes
+
+      // Set up audio analysis for waveform
+      const audioAnalysis = createAudioAnalysisContext(stream);
+      audioAnalysisRef.current = audioAnalysis;
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -168,6 +190,15 @@ const Footer = ({
 
       mediaRecorder.start();
       setIsListening(true);
+
+      // Start waveform animation
+      const stopAnimation = startWaveformAnimation(
+        audioAnalysis.analyser,
+        (bars) => {
+          setWaveformBars(bars);
+        }
+      );
+      stopWaveformAnimationRef.current = stopAnimation;
     } catch (error) {
       console.error("Error accessing microphone:", error);
     }
@@ -176,10 +207,19 @@ const Footer = ({
   const stopRecording = () => {
     if (mediaRecorderRef.current && isListening) {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream
-        .getTracks()
-        .forEach((track) => track.stop());
       setIsListening(false);
+
+      // Stop waveform animation
+      if (stopWaveformAnimationRef.current) {
+        stopWaveformAnimationRef.current();
+        stopWaveformAnimationRef.current = null;
+      }
+
+      // Clean up audio analysis
+      cleanupAudioAnalysis(audioAnalysisRef.current);
+      audioAnalysisRef.current = null;
+      setWaveformBars(Array(20).fill(0));
+
       // Clear timer interval
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
@@ -381,45 +421,63 @@ const Footer = ({
         </div>
       ) : (
         <>
-          {/* Main container with gradient border and background */}
-          <div className="relative w-full max-w-2xl h-64 rounded-2xl border-4 border-blue-500/40 overflow-hidden shadow-lg bg-gradient-to-b from-blue-100 via-purple-50 to-yellow-50 animate-gradient backdrop-blur-sm">
-            {/* Listening text and timer */}
-            <div className="absolute top-6 left-0 right-0 flex flex-col items-center gap-2 z-10">
-              <h1 className="text-xl font-medium text-slate-700 flex items-center gap-2">
+          {/* Main container with animated background */}
+          <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl sm:rounded-3xl border-2 border-indigo-300 p-8 sm:p-12 md:p-16 shadow-2xl">
+            {/* Animated gradient background */}
+            <div className="absolute inset-0 animate-gradient bg-gradient-to-br from-blue-200 via-purple-100 to-yellow-100 bg-[length:200%_200%]" />
+
+            {/* Content */}
+            <div className="relative z-10 flex flex-col items-center gap-6 sm:gap-8">
+              {/* Listening text */}
+              <h2 className="text-xl sm:text-2xl font-medium text-gray-800 flex items-center gap-2">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                 </span>
                 Listening...
-              </h1>
-              <div className="text-2xl font-bold text-slate-800">
+              </h2>
+
+              {/* Timer */}
+              <div className="text-3xl sm:text-4xl font-semibold text-indigo-700 tabular-nums">
                 {formatTime(timeRemaining)}
               </div>
-            </div>
 
-            {/* Centered circular microphone button with gradient */}
-            <div className="absolute inset-0 flex items-center justify-center">
+              {/* Microphone circle with glow */}
               <div className="relative">
-                {/* Pulsing rings */}
-                <div className="absolute inset-0 bg-blue-400/20 rounded-full animate-ping"></div>
-                <div className="absolute inset-0 bg-blue-400/10 rounded-full animate-pulse delay-75"></div>
+                {/* Outer glow - pulsing */}
+                <div className="absolute inset-0 -m-8 sm:-m-12 animate-pulse rounded-full bg-purple-500/30 blur-3xl" />
 
-                <div className="relative size-20 rounded-full flex items-center justify-center shadow-xl bg-gradient-to-br from-pink-300 via-pink-200 to-cyan-300 transform transition-transform hover:scale-105">
-                  {/* Microphone icon */}
-                  <MicrophoneIcon className="size-10 text-blue-900" />
+                {/* Middle glow - rotating */}
+                <div className="absolute inset-0 -m-6 sm:-m-8 animate-spin-slow rounded-full bg-gradient-to-r from-purple-500/40 via-blue-500/40 to-transparent blur-2xl" />
+
+                <div className="relative flex h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 items-center justify-center rounded-full border-4 border-indigo-400/50 bg-gradient-to-br from-pink-400 via-purple-300 to-cyan-300 shadow-xl">
+                  <MicrophoneIcon className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-indigo-700" />
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div className="flex justify-center items-center w-full mt-8">
-            <button
-              onClick={handleStopListening}
-              disabled={isUploading}
-              className="btn bg-primary hover:bg-primary/90 text-white btn-block"
-            >
-              {isUploading ? "Uploading..." : "Done"}
-            </button>
+              {/* Waveform bars */}
+              <div className="flex h-16 sm:h-20 items-center justify-center gap-1 sm:gap-1.5">
+                {waveformBars.map((height, index) => (
+                  <div
+                    key={index}
+                    className="w-1 sm:w-1.5 rounded-full bg-indigo-600 transition-all duration-150 ease-out"
+                    style={{
+                      height: isListening ? `${Math.max(height, 8)}%` : "8%",
+                      opacity: isListening ? 0.6 + height / 200 : 0.3,
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Done button */}
+              <button
+                onClick={handleStopListening}
+                disabled={isUploading}
+                className="rounded-full bg-indigo-600 px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-medium text-white shadow-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUploading ? "Uploading..." : "Done"}
+              </button>
+            </div>
           </div>
         </>
       )}
