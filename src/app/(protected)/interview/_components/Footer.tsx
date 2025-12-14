@@ -9,7 +9,7 @@ import {
   MicrophoneIcon as HeroMicrophoneIcon,
   MicrophoneIcon,
 } from "@heroicons/react/24/solid";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface FooterProps {
   isLoading?: boolean;
@@ -32,10 +32,55 @@ const Footer = ({
   const [hasAnswered, setHasAnswered] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(180); // 3 minutes in seconds
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const apiClient = createApiClient(APIService.TRANSCRIBE);
+
+  // Format time as MM:SS
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  // Reset timer when question changes
+  useEffect(() => {
+    setTimeRemaining(180);
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+  }, [question_attempt_id]);
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (isListening && timeRemaining > 0) {
+      timerIntervalRef.current = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [isListening, timeRemaining]);
 
   const { mutateAsync: completeAnalysis } = apiClient.useMutation({
     url: ENDPOINTS.ANALYSIS.COMPLETE,
@@ -62,6 +107,49 @@ const Footer = ({
       },
     });
 
+  // Auto-submit when timer reaches 0
+  useEffect(() => {
+    if (isListening && timeRemaining === 0 && mediaRecorderRef.current) {
+      const autoSubmit = async () => {
+        if (!mediaRecorderRef.current) return;
+
+        return new Promise<void>((resolve) => {
+          if (mediaRecorderRef.current) {
+            mediaRecorderRef.current.onstop = async () => {
+              const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+
+              try {
+                // Resample to 16kHz WAV
+                const wavBlob = await resampleAudioTo16kHz(blob);
+                const file = new File([wavBlob], "recording.wav", {
+                  type: "audio/wav",
+                });
+
+                if (question_attempt_id) {
+                  const formData = new FormData();
+                  formData.append(
+                    "question_attempt_id",
+                    question_attempt_id.toString()
+                  );
+                  formData.append("language", "en");
+                  formData.append("file", file);
+
+                  await uploadAudio(formData);
+                }
+              } catch (error) {
+                console.error("Error processing audio:", error);
+              }
+              resolve();
+            };
+            stopRecording();
+          }
+        });
+      };
+      autoSubmit();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRemaining, isListening, question_attempt_id, uploadAudio]);
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -70,6 +158,7 @@ const Footer = ({
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
+      setTimeRemaining(180); // Reset timer to 3 minutes
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
@@ -91,6 +180,11 @@ const Footer = ({
         .getTracks()
         .forEach((track) => track.stop());
       setIsListening(false);
+      // Clear timer interval
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
     }
   };
 
@@ -138,6 +232,7 @@ const Footer = ({
     stopRecording();
     chunksRef.current = [];
     setHasAnswered(false);
+    setTimeRemaining(180); // Reset timer
     startRecording();
   };
 
@@ -288,8 +383,8 @@ const Footer = ({
         <>
           {/* Main container with gradient border and background */}
           <div className="relative w-full max-w-2xl h-64 rounded-2xl border-4 border-blue-500/40 overflow-hidden shadow-lg bg-gradient-to-b from-blue-100 via-purple-50 to-yellow-50 animate-gradient backdrop-blur-sm">
-            {/* Listening text */}
-            <div className="absolute top-6 left-0 right-0 flex justify-center z-10">
+            {/* Listening text and timer */}
+            <div className="absolute top-6 left-0 right-0 flex flex-col items-center gap-2 z-10">
               <h1 className="text-xl font-medium text-slate-700 flex items-center gap-2">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -297,6 +392,9 @@ const Footer = ({
                 </span>
                 Listening...
               </h1>
+              <div className="text-2xl font-bold text-slate-800">
+                {formatTime(timeRemaining)}
+              </div>
             </div>
 
             {/* Centered circular microphone button with gradient */}
