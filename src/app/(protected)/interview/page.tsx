@@ -3,6 +3,7 @@ import { MicPermissionModal, useMicPermission } from "@/hooks/useMicPermission";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIServiceV2 } from "@/lib/api-config/src/config";
 import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CodeView, Footer, Header, Question, Welcome } from "./_components";
@@ -10,7 +11,6 @@ import {
   GenerateQuestionsResponse,
   StartQuestionAttemptResponse,
 } from "./types";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const InterviewPage = () => {
   const searchParams = useSearchParams();
@@ -26,8 +26,8 @@ const InterviewPage = () => {
     hasPermission,
     showModal,
     requestPermission,
-    showPermissionModal,
     hidePermissionModal,
+    showPermissionModal,
   } = useMicPermission();
 
   const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
@@ -80,6 +80,9 @@ const InterviewPage = () => {
     const granted = await requestPermission();
     if (granted) {
       setHasStarted(true);
+      generateQuestions({
+        useResume,
+      });
     }
     return granted;
   };
@@ -98,6 +101,8 @@ const InterviewPage = () => {
     method: "post",
     options: {
       onSuccess: () => {
+        // Clear timer on completion
+        sessionStorage.removeItem("interviewEndTime");
         window.location.href = "/interview-completed";
       },
     },
@@ -124,9 +129,9 @@ const InterviewPage = () => {
         </>
       ) : (
         <div>
-          <Header />
+          <Header role={role || ""} hasStarted={!!generatedQuestions} />
 
-          <div className="w-48 h-48 mx-auto mb-6">
+          <div className="size-24 mx-auto mb-6">
             <DotLottieReact src="/assets/lottie/Speaker.lottie" autoplay loop />
           </div>
 
