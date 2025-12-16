@@ -5,17 +5,22 @@ import { useEffect, useState } from "react";
 const Header = ({
   role,
   hasStarted,
+  interviewId,
 }: {
   role?: string;
   hasStarted: boolean;
+  interviewId?: string | null;
 }) => {
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
 
   useEffect(() => {
-    if (!hasStarted) return;
+    if (!hasStarted || !interviewId) return;
+
+    // Create interview-specific storage key
+    const storageKey = `interviewEndTime_${interviewId}`;
 
     // Check session storage for existing timer
-    const savedEndTime = sessionStorage.getItem("interviewEndTime");
+    const savedEndTime = sessionStorage.getItem(storageKey);
 
     if (savedEndTime) {
       const remaining = Math.floor(
@@ -30,7 +35,7 @@ const Header = ({
     } else {
       // Set new end time
       const endTime = Date.now() + 25 * 60 * 1000;
-      sessionStorage.setItem("interviewEndTime", endTime.toString());
+      sessionStorage.setItem(storageKey, endTime.toString());
     }
 
     const timer = setInterval(() => {
@@ -44,7 +49,7 @@ const Header = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [hasStarted]);
+  }, [hasStarted, interviewId]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

@@ -102,7 +102,9 @@ const InterviewPage = () => {
     options: {
       onSuccess: () => {
         // Clear timer on completion
-        sessionStorage.removeItem("interviewEndTime");
+        if (interviewId) {
+          sessionStorage.removeItem(`interviewEndTime_${interviewId}`);
+        }
         window.location.href = "/interview-completed";
       },
     },
@@ -129,7 +131,11 @@ const InterviewPage = () => {
         </>
       ) : (
         <div>
-          <Header role={role || ""} hasStarted={!!generatedQuestions} />
+          <Header
+            role={role || ""}
+            hasStarted={!!generatedQuestions}
+            interviewId={interviewId}
+          />
 
           <div className="size-24 mx-auto mb-6">
             <DotLottieReact src="/assets/lottie/Speaker.lottie" autoplay loop />
