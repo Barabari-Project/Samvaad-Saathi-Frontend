@@ -1,5 +1,6 @@
 "use client";
 
+import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { GenerateQuestionsResponse } from "../types";
 
 interface QuestionProps {
@@ -15,6 +16,12 @@ const Question = ({
   currentQuestionIndex = 0,
   totalQuestions = 0,
 }: QuestionProps) => {
+  // Use text-to-speech hook
+  useTextToSpeech({
+    text: question?.text,
+    disabled: isLoading,
+  });
+
   if (isLoading) {
     return (
       <div className="w-full py-6 animate-pulse">
