@@ -143,9 +143,9 @@ const InterviewPage = () => {
           />
           <CodeView
             isLoading={isGeneratingQuestions}
-            code={
-              generatedQuestions?.items?.[currentQuestionIndex]?.supplement
-                ?.content || undefined
+            supplement={
+              generatedQuestions?.items?.[currentQuestionIndex]?.supplement ||
+              null
             }
           />
           <Footer
