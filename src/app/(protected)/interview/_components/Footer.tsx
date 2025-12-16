@@ -43,6 +43,7 @@ const Footer = ({
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioAnalysisRef = useRef<AudioAnalysisContext | null>(null);
   const stopWaveformAnimationRef = useRef<(() => void) | null>(null);
+  const lastUpdateTimeRef = useRef<number>(0);
 
   const apiClient = createApiClient(APIService.TRANSCRIBE);
 
@@ -191,12 +192,21 @@ const Footer = ({
       mediaRecorder.start();
       setIsListening(true);
 
-      // Start waveform animation
-      const stopAnimation = startWaveformAnimation(
-        audioAnalysis.analyser,
-        (bars) => {
+      // Throttled callback to reduce state updates
+      // Update state at most every 50ms (~20fps) instead of every frame (~60fps)
+      const throttledUpdate = (bars: number[]) => {
+        const now = Date.now();
+        if (now - lastUpdateTimeRef.current >= 50) {
+          lastUpdateTimeRef.current = now;
           setWaveformBars(bars);
         }
+      };
+
+      // Start waveform animation with throttled updates
+      lastUpdateTimeRef.current = Date.now();
+      const stopAnimation = startWaveformAnimation(
+        audioAnalysis.analyser,
+        throttledUpdate
       );
       stopWaveformAnimationRef.current = stopAnimation;
     } catch (error) {
@@ -468,16 +478,17 @@ const Footer = ({
                   />
                 ))}
               </div>
-
-              {/* Done button */}
-              <button
-                onClick={handleStopListening}
-                disabled={isUploading}
-                className="rounded-full bg-indigo-600 px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-medium text-white shadow-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isUploading ? "Uploading..." : "Done"}
-              </button>
             </div>
+          </div>
+
+          <div className="flex justify-end items-center w-full">
+            <button
+              onClick={handleStopListening}
+              disabled={disabled || isUploading}
+              className="btn btn-primary text-white mt-4"
+            >
+              Done
+            </button>
           </div>
         </>
       )}
