@@ -4,7 +4,7 @@ import { createApiClient } from "@/lib/api-config/src/client";
 import { APIServiceV2 } from "@/lib/api-config/src/config";
 import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CodeView, Footer, Header, Question, Welcome } from "./_components";
 import {
@@ -13,6 +13,8 @@ import {
 } from "./types";
 
 const InterviewPage = () => {
+  const router = useRouter();
+
   const searchParams = useSearchParams();
   const interviewId = searchParams.get("interviewId");
   const useResume = searchParams.get("useResume");
@@ -105,7 +107,11 @@ const InterviewPage = () => {
         if (interviewId) {
           sessionStorage.removeItem(`interviewEndTime_${interviewId}`);
         }
-        window.location.href = "/interview-completed";
+        router.push(
+          `/interview-completed?interviewId=${interviewId}&role=${
+            role || "Interview"
+          }`
+        );
       },
     },
   });
