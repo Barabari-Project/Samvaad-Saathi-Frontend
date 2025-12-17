@@ -52,7 +52,7 @@ const Question = ({
       {/* Top Row with Counter */}
       <div className="flex justify-end mb-2">
         <span className="text-lg text-slate-900 font-medium">
-          {currentQuestionIndex + 1}/{totalQuestions}
+          {currentQuestionIndex + 1}/7
         </span>
       </div>
 
@@ -65,8 +65,18 @@ const Question = ({
 
       {/* Tag */}
       <div className="flex">
-        <span className="badge badge-lg badge-warning capitalize">
-          {question.category}
+        <span
+          className={`badge badge-xs ${
+            question.category?.toLowerCase() === "tech"
+              ? "badge-primary"
+              : question.category?.toLowerCase() === "behavioral"
+              ? "badge-warning"
+              : question.category?.toLowerCase() === "tech_allied"
+              ? "badge-success"
+              : "badge-secondary"
+          }`}
+        >
+          {question?.category?.replaceAll("_", " ")?.toUpperCase()}
         </span>
       </div>
     </div>

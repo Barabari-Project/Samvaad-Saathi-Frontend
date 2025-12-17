@@ -14,6 +14,7 @@ import {
   MicrophoneIcon,
 } from "@heroicons/react/24/solid";
 import React, { useEffect, useRef, useState } from "react";
+import { FollowUpQuestion, TranscribeResponse } from "../types";
 
 interface FooterProps {
   isLoading?: boolean;
@@ -22,6 +23,7 @@ interface FooterProps {
   onNext?: () => void;
   isLastQuestion?: boolean;
   onSubmit?: () => void;
+  onFollowUpQuestion?: (followUpQuestion: FollowUpQuestion) => void;
 }
 
 const Footer = ({
@@ -31,6 +33,7 @@ const Footer = ({
   onNext,
   isLastQuestion = false,
   onSubmit,
+  onFollowUpQuestion,
 }: FooterProps) => {
   const [isListening, setIsListening] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -115,12 +118,21 @@ const Footer = ({
         },
       },
       options: {
-        onSuccess: () => {
+        onSuccess: (response: TranscribeResponse) => {
           completeAnalysis({
             question_attempt_id: question_attempt_id,
             analysisTypes: ["domain", "communication", "pace", "pause"],
           });
           setHasAnswered(true);
+
+          // Handle follow-up question if generated
+          if (
+            response?.followUpGenerated &&
+            response?.followUpQuestion &&
+            onFollowUpQuestion
+          ) {
+            onFollowUpQuestion(response.followUpQuestion);
+          }
         },
       },
     });

@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CodeView, Footer, Header, Question, Welcome } from "./_components";
 import {
+  FollowUpQuestion,
   GenerateQuestionsResponse,
   StartQuestionAttemptResponse,
 } from "./types";
@@ -22,6 +23,9 @@ const InterviewPage = () => {
 
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [questions, setQuestions] = useState<
+    GenerateQuestionsResponse["items"]
+  >([]);
 
   // mic permission utils
   const {
@@ -52,20 +56,21 @@ const InterviewPage = () => {
     method: "post",
   });
 
+  // Update local questions state when generatedQuestions changes
   useEffect(() => {
-    if (generatedQuestions?.items?.[currentQuestionIndex] && interviewId) {
+    if (generatedQuestions?.items) {
+      setQuestions(generatedQuestions.items);
+    }
+  }, [generatedQuestions?.items?.length]);
+
+  useEffect(() => {
+    if (questions?.[currentQuestionIndex] && interviewId) {
       startQuestionAttempt({
         interviewId: Number(interviewId),
-        questionId:
-          generatedQuestions.items[currentQuestionIndex].interviewQuestionId,
+        questionId: questions[currentQuestionIndex].interviewQuestionId,
       });
     }
-  }, [
-    generatedQuestions,
-    interviewId,
-    startQuestionAttempt,
-    currentQuestionIndex,
-  ]);
+  }, [questions, interviewId, currentQuestionIndex]);
 
   const handleInterviewStart = () => {
     if (hasPermission) {
@@ -90,12 +95,31 @@ const InterviewPage = () => {
   };
 
   const handleNextQuestion = () => {
-    if (
-      generatedQuestions?.items &&
-      currentQuestionIndex < generatedQuestions.items.length - 1
-    ) {
+    if (questions && currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     }
+  };
+
+  const handleFollowUpQuestion = (followUpQuestion: FollowUpQuestion) => {
+    // Transform the follow-up question to match the items structure
+    const transformedQuestion: GenerateQuestionsResponse["items"][0] = {
+      interviewQuestionId: followUpQuestion.interviewQuestionId,
+      text: followUpQuestion.text,
+      topic: "", // Not provided in follow-up question
+      difficulty: null, // Not provided in follow-up question
+      category: "", // Not provided in follow-up question
+      isFollowUp: true,
+      parentQuestionId: followUpQuestion.parentQuestionId,
+      followUpStrategy: followUpQuestion.strategy,
+      supplement: null, // Not provided in follow-up question
+    };
+
+    // Insert the follow-up question right after the current question
+    setQuestions((prev) => {
+      const newQuestions = [...prev];
+      newQuestions.splice(currentQuestionIndex + 1, 0, transformedQuestion);
+      return newQuestions;
+    });
   };
 
   const { mutateAsync: completeInterview } = apiClient.useMutation({
@@ -149,16 +173,13 @@ const InterviewPage = () => {
 
           <Question
             isLoading={isGeneratingQuestions}
-            question={generatedQuestions?.items?.[currentQuestionIndex]}
+            question={questions?.[currentQuestionIndex]}
             currentQuestionIndex={currentQuestionIndex}
-            totalQuestions={generatedQuestions?.items?.length || 0}
+            totalQuestions={questions?.length || 0}
           />
           <CodeView
             isLoading={isGeneratingQuestions}
-            supplement={
-              generatedQuestions?.items?.[currentQuestionIndex]?.supplement ||
-              null
-            }
+            supplement={questions?.[currentQuestionIndex]?.supplement || null}
           />
           <Footer
             isLoading={isGeneratingQuestions}
@@ -166,10 +187,10 @@ const InterviewPage = () => {
             question_attempt_id={questionAttemptResponse?.questionAttemptId}
             onNext={handleNextQuestion}
             isLastQuestion={
-              generatedQuestions?.items &&
-              currentQuestionIndex === generatedQuestions.items.length - 1
+              questions && currentQuestionIndex === questions.length - 1
             }
             onSubmit={handleInterviewSubmit}
+            onFollowUpQuestion={handleFollowUpQuestion}
           />
         </div>
       )}

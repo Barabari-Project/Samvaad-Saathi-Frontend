@@ -29,3 +29,16 @@ export interface GenerateQuestionsResponse {
 export interface StartQuestionAttemptResponse {
   questionAttemptId: number;
 }
+
+export interface FollowUpQuestion {
+  interviewQuestionId: number;
+  questionAttemptId: number;
+  parentQuestionId: number;
+  text: string;
+  strategy: string;
+}
+
+export interface TranscribeResponse {
+  followUpGenerated?: boolean;
+  followUpQuestion?: FollowUpQuestion;
+}

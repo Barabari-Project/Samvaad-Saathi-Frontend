@@ -39,35 +39,33 @@ export default function InterviewStartPage() {
 
   const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
-  const {mutateAsync: createInterview, isPending:isCreatingInterview} = apiClient.useMutation<
-    CreateInterviewResponse,
-    CreateInterviewRequest
-  >({
-    url: ENDPOINTS_V2.CREATE_INTERVIEW,
-    method: "post",
-    successMessage: "Interview created successfully!",
-    errorMessage: "Failed to create interview. Please try again.",
-    options: {
-      onSuccess: (data) => {
-        // Navigate to the interview page with query params
-        const interviewId = data.interviewId;
-        if (interviewId) {
-          router.push(
-            `/interview?interviewId=${interviewId}&useResume=${useResume}&role=${encodeURIComponent(
-              selectedRole
-            )}`
-          );
-        }
+  const { mutateAsync: createInterview, isPending: isCreatingInterview } =
+    apiClient.useMutation<CreateInterviewResponse, CreateInterviewRequest>({
+      url: ENDPOINTS_V2.CREATE_INTERVIEW,
+      method: "post",
+      successMessage: "Interview created successfully!",
+      errorMessage: "Failed to create interview. Please try again.",
+      options: {
+        onSuccess: (data) => {
+          // Navigate to the interview page with query params
+          const interviewId = data.interviewId;
+          if (interviewId) {
+            router.push(
+              `/interview?interviewId=${interviewId}&useResume=${useResume}&role=${encodeURIComponent(
+                selectedRole
+              )}`
+            );
+          }
+        },
       },
-    },
-    keyToInvalidate: {
-      queryKey: [
-        ENDPOINTS.AUTH.ABOUT_ME,
-        ENDPOINTS.INTERVIEWS.LIST,
-        ENDPOINTS.INTERVIEWS.WITH_SUMMARY,
-      ],
-    },
-  });
+      keyToInvalidate: {
+        queryKey: [
+          ENDPOINTS.AUTH.ABOUT_ME,
+          ENDPOINTS.INTERVIEWS.LIST,
+          ENDPOINTS.INTERVIEWS.WITH_SUMMARY,
+        ],
+      },
+    });
 
   const handleToggleResume = (checked: boolean) => {
     setUseResume(checked);
@@ -198,9 +196,7 @@ export default function InterviewStartPage() {
               : "bg-black text-white hover:bg-gray-800"
           }`}
         >
-          {isCreatingInterview
-            ? "Starting Interview..."
-            : "Start Interview"}
+          {isCreatingInterview ? "Starting Interview..." : "Start Interview"}
         </button>
       </div>
     </div>
