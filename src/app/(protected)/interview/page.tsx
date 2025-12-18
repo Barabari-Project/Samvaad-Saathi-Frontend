@@ -167,7 +167,7 @@ const InterviewPage = () => {
             interviewId={interviewId}
           />
 
-          <div className="size-24 mx-auto mb-6">
+          <div className="size-24 mx-auto mb-4">
             <DotLottieReact src="/assets/lottie/Speaker.lottie" autoplay loop />
           </div>
 

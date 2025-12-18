@@ -100,7 +100,9 @@ const CodeView: React.FC<CodeViewProps> = ({
           >
             {isDiagram ? (
               <div className="overflow-hidden max-h-64 flex items-center justify-center">
-                <MermaidDiagram>{content}</MermaidDiagram>
+                <div className="[&_svg_text]:word-wrap [&_svg_text]:break-words [&_svg_text]:max-w-full">
+                  <MermaidDiagram>{content}</MermaidDiagram>
+                </div>
               </div>
             ) : (
               <pre className="font-mono text-sm leading-relaxed text-gray-300 overflow-hidden max-h-32">
@@ -143,7 +145,9 @@ const CodeView: React.FC<CodeViewProps> = ({
           <div className="p-6 overflow-x-auto">
             {isDiagram ? (
               <div className="flex items-center justify-center min-h-[400px]">
-                <MermaidDiagram>{content}</MermaidDiagram>
+                <div className="[&_svg_text]:word-wrap [&_svg_text]:break-words [&_svg_text]:max-w-full">
+                  <MermaidDiagram>{content}</MermaidDiagram>
+                </div>
               </div>
             ) : (
               <pre className="font-mono text-sm leading-relaxed text-gray-300">

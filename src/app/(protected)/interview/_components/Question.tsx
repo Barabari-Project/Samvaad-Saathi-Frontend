@@ -50,14 +50,14 @@ const Question = ({
   return (
     <div className="w-full py-6">
       {/* Top Row with Counter */}
-      <div className="flex justify-end mb-2">
+      <div className="mb-2">
         <span className="text-lg text-slate-900 font-medium">
-          {currentQuestionIndex + 1}/7
+          Question{currentQuestionIndex + 1}:
         </span>
       </div>
 
       {/* Question Text */}
-      <div className="mb-8">
+      <div className="mb-4">
         <p className="text-xl leading-[1.4] text-slate-900 font-normal">
           {question.text}
         </p>
@@ -66,7 +66,7 @@ const Question = ({
       {/* Tag */}
       <div className="flex">
         <span
-          className={`badge badge-xs ${
+          className={`badge badge-sm ${
             question.category?.toLowerCase() === "tech"
               ? "badge-primary"
               : question.category?.toLowerCase() === "behavioral"

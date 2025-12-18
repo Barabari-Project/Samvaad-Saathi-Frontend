@@ -100,3 +100,18 @@ h6 {
 .animate-spin-slow {
   animation: spin-slow 8s linear infinite;
 }
+
+/* Mermaid diagram text wrapping */
+.mermaid svg text {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+}
+
+.mermaid svg .nodeLabel,
+.mermaid svg .edgeLabel {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
