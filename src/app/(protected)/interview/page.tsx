@@ -20,6 +20,7 @@ const InterviewPage = () => {
   const interviewId = searchParams.get("interviewId");
   const useResume = searchParams.get("useResume");
   const role = searchParams.get("role");
+  const selectedQuestionsParam = searchParams.get("selectedQuestions");
 
   const [hasStarted, setHasStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -56,6 +57,23 @@ const InterviewPage = () => {
     method: "post",
   });
 
+  // Parse selectedQuestions from URL if present
+  useEffect(() => {
+    if (selectedQuestionsParam) {
+      try {
+        const parsedQuestions = JSON.parse(
+          decodeURIComponent(selectedQuestionsParam)
+        ) as GenerateQuestionsResponse["items"];
+        if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+          setQuestions(parsedQuestions);
+        }
+      } catch (error) {
+        console.error("Failed to parse selectedQuestions from URL:", error);
+        // Fallback to generating questions via API if parsing fails
+      }
+    }
+  }, [selectedQuestionsParam]);
+
   // Update local questions state when generatedQuestions changes
   useEffect(() => {
     if (generatedQuestions?.items) {
@@ -75,9 +93,20 @@ const InterviewPage = () => {
   const handleInterviewStart = () => {
     if (hasPermission) {
       setHasStarted(true);
-      generateQuestions({
-        useResume: useResume === "true",
-      });
+      // If selectedQuestions exists in URL, questions should be parsed from URL
+      // Only call API if selectedQuestions is not present or parsing failed (no questions)
+      if (!selectedQuestionsParam) {
+        generateQuestions({
+          useResume: useResume === "true",
+        });
+      } else if (questions.length === 0) {
+        // selectedQuestions exists but parsing failed or hasn't completed yet
+        // Fallback to generating questions via API
+        generateQuestions({
+          useResume: useResume === "true",
+        });
+      }
+      // If selectedQuestions exists and questions are available, skip API call
     } else {
       showPermissionModal();
     }
@@ -87,9 +116,20 @@ const InterviewPage = () => {
     const granted = await requestPermission();
     if (granted) {
       setHasStarted(true);
-      generateQuestions({
-        useResume: useResume === "true",
-      });
+      // If selectedQuestions exists in URL, questions should be parsed from URL
+      // Only call API if selectedQuestions is not present or parsing failed (no questions)
+      if (!selectedQuestionsParam) {
+        generateQuestions({
+          useResume: useResume === "true",
+        });
+      } else if (questions.length === 0) {
+        // selectedQuestions exists but parsing failed or hasn't completed yet
+        // Fallback to generating questions via API
+        generateQuestions({
+          useResume: useResume === "true",
+        });
+      }
+      // If selectedQuestions exists and questions are available, skip API call
     }
     return granted;
   };
@@ -163,7 +203,7 @@ const InterviewPage = () => {
         <div>
           <Header
             role={role || ""}
-            hasStarted={!!generatedQuestions}
+            hasStarted={hasStarted}
             interviewId={interviewId}
           />
 
