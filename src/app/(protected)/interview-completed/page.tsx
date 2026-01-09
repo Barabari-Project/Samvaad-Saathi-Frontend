@@ -1,7 +1,7 @@
 "use client";
 import { createApiClient } from "@/lib/api-config/src/client";
-import { APIService } from "@/lib/api-config/src/config";
-import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import { APIServiceV2 } from "@/lib/api-config/src/config";
+import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import {
   trackReportGenerationError,
   trackReportGenerationStart,
@@ -18,12 +18,12 @@ const InterviewCompleted = () => {
   const interviewId = searchParams.get("interviewId");
   const role = searchParams.get("role") || "Interview";
 
-  const apiClient = createApiClient(APIService.ANALYSIS);
+  const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
   // Generate final report mutation
   const { mutateAsync: generateFinalReport, isPending: isGeneratingReport } =
     apiClient.useMutation<unknown, { interviewId: number }>({
-      url: ENDPOINTS.ANALYSIS.GENERATE_SUMMARY_REPORT,
+      url: ENDPOINTS_V2.SUMMARY_REPORT,
       method: "post",
       successMessage: "Report generated successfully!",
       errorMessage: "Failed to generate report. Please try again.",

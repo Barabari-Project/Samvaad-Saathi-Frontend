@@ -1,7 +1,7 @@
 "use client";
 import { createApiClient } from "@/lib/api-config/src/client";
-import { APIService } from "@/lib/api-config/src/config";
-import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import { APIServiceV2 } from "@/lib/api-config/src/config";
+import { ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import { SCREEN_VIEW } from "@/lib/posthog/events";
 import { trackScreenView } from "@/lib/posthog/tracking.utils";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
@@ -22,7 +22,7 @@ const ReportSummaryPage: React.FC = () => {
   const interviewId = searchParams.get("interviewId");
   const [activeTab, setActiveTab] = useState<ReportTab>("per-question");
 
-  const apiClient = createApiClient(APIService.ANALYSIS);
+  const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
   const scrollToSection = (sectionId: string, tab: ReportTab) => {
     setActiveTab(tab);
@@ -38,7 +38,7 @@ const ReportSummaryPage: React.FC = () => {
     error,
   } = apiClient.useQuery<ReportResponse>({
     key: ["report", interviewId],
-    url: ENDPOINTS.ANALYSIS.GET_SUMMARY_REPORT(interviewId || ""),
+    url: `${ENDPOINTS_V2.SUMMARY_REPORT}/${interviewId || ""}`,
     enabled: !!interviewId,
   });
 
@@ -75,6 +75,8 @@ const ReportSummaryPage: React.FC = () => {
         candidateName={reportData.candidateInfo.name}
         role={reportData.candidateInfo.roleTopic}
         date={reportData.candidateInfo.interviewDate}
+        duration={reportData.candidateInfo.duration}
+        durationFeedback={reportData.candidateInfo.durationFeedback}
       />
 
       <OverallScoreSummary
@@ -124,10 +126,10 @@ const ReportSummaryPage: React.FC = () => {
             </div>
             <div className="flex-1">
               <h3 className="font-bold text-base-content text-lg">
-                Recommended Practice Exercise
+                {reportData.recommendedPractice.title}
               </h3>
               <p className="text-base-content/70 text-sm">
-                Let&apos;s fine-tune your interview structure skills.
+                {reportData.recommendedPractice.description}
               </p>
             </div>
           </div>
@@ -141,21 +143,22 @@ const ReportSummaryPage: React.FC = () => {
         </div>
       </div>
 
-      <FinalSummary speechFluency={reportData.overallFeedback.speechFluency} />
+      <FinalSummary speechFluencyFeedback={reportData.speechFluencyFeedback} />
 
       {/* Speaker Analysis Section */}
       <div className="card bg-base-100 rounded-xl shadow-md">
         <div className="card-body flex-row items-center gap-4 p-6">
           <div className="flex-shrink-0">
-            <div className="text-6xl">😊</div>
+            <div className="text-6xl">
+              {reportData.speechFluencyFeedback.ratingEmoji}
+            </div>
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-base-content text-md mb-2">
-              You are a Clear but Structurally Inconsistent Speaker
+              {reportData.speechFluencyFeedback.ratingTitle}
             </h3>
             <p className="text-base-content/70">
-              You communicate ideas clearly, but lack of mental structuring
-              causes pauses and loss of flow.
+              {reportData.speechFluencyFeedback.ratingDescription}
             </p>
           </div>
         </div>
@@ -172,62 +175,40 @@ const ReportSummaryPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Practice Card 1 */}
-          <div className="card bg-base-200 rounded-xl shadow-md">
-            <div className="card-body gap-4 p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center bg-base-100">
-                    <ClipboardDocumentIcon className="w-7 h-7 text-base-content" />
+          {reportData.nextSteps.map((step, index) => (
+            <div key={index} className="card bg-base-200 rounded-xl shadow-md">
+              <div className="card-body gap-4 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center bg-base-100">
+                      <ClipboardDocumentIcon className="w-7 h-7 text-base-content" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base-content">
+                      {step.title}
+                    </h3>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-base-content">
-                    Master Your Pronunciation
-                  </h3>
+                <div className="flex justify-end">
+                  <button className="btn btn-primary text-white">
+                    Practice Now
+                    <ArrowRightIcon className="w-5 h-5" />
+                  </button>
                 </div>
-              </div>
-              <div className="flex justify-end">
-                <button className="btn btn-primary text-white">
-                  Practice Now
-                  <ArrowRightIcon className="w-5 h-5" />
-                </button>
               </div>
             </div>
-          </div>
-
-          {/* Practice Card 2 */}
-          <div className="card bg-base-200 rounded-xl shadow-md">
-            <div className="card-body gap-4 p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center bg-base-100">
-                    <ClipboardDocumentIcon className="w-7 h-7 text-base-content" />
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-base-content">
-                    Replace Fillers with Silent Pauses
-                  </h3>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <button className="btn btn-primary text-white">
-                  Practice Now
-                  <ArrowRightIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
       {/* Final Tip Section */}
       <div className="space-y-3">
-        <h2 className="font-bold text-base-content text-xl">Final Tip</h2>
+        <h2 className="font-bold text-base-content text-xl">
+          {reportData.finalTip.title}
+        </h2>
         <p className="text-base-content/70">
-          Fluency improves faster from better thinking than better speaking —
-          structure the answer first, and smooth delivery will follow naturally.
+          {reportData.finalTip.description}
         </p>
       </div>
     </div>

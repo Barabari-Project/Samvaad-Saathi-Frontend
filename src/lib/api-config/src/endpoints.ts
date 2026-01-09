@@ -32,8 +32,7 @@ export const ENDPOINTS = {
     FINAL_REPORT: "final-report",
     FETCH_REPORT: (interviewId: string) => `final-report/${interviewId}`,
     GENERATE_SUMMARY_REPORT: "summary-report",
-    GET_SUMMARY_REPORT: (interviewId: string) =>
-      `summary-report/${interviewId}`,
+    // GET_SUMMARY_REPORT: (interviewId: string) =>`summary-report/${interviewId}`,
   },
 };
 
@@ -42,4 +41,5 @@ export const ENDPOINTS_V2 = {
   GENERATE_QUESTIONS: "v2/interviews/generate-questions",
   SUPPLEMENTS: (interviewId: string) =>
     `v2/interviews/${interviewId}/supplements`,
+  SUMMARY_REPORT: "v2/summary-report",
 };

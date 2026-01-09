@@ -49,55 +49,24 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
             <div className="collapse-content">
               {hasFeedback ? (
                 <div className="space-y-6">
-                  {question.feedback!.knowledgeRelated.strengths.length > 0 && (
+                  {question.feedback!.strengths && (
                     <section className="space-y-3">
                       <h4 className="text-base font-semibold text-emerald-600">
                         Strengths
                       </h4>
-                      <ul className="list-disc pl-5 text-sm leading-relaxed space-y-1">
-                        {question.feedback!.knowledgeRelated.strengths.map(
-                          (item, itemIndex) => (
-                            <li key={itemIndex}>{item}</li>
-                          )
-                        )}
-                      </ul>
+                      <p className="text-sm leading-relaxed whitespace-pre-line">
+                        {question.feedback!.strengths}
+                      </p>
                     </section>
                   )}
-                  {question.feedback!.knowledgeRelated.areasOfImprovement
-                    .length > 0 && (
+                  {question.feedback!.areasOfImprovement && (
                     <section className="space-y-3">
                       <h4 className="text-base font-semibold text-red-600">
                         Areas of Improvement
                       </h4>
-                      <ul className="list-disc pl-5 text-sm leading-relaxed space-y-1">
-                        {question.feedback!.knowledgeRelated.areasOfImprovement.map(
-                          (item, itemIndex) => (
-                            <li key={itemIndex}>{item}</li>
-                          )
-                        )}
-                      </ul>
-                    </section>
-                  )}
-                  {question.feedback!.knowledgeRelated.actionableInsights
-                    .length > 0 && (
-                    <section className="space-y-3">
-                      <h4 className="text-base font-semibold text-blue-600">
-                        Actionable Insights
-                      </h4>
-                      <div className="space-y-3">
-                        {question.feedback!.knowledgeRelated.actionableInsights.map(
-                          (insight, insightIndex) => (
-                            <div key={insightIndex}>
-                              <h5 className="font-semibold text-sm mb-1">
-                                {insight.title}
-                              </h5>
-                              <ul className="list-disc pl-5 text-sm leading-relaxed">
-                                <li>{insight.description}</li>
-                              </ul>
-                            </div>
-                          )
-                        )}
-                      </div>
+                      <p className="text-sm leading-relaxed whitespace-pre-line">
+                        {question.feedback!.areasOfImprovement}
+                      </p>
                     </section>
                   )}
                 </div>
