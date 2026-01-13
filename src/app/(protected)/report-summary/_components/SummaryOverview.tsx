@@ -7,6 +7,8 @@ const SummaryOverview: React.FC<SummaryOverviewProps> = ({
   candidateName,
   role,
   date,
+  duration,
+  durationFeedback,
 }) => {
   return (
     <SectionCard title="Summary Overview">
@@ -21,6 +23,22 @@ const SummaryOverview: React.FC<SummaryOverviewProps> = ({
 
         <div className="text-gray-500">Role</div>
         <div className="text-right font-medium">{role}</div>
+
+        {duration && (
+          <>
+            <div className="text-gray-500">Duration</div>
+            <div className="text-right font-medium">{duration}</div>
+          </>
+        )}
+
+        {durationFeedback && (
+          <>
+            <div className="text-gray-500 col-span-2">Duration Feedback</div>
+            <div className="text-right font-medium col-span-2">
+              {durationFeedback}
+            </div>
+          </>
+        )}
       </div>
     </SectionCard>
   );

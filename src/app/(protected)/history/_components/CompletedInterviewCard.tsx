@@ -1,4 +1,5 @@
 import ConcentricRadialProgress from "@/components/ConcentricRadialProgress";
+import DifficultyTag from "@/components/DifficultyTag";
 import Link from "next/link";
 
 import { formatDate } from "@/lib/utils";
@@ -23,19 +24,7 @@ export default function CompletedInterviewCard({
 
       {/* Difficulty Label - Top Right */}
       <div className="absolute top-4 right-4">
-        <span
-          className={`badge badge-xs badge-soft ${
-            item?.difficulty?.toLowerCase() === "hard"
-              ? "badge-error"
-              : item?.difficulty?.toLowerCase() === "easy"
-              ? "badge-success"
-              : item?.difficulty?.toLowerCase() === "medium"
-              ? "badge-warning"
-              : "badge-neutral"
-          }`}
-        >
-          {item?.difficulty?.toUpperCase()}
-        </span>
+        <DifficultyTag difficulty={item?.difficulty} />
       </div>
 
       {/* Progress indicators */}
@@ -49,13 +38,13 @@ export default function CompletedInterviewCard({
                 value: item.knowledgePercentage ?? 0,
                 color: "#3b82f6",
                 ariaLabel: "Technical Knowledge progress",
-                trackColor: "#3b82f6",
+                trackColor: "#e5e5e5",
               },
               {
                 value: item.speechFluencyPercentage ?? 0,
                 color: "#6b7280",
                 ariaLabel: "Speech Fluency progress",
-                trackColor: "#6b7280",
+                trackColor: "#bedbff",
               },
             ]}
             centerRender={(rings) => (
@@ -76,13 +65,21 @@ export default function CompletedInterviewCard({
             </p>
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                <div className="p-2">
+                  <svg width="8" height="8" viewBox="0 0 8 8">
+                    <circle cx="4" cy="4" r="4" fill="#3b82f6" />
+                  </svg>
+                </div>
                 <span className="text-sm text-gray-700">
                   Technical Knowledge
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                <div className="p-2">
+                  <svg width="8" height="8" viewBox="0 0 8 8">
+                    <circle cx="4" cy="4" r="4" fill="#6b7280" />
+                  </svg>
+                </div>
                 <span className="text-sm text-gray-700">Speech Fluency</span>
               </div>
             </div>

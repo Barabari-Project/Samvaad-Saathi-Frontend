@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@lightenna/react-mermaid-diagram": "^1.0.22",
     "@lottiefiles/dotlottie-react": "^0.17.1",
     "@tailwindcss/postcss": "^4.1.13",
     "@tailwindcss/typography": "^0.5.16",
@@ -20,6 +21,7 @@
     "dayjs": "^1.11.18",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
+    "mermaid": "^11.12.2",
     "next": "15.5.2",
     "posthog-js": "^1.270.1",
     "react": "19.1.0",

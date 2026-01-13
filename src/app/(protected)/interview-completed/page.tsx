@@ -1,7 +1,7 @@
 "use client";
 import { createApiClient } from "@/lib/api-config/src/client";
-import { APIService } from "@/lib/api-config/src/config";
-import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import { APIServiceV2 } from "@/lib/api-config/src/config";
+import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import {
   trackReportGenerationError,
   trackReportGenerationStart,
@@ -9,7 +9,7 @@ import {
 } from "@/lib/posthog/tracking.utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import toast from "react-hot-toast";
 
 const InterviewCompleted = () => {
@@ -17,19 +17,13 @@ const InterviewCompleted = () => {
   const router = useRouter();
   const interviewId = searchParams.get("interviewId");
   const role = searchParams.get("role") || "Interview";
-  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
 
-  const apiClient = createApiClient(APIService.ANALYSIS);
-
-  // Track screen view on component mount
-  useEffect(() => {
-    trackScreenView("congratulations_page", interviewId || "");
-  }, [interviewId]);
+  const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
   // Generate final report mutation
   const { mutateAsync: generateFinalReport, isPending: isGeneratingReport } =
     apiClient.useMutation<unknown, { interviewId: number }>({
-      url: ENDPOINTS.ANALYSIS.GENERATE_SUMMARY_REPORT,
+      url: ENDPOINTS_V2.SUMMARY_REPORT,
       method: "post",
       successMessage: "Report generated successfully!",
       errorMessage: "Failed to generate report. Please try again.",
@@ -44,42 +38,44 @@ const InterviewCompleted = () => {
           );
         },
       },
+      keyToInvalidate: {
+        queryKey: [
+          ENDPOINTS.INTERVIEWS.LIST,
+          ENDPOINTS.INTERVIEWS.WITH_SUMMARY,
+        ],
+      },
     });
 
-  const handleViewReport = async () => {
+  const generateReport = async () => {
+    try {
+      console.log("interviewId :", interviewId);
+      if (interviewId) {
+        await generateFinalReport({
+          interviewId: parseInt(interviewId),
+        });
+      } else {
+        toast.error("Interview ID is required for generating report");
+      }
+    } catch (error) {
+      console.error("Failed to generate final report:", error);
+      toast.error("Failed to generate final report");
+    }
+  };
+
+  // Track screen view on component mount
+  useEffect(() => {
     if (!interviewId) {
-      console.error("No interview ID available");
-      toast.error("No interview ID available");
       return;
     }
+
+    trackScreenView("congratulations_page", interviewId || "");
 
     // Track report generation start
     trackReportGenerationStart();
 
-    // Set up timeout for 1 minute
-    const timeoutId = setTimeout(() => {
-      setShowTimeoutModal(true);
-    }, 60000); // 60 seconds
-
-    try {
-      await generateFinalReport({
-        interviewId: parseInt(interviewId),
-      });
-      // Clear timeout if report generation succeeds
-      clearTimeout(timeoutId);
-    } catch (error) {
-      console.error("Failed to generate final report:", error);
-      toast.error("Failed to generate final report");
-
-      // Clear timeout on error
-      clearTimeout(timeoutId);
-    }
-  };
-
-  const handleReturnToHome = () => {
-    setShowTimeoutModal(false);
-    router.push("/home");
-  };
+    generateReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interviewId]);
 
   return (
     <div className="hero">
@@ -101,44 +97,29 @@ const InterviewCompleted = () => {
             <span className="text-primary font-semibold">{role}</span> interview
           </p>
 
-          {/* Performance Report Message */}
-          <p className="text-sm sm:text-base md:text-lg text-base-content/70 mb-6 sm:mb-8">
-            Your performance report is ready! Check it out to see how you did.
-          </p>
-
-          {/* View Report Button */}
-          <button
-            onClick={handleViewReport}
-            disabled={isGeneratingReport}
-            className="btn btn-neutral btn-sm sm:btn-md md:btn-lg text-sm sm:text-base"
-          >
-            {isGeneratingReport && (
-              <span className="loading loading-spinner loading-sm"></span>
-            )}
-            {isGeneratingReport ? "Generating Report..." : "View Report"}
-          </button>
+          {/* Loading State */}
+          {isGeneratingReport ? (
+            <>
+              <p className="text-sm sm:text-base md:text-lg text-base-content/70 mb-6 sm:mb-8">
+                Generating your performance report...
+              </p>
+              <div className="flex justify-center">
+                <span className="loading loading-spinner loading-lg"></span>
+              </div>
+              <p className="mt-4 text-sm text-base-content/60">
+                Please wait while we analyze your interview
+              </p>
+            </>
+          ) : (
+            <>
+              {/* Performance Report Message */}
+              <p className="text-sm sm:text-base md:text-lg text-base-content/70 mb-6 sm:mb-8">
+                Your performance report is being prepared...
+              </p>
+            </>
+          )}
         </div>
       </div>
-
-      {/* Timeout Modal */}
-      <dialog className={`modal ${showTimeoutModal ? "modal-open" : ""}`}>
-        <div className="modal-box">
-          <div className="text-center">
-            <h3 className="text-lg sm:text-xl font-bold mb-4">
-              Your report is currently being generated.
-            </h3>
-            <p className="text-sm sm:text-base mb-6">
-              It will appear on your home screen as soon as it&apos;s ready.
-            </p>
-            <button
-              onClick={handleReturnToHome}
-              className="btn btn-secondary btn-sm sm:btn-md text-sm sm:text-base"
-            >
-              Return to Home Screen
-            </button>
-          </div>
-        </div>
-      </dialog>
     </div>
   );
 };

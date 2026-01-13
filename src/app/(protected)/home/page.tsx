@@ -1,5 +1,6 @@
 "use client";
 import ConcentricRadialProgress from "@/components/ConcentricRadialProgress";
+import DifficultyTag from "@/components/DifficultyTag";
 import { useAuth } from "@/components/providers/auth-provider";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
@@ -72,7 +73,7 @@ export default function HomePage() {
     error: interviewsError,
   } = apiClient.useQuery<InterviewsResponse>({
     key: [ENDPOINTS.INTERVIEWS.WITH_SUMMARY, "interview-list"],
-    url: ENDPOINTS.INTERVIEWS.WITH_SUMMARY,
+    url: `${ENDPOINTS.INTERVIEWS.WITH_SUMMARY}?limit=3`,
     enabled: !loading, // Only fetch when auth is loaded
   });
 
@@ -88,20 +89,6 @@ export default function HomePage() {
   // Helper function to format date
   const formatDate = (dateString: string) => {
     return dayjs(dateString).format("DD MMM, YYYY");
-  };
-
-  // Helper function to get difficulty color
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case "easy":
-        return "badge-success";
-      case "medium":
-        return "badge-warning";
-      case "hard":
-        return "badge-error";
-      default:
-        return "badge-neutral";
-    }
   };
 
   // Handle continue interview
@@ -209,13 +196,10 @@ export default function HomePage() {
                             </p>
                           </div>
                           <div className="flex gap-2">
-                            <div
-                              className={`badge badge-xs ${getDifficultyColor(
-                                interview.difficulty
-                              )}`}
-                            >
-                              {interview.difficulty?.toUpperCase()}
-                            </div>
+                            <DifficultyTag
+                              difficulty={interview.difficulty}
+                              soft={false}
+                            />
                           </div>
                         </div>
 
@@ -251,7 +235,7 @@ export default function HomePage() {
                                     value: interview.knowledgePercentage ?? 0,
                                     color: "#3b82f6",
                                     ariaLabel: "Technical Knowledge progress",
-                                    trackColor: "#e5e7eb",
+                                    trackColor: "#e5e5e5",
                                     thickness: 10,
                                   },
                                   {
@@ -259,7 +243,7 @@ export default function HomePage() {
                                       interview.speechFluencyPercentage ?? 0,
                                     color: "#6b7280",
                                     ariaLabel: "Speech Fluency progress",
-                                    trackColor: "#e5e7eb",
+                                    trackColor: "#bedbff",
                                     thickness: 8,
                                   },
                                 ]}
@@ -283,14 +267,40 @@ export default function HomePage() {
                                   Performance Score
                                 </p>
                                 <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                                  <div className="flex items-center">
+                                    <div className="p-2">
+                                      <svg
+                                        width="8"
+                                        height="8"
+                                        viewBox="0 0 8 8"
+                                      >
+                                        <circle
+                                          cx="4"
+                                          cy="4"
+                                          r="4"
+                                          fill="#3b82f6"
+                                        />
+                                      </svg>
+                                    </div>
                                     <span className="text-sm text-gray-700">
                                       Technical Knowledge
                                     </span>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                                  <div className="flex items-center">
+                                    <div className="p-2">
+                                      <svg
+                                        width="8"
+                                        height="8"
+                                        viewBox="0 0 8 8"
+                                      >
+                                        <circle
+                                          cx="4"
+                                          cy="4"
+                                          r="4"
+                                          fill="#6b7280"
+                                        />
+                                      </svg>
+                                    </div>
                                     <span className="text-sm text-gray-700">
                                       Speech Fluency
                                     </span>
@@ -309,7 +319,14 @@ export default function HomePage() {
                                   className="flex items-start gap-2"
                                 >
                                   <div className="flex-shrink-0 mt-1">
-                                    <div className="size-1.5 bg-primary rounded-full"></div>
+                                    <svg width="6" height="6" viewBox="0 0 6 6">
+                                      <circle
+                                        cx="3"
+                                        cy="3"
+                                        r="3"
+                                        className="fill-primary"
+                                      />
+                                    </svg>
                                   </div>
                                   <p className="text-xs font-semibold text-gray-700">
                                     {item}

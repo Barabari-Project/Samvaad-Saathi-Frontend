@@ -1,8 +1,8 @@
 "use client";
 
 import { createApiClient } from "@/lib/api-config/src/client";
-import { APIService } from "@/lib/api-config/src/config";
-import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import { APIServiceV2 } from "@/lib/api-config/src/config";
+import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import { ROLE_OPTIONS } from "@/lib/constants";
 import {
   trackDifficultySelected,
@@ -23,36 +23,49 @@ interface CreateInterviewResponse {
   interviewId: string;
 }
 
+const DIFFICULTY_LEVEL = [
+  { key: "easy", label: "Easy" },
+  { key: "medium", label: "Medium" },
+  { key: "hard", label: "Hard" },
+  { key: "expert", label: "Expert" },
+];
+
 export default function InterviewStartPage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
   const [useResume, setUseResume] = useState(false);
+
   const router = useRouter();
 
-  const apiClient = createApiClient(APIService.INTERVIEWS);
+  const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
-  const createInterviewMutation = apiClient.useMutation<
-    CreateInterviewResponse,
-    CreateInterviewRequest
-  >({
-    url: ENDPOINTS.INTERVIEWS.CREATE,
-    method: "post",
-    successMessage: "Interview created successfully!",
-    errorMessage: "Failed to create interview. Please try again.",
-    options: {
-      onSuccess: (data) => {
-        // Navigate to the interview page with query params
-        const interviewId = data.interviewId;
-        if (interviewId) {
-          router.push(
-            `/interview?interviewId=${interviewId}&useResume=${useResume}&role=${encodeURIComponent(
-              selectedRole
-            )}`
-          );
-        }
+  const { mutateAsync: createInterview, isPending: isCreatingInterview } =
+    apiClient.useMutation<CreateInterviewResponse, CreateInterviewRequest>({
+      url: ENDPOINTS_V2.CREATE_INTERVIEW,
+      method: "post",
+      successMessage: "Interview created successfully!",
+      errorMessage: "Failed to create interview. Please try again.",
+      options: {
+        onSuccess: (data) => {
+          // Navigate to the interview page with query params
+          const interviewId = data.interviewId;
+          if (interviewId) {
+            router.push(
+              `/interview?interviewId=${interviewId}&useResume=${useResume}&role=${encodeURIComponent(
+                selectedRole
+              )}`
+            );
+          }
+        },
       },
-    },
-  });
+      keyToInvalidate: {
+        queryKey: [
+          ENDPOINTS.AUTH.ABOUT_ME,
+          ENDPOINTS.INTERVIEWS.LIST,
+          ENDPOINTS.INTERVIEWS.WITH_SUMMARY,
+        ],
+      },
+    });
 
   const handleToggleResume = (checked: boolean) => {
     setUseResume(checked);
@@ -76,7 +89,7 @@ export default function InterviewStartPage() {
 
     try {
       // Create the interview and redirect on success
-      await createInterviewMutation.mutateAsync({
+      await createInterview({
         track: selectedRole,
         difficulty: difficulty,
       });
@@ -126,11 +139,7 @@ export default function InterviewStartPage() {
         </label>
 
         <div className="space-y-2">
-          {[
-            { key: "easy", label: "Easy" },
-            { key: "medium", label: "Medium" },
-            { key: "hard", label: "Hard" },
-          ].map((opt) => (
+          {DIFFICULTY_LEVEL.map((opt) => (
             <label
               key={opt.key}
               className="flex items-center gap-3 cursor-pointer"
@@ -180,16 +189,14 @@ export default function InterviewStartPage() {
       <div className="pt-4">
         <button
           onClick={handleSubmit}
-          disabled={createInterviewMutation.isPending || !selectedRole}
+          disabled={isCreatingInterview || !selectedRole}
           className={`w-full font-bold p-4 rounded-xl ${
-            createInterviewMutation.isPending || !selectedRole
+            isCreatingInterview || !selectedRole
               ? "bg-gray-400 text-gray-200 cursor-not-allowed"
               : "bg-black text-white hover:bg-gray-800"
           }`}
         >
-          {createInterviewMutation.isPending
-            ? "Starting Interview..."
-            : "Start Interview"}
+          {isCreatingInterview ? "Starting Interview..." : "Start Interview"}
         </button>
       </div>
     </div>
