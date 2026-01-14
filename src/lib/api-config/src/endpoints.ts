@@ -44,4 +44,8 @@ export const ENDPOINTS_V2 = {
   SUMMARY_REPORT: "v2/summary-report",
   GENERATE_STRUCTURED_ANSWERS: "v2/interviews/structure-practice",
   CREATE_PRONUNCIATION_PRACTICE: "v2/pronunciation/create",
+  GET_PRONUNCIATION_PRACTICE_AUDIO: (
+    practiceId: string,
+    questionNumber: number
+  ) => `v2/pronunciation/${practiceId}/audio/${questionNumber}`,
 };
