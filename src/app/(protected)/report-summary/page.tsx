@@ -6,6 +6,7 @@ import { SCREEN_VIEW } from "@/lib/posthog/events";
 import { trackScreenView } from "@/lib/posthog/tracking.utils";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import FinalSummary from "./_components/FinalSummary";
@@ -16,6 +17,17 @@ import SummaryOverview from "./_components/SummaryOverview";
 import { ReportResponse } from "./_components/types";
 
 type ReportTab = "per-question" | "final-summary";
+
+const getRatingEmoji = (rating: string): string => {
+  const ratingMap: Record<string, string> = {
+    Excellent: "😄",
+    Good: "🙂",
+    Average: "😐",
+    "Needs-Improvement": "😕",
+    Poor: "😞",
+  };
+  return ratingMap[rating] || "😐";
+};
 
 const ReportSummaryPage: React.FC = () => {
   const searchParams = useSearchParams();
@@ -149,8 +161,8 @@ const ReportSummaryPage: React.FC = () => {
       <div className="card bg-base-100 rounded-xl shadow-md">
         <div className="card-body flex-row items-center gap-4 p-6">
           <div className="flex-shrink-0">
-            <div className="text-xl">
-              {reportData.speechFluencyFeedback.ratingEmoji}
+            <div className="text-5xl">
+              {getRatingEmoji(reportData.speechFluencyFeedback.ratingEmoji)}
             </div>
           </div>
           <div className="flex-1">
@@ -175,30 +187,55 @@ const ReportSummaryPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {reportData.nextSteps.map((step, index) => (
-            <div key={index} className="card bg-base-200 rounded-xl shadow-md">
-              <div className="card-body gap-4 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center bg-base-100">
-                      <ClipboardDocumentIcon className="w-7 h-7 text-base-content" />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-base-content">
-                      {step.title}
-                    </h3>
+          <div className="card bg-base-200 rounded-xl shadow-md">
+            <div className="card-body gap-4 p-6">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center bg-base-100">
+                    <ClipboardDocumentIcon className="w-7 h-7 text-base-content" />
                   </div>
                 </div>
-                <div className="flex justify-end">
-                  <button className="btn btn-primary text-white">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-base-content">
+                    Master Your Pronunciation
+                  </h3>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Link href="/pronunciation-practice">
+                  <button className="btn btn-primary">
                     Practice Now
                     <ArrowRightIcon className="w-5 h-5" />
                   </button>
-                </div>
+                </Link>
               </div>
             </div>
-          ))}
+          </div>
+
+          <div className="card bg-base-200 rounded-xl shadow-md">
+            <div className="card-body gap-4 p-6">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center bg-base-100">
+                    <ClipboardDocumentIcon className="w-7 h-7 text-base-content" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-base-content">
+                    Replace Fillers with Silent Pauses
+                  </h3>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Link href="/structure-your-answer">
+                  <button className="btn btn-primary">
+                    Practice Now
+                    <ArrowRightIcon className="w-5 h-5" />
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
