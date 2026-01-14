@@ -1,7 +1,7 @@
 "use client";
 import { createApiClient } from "@/lib/api-config/src/client";
-import { APIService } from "@/lib/api-config/src/config";
-import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import { APIServiceV2 } from "@/lib/api-config/src/config";
+import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import {
   trackReportGenerationError,
   trackReportGenerationStart,
@@ -9,7 +9,7 @@ import {
 } from "@/lib/posthog/tracking.utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import toast from "react-hot-toast";
 
 const InterviewCompleted = () => {
@@ -17,14 +17,13 @@ const InterviewCompleted = () => {
   const router = useRouter();
   const interviewId = searchParams.get("interviewId");
   const role = searchParams.get("role") || "Interview";
-  const hasStartedGeneration = useRef(false);
 
-  const apiClient = createApiClient(APIService.ANALYSIS);
+  const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
   // Generate final report mutation
   const { mutateAsync: generateFinalReport, isPending: isGeneratingReport } =
     apiClient.useMutation<unknown, { interviewId: number }>({
-      url: ENDPOINTS.ANALYSIS.GENERATE_SUMMARY_REPORT,
+      url: ENDPOINTS_V2.SUMMARY_REPORT,
       method: "post",
       successMessage: "Report generated successfully!",
       errorMessage: "Failed to generate report. Please try again.",
@@ -47,30 +46,32 @@ const InterviewCompleted = () => {
       },
     });
 
+  const generateReport = async () => {
+    try {
+      console.log("interviewId :", interviewId);
+      if (interviewId) {
+        await generateFinalReport({
+          interviewId: parseInt(interviewId),
+        });
+      } else {
+        toast.error("Interview ID is required for generating report");
+      }
+    } catch (error) {
+      console.error("Failed to generate final report:", error);
+      toast.error("Failed to generate final report");
+    }
+  };
+
   // Track screen view on component mount
   useEffect(() => {
-    if (!interviewId || hasStartedGeneration.current) {
+    if (!interviewId) {
       return;
     }
 
     trackScreenView("congratulations_page", interviewId || "");
 
-    hasStartedGeneration.current = true;
-
     // Track report generation start
     trackReportGenerationStart();
-
-    const generateReport = async () => {
-      try {
-        await generateFinalReport({
-          interviewId: parseInt(interviewId),
-        });
-      } catch (error) {
-        console.error("Failed to generate final report:", error);
-        toast.error("Failed to generate final report");
-        hasStartedGeneration.current = false; // Allow retry on error
-      }
-    };
 
     generateReport();
     // eslint-disable-next-line react-hooks/exhaustive-deps

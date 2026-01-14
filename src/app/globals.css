@@ -9,6 +9,7 @@
   --color-error: #d40303;
   --font-heading: var(--font-noto-sans-devanagari);
   --font-body: var(--font-anek-devanagari);
+  --font-orbitron: var(--font-orbitron);
 }
 
 /* Font utility classes */
@@ -18,6 +19,10 @@
 
 .font-body {
   font-family: var(--font-body), sans-serif;
+}
+
+.font-orbitron {
+  font-family: var(--font-orbitron), sans-serif;
 }
 
 /* Apply body font to all text by default */
@@ -66,4 +71,47 @@ h6 {
 .embla__slide {
   flex: 0 0 100%;
   min-width: 0;
+}
+
+@keyframes gradient-xy {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-xy 6s ease infinite;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+/* Mermaid diagram text wrapping */
+.mermaid svg text {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+}
+
+.mermaid svg .nodeLabel,
+.mermaid svg .edgeLabel {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
 }

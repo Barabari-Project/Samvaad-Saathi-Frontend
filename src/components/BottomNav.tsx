@@ -5,7 +5,7 @@ import { HomeIcon, ListBulletIcon, UserIcon } from "@heroicons/react/24/solid";
 import { usePathname, useRouter } from "next/navigation";
 
 /**
- * Bottom navigation bar with three primary actions: History, Home, Profile.
+ * Bottom navigation bar with four primary actions: Home, History, Target Practice, Profile.
  * Automatically highlights the currently active route based on pathname.
  */
 export default function BottomNav({ className = "" }: { className?: string }) {
@@ -14,8 +14,9 @@ export default function BottomNav({ className = "" }: { className?: string }) {
 
   // Determine which nav item should be active based on pathname
   const getActiveNav = () => {
-    if (pathname.startsWith("/history")) return "history";
     if (pathname.startsWith("/home")) return "home";
+    if (pathname.startsWith("/history")) return "history";
+    if (pathname.startsWith("/practice")) return "practice";
     if (pathname.startsWith("/profile")) return "profile";
     return undefined;
   };
@@ -31,11 +32,38 @@ export default function BottomNav({ className = "" }: { className?: string }) {
     router.push(`/${destination}`);
   };
 
+  // Target Practice SVG Icon Component
+  const TargetPracticeIcon = ({ className }: { className?: string }) => (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 44 44"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M22 8.66663C20.249 8.66663 18.5152 9.0115 16.8975 9.68157C15.2799 10.3516 13.81 11.3338 12.5719 12.5719C10.0714 15.0724 8.66666 18.4637 8.66666 22C8.66666 25.5362 10.0714 28.9276 12.5719 31.4281C13.81 32.6662 15.2799 33.6483 16.8975 34.3184C18.5152 34.9884 20.249 35.3333 22 35.3333C25.5362 35.3333 28.9276 33.9285 31.4281 31.4281C33.9286 28.9276 35.3333 25.5362 35.3333 22C35.3333 20.4533 35.0533 18.92 34.52 17.48L32.3867 19.6133C32.5733 20.4 32.6667 21.2 32.6667 22C32.6667 24.8289 31.5429 27.542 29.5425 29.5424C27.5421 31.5428 24.829 32.6666 22 32.6666C19.171 32.6666 16.4579 31.5428 14.4575 29.5424C12.4571 27.542 11.3333 24.8289 11.3333 22C11.3333 19.171 12.4571 16.4579 14.4575 14.4575C16.4579 12.4571 19.171 11.3333 22 11.3333C22.8 11.3333 23.6 11.4266 24.3867 11.6133L26.5333 9.46663C25.08 8.94663 23.5467 8.66663 22 8.66663ZM31.3333 8.66663L26 14V16L22.6 19.4C22.4 19.3333 22.2 19.3333 22 19.3333C21.2927 19.3333 20.6145 19.6142 20.1144 20.1143C19.6143 20.6144 19.3333 21.2927 19.3333 22C19.3333 22.7072 19.6143 23.3855 20.1144 23.8856C20.6145 24.3857 21.2927 24.6666 22 24.6666C22.7072 24.6666 23.3855 24.3857 23.8856 23.8856C24.3857 23.3855 24.6667 22.7072 24.6667 22C24.6667 21.8 24.6667 21.6 24.6 21.4L28 18H30L35.3333 12.6666H31.3333V8.66663ZM22 14C19.8783 14 17.8434 14.8428 16.3431 16.3431C14.8428 17.8434 14 19.8782 14 22C14 24.1217 14.8428 26.1565 16.3431 27.6568C17.8434 29.1571 19.8783 30 22 30C24.1217 30 26.1566 29.1571 27.6568 27.6568C29.1571 26.1565 30 24.1217 30 22H27.3333C27.3333 23.4144 26.7714 24.771 25.7712 25.7712C24.771 26.7714 23.4145 27.3333 22 27.3333C20.5855 27.3333 19.2289 26.7714 18.2288 25.7712C17.2286 24.771 16.6667 23.4144 16.6667 22C16.6667 20.5855 17.2286 19.2289 18.2288 18.2287C19.2289 17.2285 20.5855 16.6666 22 16.6666V14Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+
   return (
     <nav
       className={`fixed bottom-0 left-0 w-full h-16 bg-[#1F285B] rounded-t-[14px] flex justify-around items-center ${className}`}
       aria-label="Bottom Navigation"
     >
+      <button
+        className={`${baseItemClass} ${
+          isActive("home") ? "text-white" : "text-gray-400"
+        }`}
+        onClick={() => handleNavigation("home")}
+        aria-label="Go to home"
+      >
+        <HomeIcon className="size-7" />
+      </button>
+
       <button
         className={`${baseItemClass} ${
           isActive("history") ? "text-white" : "text-gray-400"
@@ -48,12 +76,12 @@ export default function BottomNav({ className = "" }: { className?: string }) {
 
       <button
         className={`${baseItemClass} ${
-          isActive("home") ? "text-white" : "text-gray-400"
+          isActive("practice") ? "text-white" : "text-gray-400"
         }`}
-        onClick={() => handleNavigation("home")}
-        aria-label="Go to home"
+        onClick={() => handleNavigation("practice")}
+        aria-label="Go to target practice"
       >
-        <HomeIcon className="size-7" />
+        <TargetPracticeIcon className="size-10" />
       </button>
 
       <button

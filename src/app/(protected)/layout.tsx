@@ -23,7 +23,7 @@ export default function ProtectedLayout({
           isOnboarding
             ? "pt-0 pb-0 px-0"
             : isInterview
-            ? "pt-16 pb-0 px-0"
+            ? "pt-0 pb-0 px-0"
             : "pt-16 pb-16 px-8"
         } flex-1 overflow-y-auto`}
       >

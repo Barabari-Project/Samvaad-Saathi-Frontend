@@ -5,6 +5,8 @@ export interface ReportResponse {
     name: string;
     interviewDate: string;
     roleTopic: string;
+    duration: string;
+    durationFeedback: string;
   };
   scoreSummary: {
     knowledgeCompetence: {
@@ -35,32 +37,34 @@ export interface ReportResponse {
       };
     };
   };
-  overallFeedback: {
-    speechFluency: {
-      strengths: string[];
-      areasOfImprovement: string[];
-      actionableSteps: Array<{
-        title: string;
-        description: string;
-      }>;
-    };
-  };
   questionAnalysis: Array<{
     id: number;
     totalQuestions: number;
     type: string;
     question: string;
     feedback: {
-      knowledgeRelated: {
-        strengths: string[];
-        areasOfImprovement: string[];
-        actionableInsights: Array<{
-          title: string;
-          description: string;
-        }>;
-      };
+      strengths: string;
+      areasOfImprovement: string;
     } | null;
   }>;
+  recommendedPractice: {
+    title: string;
+    description: string;
+  };
+  speechFluencyFeedback: {
+    strengths: string;
+    areasOfImprovement: string;
+    ratingEmoji: string;
+    ratingTitle: string;
+    ratingDescription: string;
+  };
+  nextSteps: Array<{
+    title: string;
+  }>;
+  finalTip: {
+    title: string;
+    description: string;
+  };
 }
 
 // Component Props Types
@@ -68,6 +72,8 @@ export type SummaryOverviewProps = {
   candidateName: string;
   role: string;
   date: string;
+  duration?: string;
+  durationFeedback?: string;
 };
 
 export type OverallScoreSummaryProps = {
@@ -76,7 +82,7 @@ export type OverallScoreSummaryProps = {
 };
 
 export type FinalSummaryProps = {
-  speechFluency: ReportResponse["overallFeedback"]["speechFluency"];
+  speechFluencyFeedback: ReportResponse["speechFluencyFeedback"];
 };
 
 export type PerQuestionAnalysisProps = {

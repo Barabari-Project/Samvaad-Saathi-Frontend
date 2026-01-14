@@ -2,7 +2,11 @@ import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import AppProvider from "@/components/providers/app-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import type { Metadata } from "next";
-import { Anek_Devanagari, Noto_Sans_Devanagari } from "next/font/google";
+import {
+  Anek_Devanagari,
+  Noto_Sans_Devanagari,
+  Orbitron,
+} from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
@@ -17,6 +21,12 @@ const anekDevanagari = Anek_Devanagari({
   variable: "--font-anek-devanagari",
   subsets: ["devanagari"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800"],
+});
+
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
@@ -158,7 +168,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${notoSansDevanagari.variable} ${anekDevanagari.variable} antialiased`}
+        className={`${notoSansDevanagari.variable} ${anekDevanagari.variable} ${orbitron.variable} antialiased`}
       >
         <AppProvider>
           <AuthProvider>
