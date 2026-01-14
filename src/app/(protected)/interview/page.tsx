@@ -66,20 +66,28 @@ const InterviewPage = () => {
         ) as GenerateQuestionsResponse["items"];
         if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
           setQuestions(parsedQuestions);
+          // Start interview only after questions are parsed from URL
+          if (!hasStarted) {
+            setHasStarted(true);
+          }
         }
       } catch (error) {
         console.error("Failed to parse selectedQuestions from URL:", error);
         // Fallback to generating questions via API if parsing fails
       }
     }
-  }, [selectedQuestionsParam]);
+  }, [selectedQuestionsParam, hasStarted]);
 
   // Update local questions state when generatedQuestions changes
   useEffect(() => {
-    if (generatedQuestions?.items) {
+    if (generatedQuestions?.items && generatedQuestions.items.length > 0) {
       setQuestions(generatedQuestions.items);
+      // Start interview only after questions are generated via API
+      if (!hasStarted) {
+        setHasStarted(true);
+      }
     }
-  }, [generatedQuestions?.items?.length]);
+  }, [generatedQuestions?.items, hasStarted]);
 
   useEffect(() => {
     if (questions?.[currentQuestionIndex] && interviewId) {
@@ -88,11 +96,11 @@ const InterviewPage = () => {
         questionId: questions[currentQuestionIndex].interviewQuestionId,
       });
     }
-  }, [questions, interviewId, currentQuestionIndex]);
+  }, [questions, interviewId, currentQuestionIndex, startQuestionAttempt]);
 
   const handleInterviewStart = () => {
     if (hasPermission) {
-      setHasStarted(true);
+      // Don't set hasStarted here - wait for questions to be ready
       // If selectedQuestions exists in URL, questions should be parsed from URL
       // Only call API if selectedQuestions is not present or parsing failed (no questions)
       if (!selectedQuestionsParam) {
@@ -105,6 +113,9 @@ const InterviewPage = () => {
         generateQuestions({
           useResume: useResume === "true",
         });
+      } else {
+        // Questions already available from URL parsing, start immediately
+        setHasStarted(true);
       }
       // If selectedQuestions exists and questions are available, skip API call
     } else {
@@ -115,7 +126,7 @@ const InterviewPage = () => {
   const handleRequestPermission = async () => {
     const granted = await requestPermission();
     if (granted) {
-      setHasStarted(true);
+      // Don't set hasStarted here - wait for questions to be ready
       // If selectedQuestions exists in URL, questions should be parsed from URL
       // Only call API if selectedQuestions is not present or parsing failed (no questions)
       if (!selectedQuestionsParam) {
@@ -128,6 +139,9 @@ const InterviewPage = () => {
         generateQuestions({
           useResume: useResume === "true",
         });
+      } else {
+        // Questions already available from URL parsing, start immediately
+        setHasStarted(true);
       }
       // If selectedQuestions exists and questions are available, skip API call
     }
@@ -192,7 +206,11 @@ const InterviewPage = () => {
     <div className="container mx-auto p-8 max-w-6xl">
       {!hasStarted ? (
         <>
-          <Welcome role={role || ""} onInterviewStart={handleInterviewStart} />
+          <Welcome
+            role={role || ""}
+            onInterviewStart={handleInterviewStart}
+            isGeneratingQuestions={isGeneratingQuestions}
+          />
           <MicPermissionModal
             isOpen={showModal}
             onClose={hidePermissionModal}

@@ -14,6 +14,7 @@ const Header = ({
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
 
   useEffect(() => {
+    // Only start timer when interview has actually started
     if (!hasStarted || !interviewId) return;
 
     // Create interview-specific storage key
@@ -33,7 +34,7 @@ const Header = ({
         // Handle timer expiry if needed
       }
     } else {
-      // Set new end time
+      // Set new end time only when interview actually starts (questions are ready)
       const endTime = Date.now() + 25 * 60 * 1000;
       sessionStorage.setItem(storageKey, endTime.toString());
     }

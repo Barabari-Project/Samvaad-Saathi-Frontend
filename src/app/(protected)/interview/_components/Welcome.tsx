@@ -5,9 +5,14 @@ import React from "react";
 interface WelcomeProps {
   role: string;
   onInterviewStart: () => void;
+  isGeneratingQuestions: boolean;
 }
 
-const Welcome = ({ role, onInterviewStart }: WelcomeProps) => {
+const Welcome = ({
+  role,
+  onInterviewStart,
+  isGeneratingQuestions,
+}: WelcomeProps) => {
   const isTouchDevice = useTouchDevice();
 
   return (
@@ -64,8 +69,11 @@ const Welcome = ({ role, onInterviewStart }: WelcomeProps) => {
                 <button
                   onClick={onInterviewStart}
                   className="btn btn-primary px-8 text-lg"
+                  disabled={isGeneratingQuestions}
                 >
-                  Click here to continue
+                  {isGeneratingQuestions
+                    ? "Generating questions..."
+                    : "Click here to continue"}
                 </button>
               </div>
             )}
