@@ -1,6 +1,7 @@
 "use client";
 
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
+import { useEffect } from "react";
 import { GenerateQuestionsResponse } from "../types";
 
 interface QuestionProps {
@@ -8,6 +9,7 @@ interface QuestionProps {
   question: GenerateQuestionsResponse["items"][number] | undefined;
   currentQuestionIndex: number;
   totalQuestions: number;
+  onSpeakingChange?: (isSpeaking: boolean) => void;
 }
 
 const Question = ({
@@ -15,12 +17,20 @@ const Question = ({
   question,
   currentQuestionIndex = 0,
   totalQuestions = 0,
+  onSpeakingChange,
 }: QuestionProps) => {
   // Use text-to-speech hook
-  useTextToSpeech({
+  const { isSpeaking } = useTextToSpeech({
     text: question?.text,
     disabled: isLoading,
   });
+
+  // Notify parent when speaking state changes
+  useEffect(() => {
+    if (onSpeakingChange) {
+      onSpeakingChange(isSpeaking);
+    }
+  }, [isSpeaking]);
 
   if (isLoading) {
     return (

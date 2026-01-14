@@ -27,6 +27,7 @@ const InterviewPage = () => {
   const [questions, setQuestions] = useState<
     GenerateQuestionsResponse["items"]
   >([]);
+  const [isTextToSpeechSpeaking, setIsTextToSpeechSpeaking] = useState(false);
 
   // mic permission utils
   const {
@@ -96,7 +97,10 @@ const InterviewPage = () => {
         questionId: questions[currentQuestionIndex].interviewQuestionId,
       });
     }
-  }, [questions, interviewId, currentQuestionIndex, startQuestionAttempt]);
+    // Reset text-to-speech speaking state when question changes
+    setIsTextToSpeechSpeaking(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questions, interviewId, currentQuestionIndex]);
 
   const handleInterviewStart = () => {
     if (hasPermission) {
@@ -235,6 +239,7 @@ const InterviewPage = () => {
             question={questions?.[currentQuestionIndex]}
             currentQuestionIndex={currentQuestionIndex}
             totalQuestions={questions?.length || 0}
+            onSpeakingChange={setIsTextToSpeechSpeaking}
           />
           <CodeView
             isLoading={isGeneratingQuestions}
@@ -242,7 +247,7 @@ const InterviewPage = () => {
           />
           <Footer
             isLoading={isGeneratingQuestions}
-            disabled={isStartingAttempt}
+            disabled={isStartingAttempt || isTextToSpeechSpeaking}
             question_attempt_id={questionAttemptResponse?.questionAttemptId}
             onNext={handleNextQuestion}
             isLastQuestion={
