@@ -42,4 +42,6 @@ export const ENDPOINTS_V2 = {
   SUPPLEMENTS: (interviewId: string) =>
     `v2/interviews/${interviewId}/supplements`,
   SUMMARY_REPORT: "v2/summary-report",
+  GENERATE_STRUCTURED_ANSWERS: "v2/interviews/structure-practice",
+  CREATE_PRONUNCIATION_PRACTICE: "v2/pronunciation/create",
 };

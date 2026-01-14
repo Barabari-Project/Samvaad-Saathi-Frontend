@@ -149,7 +149,7 @@ const ReportSummaryPage: React.FC = () => {
       <div className="card bg-base-100 rounded-xl shadow-md">
         <div className="card-body flex-row items-center gap-4 p-6">
           <div className="flex-shrink-0">
-            <div className="text-6xl">
+            <div className="text-xl">
               {reportData.speechFluencyFeedback.ratingEmoji}
             </div>
           </div>

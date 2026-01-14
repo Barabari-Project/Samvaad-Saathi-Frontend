@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
+import Link from "next/link";
 
 const PracticePage = () => {
   const practiceModules = [
@@ -11,6 +12,7 @@ const PracticePage = () => {
         "Learn how to frame your responses with clarity, logic, and flow.",
       gradient: "from-purple-100 to-purple-200",
       shadowColor: "purple",
+      href: "/structure-your-answer",
     },
     {
       id: 2,
@@ -19,6 +21,7 @@ const PracticePage = () => {
         "Learn how to frame your responses with clarity, logic, and flow.",
       gradient: "from-yellow-100 to-amber-100",
       shadowColor: "amber",
+      href: "/pronunciation-practice",
     },
     {
       id: 3,
@@ -46,23 +49,25 @@ const PracticePage = () => {
       {/* Practice Modules */}
       <div className="flex flex-col gap-6">
         {practiceModules.map((module) => (
-          <div
-            key={module.id}
-            className={`relative rounded-2xl bg-gradient-to-br ${module.gradient} p-6 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-${module.shadowColor}-400/50 cursor-pointer`}
-          >
-            <div className="flex flex-col gap-3">
-              <h2 className="text-xl font-bold text-gray-900">
-                {module.title}
-              </h2>
-              <p className="text-base text-gray-700">{module.description}</p>
-              <div className="flex justify-end mt-2">
-                <button className="flex items-center gap-2 bg-[#1f285b] text-white px-5 py-2.5 rounded-lg font-medium hover:bg-[#1f285b]/90 transition-colors">
-                  <span>Practice Now</span>
-                  <ArrowRightIcon className="w-5 h-5" />
-                </button>
+          <Link href={module.href || ""} key={module.id}>
+            <div
+              key={module.id}
+              className={`relative rounded-2xl bg-gradient-to-br ${module.gradient} p-6 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-${module.shadowColor}-400/50 cursor-pointer`}
+            >
+              <div className="flex flex-col gap-3">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {module.title}
+                </h2>
+                <p className="text-base text-gray-700">{module.description}</p>
+                <div className="flex justify-end mt-2">
+                  <button className="flex items-center gap-2 bg-[#1f285b] text-white px-5 py-2.5 rounded-lg font-medium hover:bg-[#1f285b]/90 transition-colors">
+                    <span>Practice Now</span>
+                    <ArrowRightIcon className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
