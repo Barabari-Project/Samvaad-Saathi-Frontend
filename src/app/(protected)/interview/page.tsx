@@ -203,7 +203,7 @@ const InterviewPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-6xl">
+    <div className="px-8 pt-4 max-w-6xl">
       {!hasStarted ? (
         <>
           <Welcome
@@ -223,6 +223,7 @@ const InterviewPage = () => {
             role={role || ""}
             hasStarted={hasStarted}
             interviewId={interviewId}
+            onTimerExpire={handleInterviewSubmit}
           />
 
           <div className="size-24 mx-auto mb-4">

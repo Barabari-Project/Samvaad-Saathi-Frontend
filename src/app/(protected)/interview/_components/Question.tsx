@@ -52,7 +52,7 @@ const Question = ({
       {/* Top Row with Counter */}
       <div className="mb-2">
         <span className="text-lg text-slate-900 font-medium">
-          Question{currentQuestionIndex + 1}:
+          Question {currentQuestionIndex + 1}:
         </span>
       </div>
 
@@ -64,21 +64,23 @@ const Question = ({
       </div>
 
       {/* Tag */}
-      <div className="flex">
-        <span
-          className={`badge badge-sm ${
-            question.category?.toLowerCase() === "tech"
-              ? "badge-primary"
-              : question.category?.toLowerCase() === "behavioral"
-              ? "badge-warning"
-              : question.category?.toLowerCase() === "tech_allied"
-              ? "badge-success"
-              : "badge-secondary"
-          }`}
-        >
-          {question?.category?.replaceAll("_", " ")?.toUpperCase()}
-        </span>
-      </div>
+      {!!question?.category ? (
+        <div className="flex">
+          <span
+            className={`badge badge-sm ${
+              question.category?.toLowerCase() === "tech"
+                ? "badge-primary"
+                : question.category?.toLowerCase() === "behavioral"
+                ? "badge-warning"
+                : question.category?.toLowerCase() === "tech_allied"
+                ? "badge-success"
+                : "badge-secondary"
+            }`}
+          >
+            {question?.category?.replaceAll("_", " ")?.toUpperCase()}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 };
