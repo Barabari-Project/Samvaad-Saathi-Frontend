@@ -21,6 +21,7 @@ const PracticePage = () => {
         "Learn how to frame your responses with clarity, logic, and flow.",
       gradient: "from-yellow-100 to-amber-100",
       shadowColor: "amber",
+      href: "/pronunciation-practice",
     },
     {
       id: 3,
