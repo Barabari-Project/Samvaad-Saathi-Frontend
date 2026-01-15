@@ -1,4 +1,5 @@
 "use client";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { MicPermissionModal, useMicPermission } from "@/hooks/useMicPermission";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIServiceV2 } from "@/lib/api-config/src/config";
@@ -15,6 +16,7 @@ import {
 
 const InterviewPage = () => {
   const router = useRouter();
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   const searchParams = useSearchParams();
   const interviewId = searchParams.get("interviewId");
@@ -207,7 +209,7 @@ const InterviewPage = () => {
   };
 
   return (
-    <div className="px-8 pt-4 max-w-6xl">
+    <div className="px-8 pt-4">
       {!hasStarted ? (
         <>
           <Welcome
@@ -230,21 +232,62 @@ const InterviewPage = () => {
             onTimerExpire={handleInterviewSubmit}
           />
 
-          <div className="size-24 mx-auto mb-4">
-            <DotLottieReact src="/assets/lottie/Speaker.lottie" autoplay loop />
-          </div>
+          {isMobile ? (
+            <>
+              <div className="size-24 mx-auto mb-4">
+                <DotLottieReact
+                  src="/assets/lottie/Speaker.lottie"
+                  autoplay
+                  loop
+                />
+              </div>
 
-          <Question
-            isLoading={isGeneratingQuestions}
-            question={questions?.[currentQuestionIndex]}
-            currentQuestionIndex={currentQuestionIndex}
-            totalQuestions={questions?.length || 0}
-            onSpeakingChange={setIsTextToSpeechSpeaking}
-          />
-          <CodeView
-            isLoading={isGeneratingQuestions}
-            supplement={questions?.[currentQuestionIndex]?.supplement || null}
-          />
+              <Question
+                isLoading={isGeneratingQuestions}
+                question={questions?.[currentQuestionIndex]}
+                currentQuestionIndex={currentQuestionIndex}
+                totalQuestions={questions?.length || 0}
+                onSpeakingChange={setIsTextToSpeechSpeaking}
+              />
+              <CodeView
+                isLoading={isGeneratingQuestions}
+                supplement={
+                  questions?.[currentQuestionIndex]?.supplement || null
+                }
+              />
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-6 gap-4">
+                <div className="size-24 mx-auto mb-4 col-span-1">
+                  <DotLottieReact
+                    src="/assets/lottie/Speaker.lottie"
+                    autoplay
+                    loop
+                  />
+                </div>
+
+                <div className="col-span-3">
+                  <Question
+                    isLoading={isGeneratingQuestions}
+                    question={questions?.[currentQuestionIndex]}
+                    currentQuestionIndex={currentQuestionIndex}
+                    totalQuestions={questions?.length || 0}
+                    onSpeakingChange={setIsTextToSpeechSpeaking}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <CodeView
+                    isLoading={isGeneratingQuestions}
+                    supplement={
+                      questions?.[currentQuestionIndex]?.supplement || null
+                    }
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
           <Footer
             isLoading={isGeneratingQuestions}
             disabled={isStartingAttempt || isTextToSpeechSpeaking}

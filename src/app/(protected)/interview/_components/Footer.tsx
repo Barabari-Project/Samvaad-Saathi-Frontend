@@ -374,7 +374,7 @@ const Footer = ({
   };
 
   return (
-    <div className="w-full py-4 transition-all duration-300 ease-in-out flex flex-col items-center justify-center">
+    <div className="w-full py-4 transition-all duration-300 ease-in-out flex flex-col items-center justify-center max-w-5xl mx-auto">
       {/* Skip Confirmation Modal */}
       <dialog
         className={`modal ${
