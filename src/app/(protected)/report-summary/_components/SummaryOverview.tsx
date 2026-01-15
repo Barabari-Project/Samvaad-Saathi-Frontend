@@ -41,8 +41,7 @@ const SummaryOverview: React.FC<SummaryOverviewProps> = ({
           <div className="flex justify-between gap-2">
             <div className="text-gray-500">Duration Feedback</div>
             <div className="text-right font-medium max-w-64">
-              {durationFeedback} Lorem ipsum dolor sit amet consectetur
-              adipisicing elit. Quisquam, quos.
+              {durationFeedback}
             </div>
           </div>
         )}
