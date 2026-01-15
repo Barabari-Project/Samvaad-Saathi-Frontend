@@ -4,6 +4,7 @@ import { APIServiceV2 } from "@/lib/api-config/src/config";
 import { ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import { SCREEN_VIEW } from "@/lib/posthog/events";
 import { trackScreenView } from "@/lib/posthog/tracking.utils";
+import { formatDate } from "@/lib/utils";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
@@ -13,7 +14,6 @@ import FinalSummary from "./_components/FinalSummary";
 import OverallScoreSummary from "./_components/OverallScoreSummary";
 import PerQuestionAnalysis from "./_components/PerQuestionAnalysis";
 import SkeletonLoader from "./_components/SkeletonLoader";
-import SummaryOverview from "./_components/SummaryOverview";
 import { ReportResponse } from "./_components/types";
 
 type ReportTab = "per-question" | "final-summary";
@@ -22,11 +22,11 @@ const getRatingEmoji = (rating: string): string => {
   const ratingMap: Record<string, string> = {
     Excellent: "😄",
     Good: "🙂",
-    Average: "😐",
+    Average: "🤔",
     "Needs-Improvement": "😕",
     Poor: "😞",
   };
-  return ratingMap[rating] || "😐";
+  return ratingMap[rating] || "🤔";
 };
 
 const ReportSummaryPage: React.FC = () => {
@@ -75,21 +75,20 @@ const ReportSummaryPage: React.FC = () => {
 
   return (
     <div className="space-y-6 py-4 sm:py-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold">
-          {reportData.candidateInfo.roleTopic
-            ? `${reportData.candidateInfo.roleTopic} Interview Summary Report`
-            : "Interview Summary Report"}
-        </h1>
-      </div>
-
+      <h1 className="font-bold mb-0">
+        {reportData?.candidateInfo?.roleTopic} Performance Report
+      </h1>
+      <p>
+        Interview Date: {formatDate(reportData?.candidateInfo?.interviewDate)}
+      </p>
+      {/* 
       <SummaryOverview
         candidateName={reportData.candidateInfo.name}
         role={reportData.candidateInfo.roleTopic}
         date={reportData.candidateInfo.interviewDate}
         duration={reportData.candidateInfo.duration}
         durationFeedback={reportData.candidateInfo.durationFeedback}
-      />
+      /> */}
 
       <OverallScoreSummary
         knowledgeCompetence={reportData.scoreSummary.knowledgeCompetence}
@@ -128,7 +127,7 @@ const ReportSummaryPage: React.FC = () => {
 
       <PerQuestionAnalysis questionAnalysis={reportData.questionAnalysis} />
 
-      <div className="card bg-base-200 rounded-xl shadow-md">
+      <div className="card bg-base-100 rounded-xl shadow-md">
         <div className="card-body gap-4">
           <div className="flex items-center gap-4">
             <div className="flex-shrink-0">
@@ -147,10 +146,14 @@ const ReportSummaryPage: React.FC = () => {
           </div>
 
           <div className="flex justify-end">
-            <button className="btn btn-primary text-white">
-              Practice Now
-              <ArrowRightIcon className="w-5 h-5" />
-            </button>
+            <Link
+              href={`/structure-your-answer/interview?interviewId=${interviewId}&role=${reportData.candidateInfo.roleTopic}`}
+            >
+              <button className="btn btn-primary text-white">
+                Practice Now
+                <ArrowRightIcon className="w-5 h-5" />
+              </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -187,7 +190,7 @@ const ReportSummaryPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="card bg-base-200 rounded-xl shadow-md">
+          <div className="card bg-base-100 rounded-xl shadow-md">
             <div className="card-body gap-4 p-6">
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
@@ -203,31 +206,6 @@ const ReportSummaryPage: React.FC = () => {
               </div>
               <div className="flex justify-end">
                 <Link href="/pronunciation-practice">
-                  <button className="btn btn-primary">
-                    Practice Now
-                    <ArrowRightIcon className="w-5 h-5" />
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="card bg-base-200 rounded-xl shadow-md">
-            <div className="card-body gap-4 p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex-shrink-0">
-                  <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center bg-base-100">
-                    <ClipboardDocumentIcon className="w-7 h-7 text-base-content" />
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-base-content">
-                    Replace Fillers with Silent Pauses
-                  </h3>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Link href="/structure-your-answer">
                   <button className="btn btn-primary">
                     Practice Now
                     <ArrowRightIcon className="w-5 h-5" />

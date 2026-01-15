@@ -71,7 +71,7 @@ const PronunciationPracticePage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col ">
       {/* Main Content */}
       <div className="flex flex-col gap-6 p-6 ">
         {/* Role Selection */}

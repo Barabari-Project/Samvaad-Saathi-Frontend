@@ -185,7 +185,7 @@ const PronunciationPracticeStartPage = () => {
   // Show welcome screen
   if (showWelcome) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center p-6">
+      <div className="flex flex-col h-[80vh] items-center justify-center p-6">
         <div className="relative max-w-md w-full">
           {/* Gradient border using wrapper */}
           <div className="bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 rounded-2xl p-[2px]">
@@ -203,7 +203,7 @@ const PronunciationPracticeStartPage = () => {
   // Show completion screen
   if (showCompletion) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center p-6">
+      <div className="flex flex-col h-[80vh] items-center justify-center p-6">
         <div className="flex flex-col items-center gap-6 max-w-md w-full">
           {/* Celebration graphic placeholder - simple party popper icon */}
           <div className="flex items-center justify-center mb-4">
@@ -241,7 +241,7 @@ const PronunciationPracticeStartPage = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col">
       <div className="flex flex-col gap-4 p-6">
         {/* Header Section */}
         <div className="flex flex-col gap-2">

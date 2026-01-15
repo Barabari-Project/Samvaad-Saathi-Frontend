@@ -23,14 +23,14 @@ const PracticePage = () => {
       shadowColor: "amber",
       href: "/pronunciation-practice",
     },
-    {
-      id: 3,
-      title: "Control Your Pace",
-      description:
-        "Improve your pacing and reduce filler words for smoother responses.",
-      gradient: "from-pink-100 to-rose-200",
-      shadowColor: "rose",
-    },
+    // {
+    //   id: 3,
+    //   title: "Control Your Pace",
+    //   description:
+    //     "Improve your pacing and reduce filler words for smoother responses.",
+    //   gradient: "from-pink-100 to-rose-200",
+    //   shadowColor: "rose",
+    // },
   ];
 
   return (

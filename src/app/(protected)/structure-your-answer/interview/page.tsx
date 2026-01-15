@@ -4,6 +4,7 @@ import { createApiClient } from "@/lib/api-config/src/client";
 import { APIServiceV2 } from "@/lib/api-config/src/config";
 import { ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnswerTypeStep, QuestionReport } from "./_components";
 import { AnswerType, getFrameworkForCategory } from "./types";
@@ -35,6 +36,10 @@ interface StructuredPracticeResponse {
 }
 
 const StructureYourAnswerInterviewPage = () => {
+  const searchParams = useSearchParams();
+  const interviewId = searchParams.get("interviewId");
+  const role = searchParams.get("role");
+
   const [structuredPractice, setStructuredPractice] =
     useState<StructuredPracticeResponse | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -48,7 +53,7 @@ const StructureYourAnswerInterviewPage = () => {
 
   const { mutateAsync: generateStructuredPractice } = apiClient.useMutation<
     StructuredPracticeResponse,
-    Record<string, never>
+    { interviewId?: string; role?: string }
   >({
     url: ENDPOINTS_V2.GENERATE_STRUCTURED_PRACTICE,
     method: "post",
@@ -58,7 +63,14 @@ const StructureYourAnswerInterviewPage = () => {
     const callApi = async () => {
       try {
         setIsLoading(true);
-        const response = await generateStructuredPractice({});
+        const requestData: { interviewId?: string; role?: string } = {};
+        if (interviewId) {
+          requestData.interviewId = interviewId;
+        }
+        if (role) {
+          requestData.role = role;
+        }
+        const response = await generateStructuredPractice(requestData);
         setStructuredPractice(response);
       } catch (error) {
         console.error("Error calling API:", error);
@@ -69,7 +81,7 @@ const StructureYourAnswerInterviewPage = () => {
 
     callApi();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [interviewId, role]);
 
   // Auto-hide welcome screen after 2 seconds when loading completes
   useEffect(() => {
