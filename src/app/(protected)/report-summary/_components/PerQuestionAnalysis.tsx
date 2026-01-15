@@ -24,7 +24,7 @@ const PerQuestionAnalysis: React.FC<PerQuestionAnalysisProps> = ({
         return (
           <div
             key={question.id}
-            className="collapse collapse-arrow bg-base-200 rounded-xl shadow-sm"
+            className="collapse collapse-arrow bg-[#EEEFFC] rounded-xl shadow-sm"
           >
             <input type="checkbox" className="peer" />
             <div className="collapse-title">
