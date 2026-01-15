@@ -179,9 +179,6 @@ const StructureYourAnswerInterviewPage = () => {
   if (showReport) {
     return (
       <QuestionReport
-        questionText={currentQuestion.text}
-        category={currentQuestion.category}
-        completedAnswerTypes={currentFramework}
         practiceId={structuredPractice?.interviewId?.toString() || ""}
         questionIndex={currentQuestionIndex}
         onNextQuestion={handleNextQuestion}
