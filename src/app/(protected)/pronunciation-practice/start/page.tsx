@@ -1,11 +1,18 @@
 "use client";
 
 import DifficultyTag from "@/components/DifficultyTag";
-import { ArrowRightIcon, SpeakerWaveIcon } from "@heroicons/react/24/solid";
+import { createApiClient } from "@/lib/api-config/src/client";
+import { APIServiceV2 } from "@/lib/api-config/src/config";
+import { ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
+import {
+  ArrowPathIcon,
+  ArrowRightIcon,
+  SpeakerWaveIcon,
+} from "@heroicons/react/24/solid";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Word {
   index: number;
@@ -30,6 +37,38 @@ const PronunciationPracticeStartPage = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
   const [showCompletion, setShowCompletion] = useState(false);
+  const audioUrlRef = useRef<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
+
+  // Get current word safely
+  const currentWord = practiceData?.words[currentWordIndex];
+
+  // Fetch audio using the API endpoint - must be called before any early returns
+  const {
+    data: audioData,
+    refetch: fetchAudio,
+    isFetching: isFetchingAudio,
+  } = apiClient.useQuery<Blob>({
+    key: [
+      "pronunciation-audio",
+      practiceData?.practiceId,
+      currentWord?.index,
+      isSlow,
+    ],
+    url:
+      practiceData && currentWord
+        ? ENDPOINTS_V2.GET_PRONUNCIATION_PRACTICE_AUDIO(
+            practiceData.practiceId.toString(),
+            currentWord.index
+          )
+        : "",
+    enabled: false, // Don't auto-fetch, we'll trigger it manually
+    config: {
+      responseType: "blob",
+      params: isSlow ? { slow: true } : undefined,
+    },
+  });
 
   useEffect(() => {
     // Read data from sessionStorage
@@ -47,7 +86,7 @@ const PronunciationPracticeStartPage = () => {
       // Redirect back if no data
       router.push("/pronunciation-practice");
     }
-  }, [router]);
+  }, []);
 
   // Hide welcome screen after 2 seconds
   useEffect(() => {
@@ -58,6 +97,21 @@ const PronunciationPracticeStartPage = () => {
       return () => clearTimeout(timer);
     }
   }, [practiceData]);
+
+  // Call API when word changes or slow toggle changes
+  useEffect(() => {
+    if (practiceData && currentWord && !showWelcome && !showCompletion) {
+      fetchAudio();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentWordIndex,
+    practiceData,
+    isSlow,
+    showWelcome,
+    showCompletion,
+    currentWord,
+  ]);
 
   const handleNext = () => {
     if (practiceData && currentWordIndex < practiceData.words.length - 1) {
@@ -70,6 +124,55 @@ const PronunciationPracticeStartPage = () => {
       setShowCompletion(true);
     }
   };
+
+  const handlePlayAudio = () => {
+    if (!audioData) {
+      // If audio is not loaded, fetch it first
+      fetchAudio();
+      return;
+    }
+
+    // Clean up previous audio URL if it exists
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+
+    // Create object URL from blob
+    const audioUrl = URL.createObjectURL(audioData);
+    audioUrlRef.current = audioUrl;
+
+    // Create and play audio
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+
+    audio.play().catch((error) => {
+      console.error("Error playing audio:", error);
+    });
+
+    // Clean up when audio finishes playing
+    audio.addEventListener("ended", () => {
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+        audioUrlRef.current = null;
+      }
+      audioRef.current = null;
+    });
+  };
+
+  // Cleanup audio URL on unmount or when audio data changes
+  useEffect(() => {
+    return () => {
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+        audioUrlRef.current = null;
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [audioData]);
 
   if (!practiceData) {
     return (
@@ -137,46 +240,6 @@ const PronunciationPracticeStartPage = () => {
     );
   }
 
-  const currentWord = practiceData.words[currentWordIndex];
-
-  // Format phonetic with dots between syllables (simple approach - split by spaces or common patterns)
-  const formatPhonetic = (phonetic: string) => {
-    // If phonetic contains spaces or separators, use them
-    if (phonetic.includes(" ") || phonetic.includes("·")) {
-      return phonetic.replace(/\s+/g, " · ").replace(/·+/g, "·");
-    }
-    // Otherwise, try to split into syllables (simple heuristic)
-    // For now, just return as is - the API should provide formatted phonetic
-    return phonetic;
-  };
-
-  const phoneticDisplay = formatPhonetic(currentWord.phonetic);
-
-  const handlePlayPhonetic = () => {
-    if (!currentWord?.phonetic) return;
-
-    // Check if browser supports speech synthesis
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      console.warn("Text-to-speech is not supported in this browser");
-      return;
-    }
-
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-
-    // Create speech utterance with phonetic text
-    const utterance = new SpeechSynthesisUtterance(currentWord.phonetic);
-
-    // Configure speech settings
-    utterance.rate = isSlow ? 0.3 : 0.9; // Slower rate when isSlow is true
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-    utterance.lang = "en-US"; // Use English for phonetic pronunciation
-
-    // Speak the phonetic text
-    window.speechSynthesis.speak(utterance);
-  };
-
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex flex-col gap-4 p-6">
@@ -199,7 +262,7 @@ const PronunciationPracticeStartPage = () => {
         {/* Word Display */}
         <div className="flex items-center justify-between mt-4">
           <div className="text-4xl font-bold text-black">
-            {currentWord.word}
+            {currentWord?.word || ""}
           </div>
           <div className="text-sm text-gray-600">
             {currentWordIndex + 1}/{practiceData.totalWords}
@@ -217,23 +280,30 @@ const PronunciationPracticeStartPage = () => {
             <div className="text-gray-600 text-sm">Sounds like</div>
             <div className="flex items-center justify-between gap-4">
               <div className="text-2xl font-bold text-black flex-1">
-                {phoneticDisplay}
+                {currentWord?.phonetic || ""}
               </div>
               <button
-                onClick={handlePlayPhonetic}
-                className="flex-shrink-0 p-2 hover:bg-purple-200 rounded-lg transition-colors"
+                onClick={handlePlayAudio}
+                className="flex-shrink-0 p-2 hover:bg-purple-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Play pronunciation"
+                disabled={!audioData || isFetchingAudio}
               >
-                <SpeakerWaveIcon className="h-6 w-6 text-[#1f285b]" />
+                {isFetchingAudio ? (
+                  <ArrowPathIcon className="h-6 w-6 text-[#1f285b] animate-spin" />
+                ) : (
+                  <SpeakerWaveIcon className="h-6 w-6 text-[#1f285b]" />
+                )}
               </button>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-gray-600 text-sm">Stress:</span>
               <span className="bg-gray-200 text-black px-3 py-1 rounded-lg text-sm">
                 {/* Stress indicator - would need API data for this */}
-                {currentWord.word
-                  .charAt(Math.floor(currentWord.word.length / 2))
-                  .toLowerCase()}
+                {currentWord?.word
+                  ? currentWord.word
+                      .charAt(Math.floor(currentWord.word.length / 2))
+                      .toLowerCase()
+                  : ""}
               </span>
             </div>
           </div>
@@ -243,7 +313,7 @@ const PronunciationPracticeStartPage = () => {
         <div className="flex items-center gap-3 mt-4">
           <input
             type="checkbox"
-            checked={!isSlow}
+            // checked={!isSlow}
             onChange={(e) => setIsSlow(!e.target.checked)}
             className="toggle toggle-sm"
             aria-label="Toggle speed"

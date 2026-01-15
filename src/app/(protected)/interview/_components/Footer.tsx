@@ -9,10 +9,8 @@ import {
   startWaveformAnimation,
   type AudioAnalysisContext,
 } from "@/lib/audio-utils";
-import {
-  MicrophoneIcon as HeroMicrophoneIcon,
-  MicrophoneIcon,
-} from "@heroicons/react/24/solid";
+import { MicrophoneIcon } from "@heroicons/react/24/solid";
+import { AxiosRequestConfig } from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { FollowUpQuestion, TranscribeResponse } from "../types";
 
@@ -47,6 +45,7 @@ const Footer = ({
   const audioAnalysisRef = useRef<AudioAnalysisContext | null>(null);
   const stopWaveformAnimationRef = useRef<(() => void) | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const apiClient = createApiClient(APIService.TRANSCRIBE);
 
@@ -66,6 +65,11 @@ const Footer = ({
         stopWaveformAnimationRef.current();
       }
       cleanupAudioAnalysis(audioAnalysisRef.current);
+      // Cancel any ongoing API call on unmount
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
     };
   }, []);
 
@@ -75,6 +79,11 @@ const Footer = ({
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
+    }
+    // Cancel any ongoing API call when question changes
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
   }, [question_attempt_id]);
 
@@ -108,7 +117,7 @@ const Footer = ({
     method: "post",
   });
 
-  const { mutateAsync: uploadAudio, isPending: isUploading } =
+  const { mutateAsync: uploadAudioBase, isPending: isUploading } =
     apiClient.useMutation({
       url: ENDPOINTS.TRANSCRIBE.WHISPER,
       method: "post",
@@ -116,9 +125,16 @@ const Footer = ({
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        // Use signal getter to support dynamic cancellation
+        _signalGetter: () => abortControllerRef.current?.signal,
+      } as AxiosRequestConfig & {
+        _signalGetter?: () => AbortSignal | undefined;
       },
       options: {
         onSuccess: (response: TranscribeResponse) => {
+          // Clear AbortController on successful completion
+          abortControllerRef.current = null;
+
           completeAnalysis({
             question_attempt_id: question_attempt_id,
             analysisTypes: ["domain", "communication", "pace", "pause"],
@@ -136,6 +152,25 @@ const Footer = ({
         },
       },
     });
+
+  // Wrapper function to create new AbortController before each upload
+  const uploadAudio = async (formData: FormData) => {
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
+    try {
+      return await uploadAudioBase(formData);
+    } catch (error) {
+      // Clear the ref if request is cancelled
+      const axiosError = error as { name?: string; code?: string };
+      if (
+        axiosError?.name === "CanceledError" ||
+        axiosError?.code === "ERR_CANCELED"
+      ) {
+        abortControllerRef.current = null;
+      }
+      throw error;
+    }
+  };
 
   // Auto-submit when timer reaches 0
   useEffect(() => {
@@ -255,6 +290,7 @@ const Footer = ({
   };
 
   const handleStopListening = async () => {
+    setHasAnswered(true);
     if (!mediaRecorderRef.current) return;
 
     return new Promise<void>((resolve) => {
@@ -291,6 +327,11 @@ const Footer = ({
   };
 
   const handleRedo = () => {
+    // Cancel ongoing API call if any
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
     stopRecording();
     chunksRef.current = [];
     setHasAnswered(false);
@@ -408,18 +449,18 @@ const Footer = ({
           {!hasAnswered ? (
             <button
               onClick={handleAnswerClick}
-              disabled={disabled || isUploading}
+              disabled={disabled}
               className="btn bg-primary hover:bg-primary/90 text-white "
             >
-              Answer <HeroMicrophoneIcon className="h-5 w-5" />
+              Answer <MicrophoneIcon className="h-5 w-5" />
             </button>
           ) : (
             <button
               onClick={handleRedo}
-              disabled={disabled || isUploading}
+              disabled={disabled}
               className="btn bg-primary hover:bg-primary/90 text-white"
             >
-              Redo <HeroMicrophoneIcon className="h-5 w-5" />
+              Redo <MicrophoneIcon className="h-5 w-5" />
             </button>
           )}
 
@@ -434,7 +475,7 @@ const Footer = ({
           ) : (
             <button
               onClick={handleNextClick}
-              disabled={disabled || isUploading}
+              disabled={disabled}
               className="btn btn-outline"
             >
               Next
@@ -451,7 +492,7 @@ const Footer = ({
             {/* Content */}
             <div className="relative z-10 flex flex-col items-center gap-6 sm:gap-8">
               {/* Listening text */}
-              <h2 className="text-xl sm:text-2xl font-medium text-gray-800 flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-medium text-gray-800 flex items-center gap-2">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
@@ -460,7 +501,7 @@ const Footer = ({
               </h2>
 
               {/* Timer */}
-              <div className="text-3xl sm:text-4xl font-semibold text-indigo-700 tabular-nums">
+              <div className="text-xl sm:text-4xl font-semibold text-indigo-700 tabular-nums">
                 {formatTime(timeRemaining)}
               </div>
 
@@ -472,8 +513,8 @@ const Footer = ({
                 {/* Middle glow - rotating */}
                 <div className="absolute inset-0 -m-6 sm:-m-8 animate-spin-slow rounded-full bg-gradient-to-r from-purple-500/40 via-blue-500/40 to-transparent blur-2xl" />
 
-                <div className="relative flex h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 items-center justify-center rounded-full border-4 border-indigo-400/50 bg-gradient-to-br from-pink-400 via-purple-300 to-cyan-300 shadow-xl">
-                  <MicrophoneIcon className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24 text-indigo-700" />
+                <div className="relative flex size-20 items-center justify-center rounded-full border-4 border-indigo-400/50 bg-gradient-to-br from-pink-400 via-purple-300 to-cyan-300 shadow-xl">
+                  <MicrophoneIcon className="size-10 text-indigo-700" />
                 </div>
               </div>
 
@@ -496,7 +537,7 @@ const Footer = ({
           <div className="flex justify-end items-center w-full">
             <button
               onClick={handleStopListening}
-              disabled={disabled || isUploading}
+              disabled={disabled}
               className="btn btn-primary text-white mt-4"
             >
               Done

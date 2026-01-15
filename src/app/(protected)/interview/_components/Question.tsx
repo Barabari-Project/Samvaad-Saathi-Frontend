@@ -1,6 +1,7 @@
 "use client";
 
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
+import { useEffect } from "react";
 import { GenerateQuestionsResponse } from "../types";
 
 interface QuestionProps {
@@ -8,6 +9,7 @@ interface QuestionProps {
   question: GenerateQuestionsResponse["items"][number] | undefined;
   currentQuestionIndex: number;
   totalQuestions: number;
+  onSpeakingChange?: (isSpeaking: boolean) => void;
 }
 
 const Question = ({
@@ -15,12 +17,20 @@ const Question = ({
   question,
   currentQuestionIndex = 0,
   totalQuestions = 0,
+  onSpeakingChange,
 }: QuestionProps) => {
   // Use text-to-speech hook
-  useTextToSpeech({
+  const { isSpeaking } = useTextToSpeech({
     text: question?.text,
     disabled: isLoading,
   });
+
+  // Notify parent when speaking state changes
+  useEffect(() => {
+    if (onSpeakingChange) {
+      onSpeakingChange(isSpeaking);
+    }
+  }, [isSpeaking]);
 
   if (isLoading) {
     return (
@@ -52,7 +62,7 @@ const Question = ({
       {/* Top Row with Counter */}
       <div className="mb-2">
         <span className="text-lg text-slate-900 font-medium">
-          Question{currentQuestionIndex + 1}:
+          Question {currentQuestionIndex + 1}:
         </span>
       </div>
 
@@ -64,21 +74,23 @@ const Question = ({
       </div>
 
       {/* Tag */}
-      <div className="flex">
-        <span
-          className={`badge badge-sm ${
-            question.category?.toLowerCase() === "tech"
-              ? "badge-primary"
-              : question.category?.toLowerCase() === "behavioral"
-              ? "badge-warning"
-              : question.category?.toLowerCase() === "tech_allied"
-              ? "badge-success"
-              : "badge-secondary"
-          }`}
-        >
-          {question?.category?.replaceAll("_", " ")?.toUpperCase()}
-        </span>
-      </div>
+      {!!question?.category ? (
+        <div className="flex">
+          <span
+            className={`badge badge-sm ${
+              question.category?.toLowerCase() === "tech"
+                ? "badge-primary"
+                : question.category?.toLowerCase() === "behavioral"
+                ? "badge-warning"
+                : question.category?.toLowerCase() === "tech_allied"
+                ? "badge-success"
+                : "badge-secondary"
+            }`}
+          >
+            {question?.category?.replaceAll("_", " ")?.toUpperCase()}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 };

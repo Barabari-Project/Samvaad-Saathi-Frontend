@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseTextToSpeechOptions {
   /**
@@ -140,6 +140,7 @@ export const useTextToSpeech = ({
   useNaturalPauses = true,
 }: UseTextToSpeechOptions) => {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Check if browser supports speech synthesis
   const isSupported =
@@ -159,6 +160,7 @@ export const useTextToSpeech = ({
       window.speechSynthesis.cancel();
     }
     utteranceRef.current = null;
+    setIsSpeaking(false);
   }, [isSupported]);
 
   const speak = useCallback(
@@ -194,6 +196,19 @@ export const useTextToSpeech = ({
       // Store reference for cleanup
       utteranceRef.current = utterance;
 
+      // Set up event handlers to track speaking state
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+      };
+
+      utterance.onend = () => {
+        setIsSpeaking(false);
+      };
+
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+      };
+
       // Speak the text
       window.speechSynthesis.speak(utterance);
     },
@@ -219,5 +234,6 @@ export const useTextToSpeech = ({
     speak,
     stop,
     isSupported,
+    isSpeaking,
   };
 };

@@ -13,7 +13,12 @@ import {
 import { AxiosError, AxiosRequestConfig } from "axios";
 import { useCookies } from "react-cookie";
 import toast from "react-hot-toast";
-import { APIService, APIServiceV2, AUTH_BASE_URL, createAxiosInstance } from "./config";
+import {
+  APIService,
+  APIServiceV2,
+  AUTH_BASE_URL,
+  createAxiosInstance,
+} from "./config";
 
 interface UseQueryApiProps<TData> {
   key: unknown[];
@@ -73,11 +78,20 @@ export const createApiClient = (service: APIService | APIServiceV2) => {
       // Try to get token from cookies first, fallback to react-cookie
       const token = getTokenFromCookies() || cookies.token;
 
+      // Support dynamic signal getter (for request cancellation)
+      const signalGetter = (
+        config as AxiosRequestConfig & {
+          _signalGetter?: () => AbortSignal | undefined;
+        }
+      )?._signalGetter;
+      const signal = signalGetter ? signalGetter() : config?.signal;
+
       const res = await axiosInstance({
         url,
         method,
         data: params,
         ...config,
+        ...(signal && { signal }),
         headers: {
           ...config?.headers,
           ...(token && { Authorization: `Bearer ${token}` }),
