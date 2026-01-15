@@ -258,7 +258,7 @@ const InterviewPage = () => {
             </>
           ) : (
             <>
-              <div className="grid grid-cols-6 gap-4">
+              <div className="grid grid-cols-6 gap-4 mt-24">
                 <div className="size-24 mx-auto mb-4 col-span-1">
                   <DotLottieReact
                     src="/assets/lottie/Speaker.lottie"

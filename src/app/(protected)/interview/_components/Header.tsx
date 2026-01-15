@@ -1,5 +1,6 @@
 "use client";
 
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useEffect, useRef, useState } from "react";
 
 const Header = ({
@@ -16,6 +17,7 @@ const Header = ({
   const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
   const hasExpiredRef = useRef(false);
   const onTimerExpireRef = useRef(onTimerExpire);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   // Keep the ref updated with the latest callback
   useEffect(() => {
@@ -82,14 +84,18 @@ const Header = ({
   };
 
   return (
-    <div className="navbar min-h-0 px-0 py-4">
+    <div
+      className={`navbar min-h-0 px-0 py-4 ${
+        isMobile ? "" : "bg-[#ACADF1]/20 rounded-lg"
+      }`}
+    >
       <div className="flex-1">
-        <h3 className="text-[#1f285b] text-2xl font-bold uppercase tracking-wide">
+        <h3 className="text-[#1f285b] text-2xl font-bold uppercase tracking-wide pl-4">
           {role || "Developer"}
         </h3>
       </div>
 
-      <div className="flex-none">
+      <div className="flex-none pr-4">
         {/* Timer Container with Gradient Border */}
         <div className="relative p-[2px] rounded-xl bg-gradient-to-r from-pink-500 to-blue-600 shadow-md">
           <div className="bg-slate-50 rounded-[10px] px-6 py-2 min-w-[100px] flex items-center justify-center">
