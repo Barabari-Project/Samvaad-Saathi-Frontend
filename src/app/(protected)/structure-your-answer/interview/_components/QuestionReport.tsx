@@ -1,12 +1,18 @@
 "use client";
 
+import { createApiClient } from "@/lib/api-config/src/client";
+import { APIServiceV2 } from "@/lib/api-config/src/config";
+import { ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import { ArrowRightIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
+import { useEffect, useState } from "react";
 import { AnswerType, getAnswerTypeLabel } from "../types";
 
 interface QuestionReportProps {
   questionText: string;
   category: string;
   completedAnswerTypes: AnswerType[];
+  practiceId: string;
+  questionIndex: number;
   onNextQuestion: () => void;
   isLastQuestion: boolean;
 }
@@ -15,9 +21,22 @@ const QuestionReport = ({
   questionText,
   category,
   completedAnswerTypes,
+  practiceId,
+  questionIndex,
   onNextQuestion,
   isLastQuestion,
 }: QuestionReportProps) => {
+  const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
+
+  const { data: analysisData, isLoading } = apiClient.useQuery({
+    key: ["structured-practice-analysis", practiceId, questionIndex],
+    url: ENDPOINTS_V2.ANALYSE_STRUCTURED_PRACTICE_AUDIO(
+      practiceId,
+      questionIndex
+    ),
+    method: "get",
+    enabled: !!practiceId && questionIndex !== undefined,
+  });
   return (
     <div className="flex flex-col px-6 py-8 min-h-screen">
       {/* Header */}
@@ -73,6 +92,22 @@ const QuestionReport = ({
           responses and continue to the next question.
         </p>
       </div>
+
+      {/* Analysis Loading/Data */}
+      {isLoading ? (
+        <div className="mb-8">
+          <p className="text-sm text-gray-600">Loading analysis...</p>
+        </div>
+      ) : analysisData ? (
+        <div className="mb-8 bg-gray-50 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Analysis Results
+          </h3>
+          <pre className="text-xs text-gray-700 overflow-auto">
+            {JSON.stringify(analysisData, null, 2)}
+          </pre>
+        </div>
+      ) : null}
 
       {/* Next Button */}
       <div className="flex justify-end mt-auto pt-6">

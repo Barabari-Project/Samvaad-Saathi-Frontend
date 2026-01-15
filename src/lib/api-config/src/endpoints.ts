@@ -42,10 +42,18 @@ export const ENDPOINTS_V2 = {
   SUPPLEMENTS: (interviewId: string) =>
     `v2/interviews/${interviewId}/supplements`,
   SUMMARY_REPORT: "v2/summary-report",
-  GENERATE_STRUCTURED_PRACTICE: "v2/interviews/structure-practice",
   CREATE_PRONUNCIATION_PRACTICE: "v2/pronunciation/create",
   GET_PRONUNCIATION_PRACTICE_AUDIO: (
     practiceId: string,
     questionNumber: number
   ) => `v2/pronunciation/${practiceId}/audio/${questionNumber}`,
+  GENERATE_STRUCTURED_PRACTICE: "v2/interviews/structure-practice",
+  SUBMIT_STRUCTURED_PRACTICE_AUDIO: (
+    practiceId: string,
+    questionIndex: number
+  ) => `v2/structure-practice/${practiceId}/question/${questionIndex}/submit`,
+  ANALYSE_STRUCTURED_PRACTICE_AUDIO: (
+    practiceId: string,
+    questionIndex: number
+  ) => `v2/structure-practice/${practiceId}/question/${questionIndex}/audio`,
 };

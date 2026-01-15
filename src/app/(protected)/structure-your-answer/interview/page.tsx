@@ -182,6 +182,8 @@ const StructureYourAnswerInterviewPage = () => {
         questionText={currentQuestion.text}
         category={currentQuestion.category}
         completedAnswerTypes={currentFramework}
+        practiceId={structuredPractice?.interviewId?.toString() || ""}
+        questionIndex={currentQuestionIndex}
         onNextQuestion={handleNextQuestion}
         isLastQuestion={
           currentQuestionIndex === structuredPractice.items.length - 1
@@ -261,6 +263,9 @@ const StructureYourAnswerInterviewPage = () => {
       currentAnswerType={currentAnswerType}
       currentStep={currentAnswerTypeIndex + 1}
       totalSteps={totalAnswerTypes}
+      practiceId={structuredPractice?.interviewId?.toString() || ""}
+      questionIndex={currentQuestionIndex}
+      answerTypeIndex={currentAnswerTypeIndex}
       onComplete={handleAnswerTypeComplete}
     />
   );
