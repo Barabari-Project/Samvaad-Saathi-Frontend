@@ -1,4 +1,5 @@
 "use client";
+import TaskIcon from "@/components/icons/Task";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIServiceV2 } from "@/lib/api-config/src/config";
 import { ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
@@ -132,7 +133,7 @@ const ReportSummaryPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="flex-shrink-0">
               <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center bg-base-100">
-                <ClipboardDocumentIcon className="w-7 h-7 text-base-content" />
+                <TaskIcon className="size-7 text-base-content" />
               </div>
             </div>
             <div className="flex-1">
@@ -195,7 +196,7 @@ const ReportSummaryPage: React.FC = () => {
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0">
                   <div className="w-14 h-14 rounded-full border-2 border-primary flex items-center justify-center bg-base-100">
-                    <ClipboardDocumentIcon className="w-7 h-7 text-base-content" />
+                    <TaskIcon className="size-7 text-base-content" />
                   </div>
                 </div>
                 <div className="flex-1">
