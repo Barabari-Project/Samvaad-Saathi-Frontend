@@ -5,6 +5,7 @@ import { ENDPOINTS } from "@/lib/api-config";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import {
+  APP_VERSION,
   DEGREE_OPTIONS,
   EXPERIENCE_OPTIONS,
   MAX_PROFILE_RESUME_SIZE_MB,
@@ -770,6 +771,10 @@ export default function ProfilePage() {
             Log Out
           </button>
         </div>
+
+        <p className="text-center text-sm text-gray-500">
+          Samvaad Saathi v{APP_VERSION}
+        </p>
       </section>
     </main>
   );
