@@ -12,35 +12,37 @@ import {
   type AudioAnalysisContext,
 } from "@/lib/audio-utils";
 import { MicrophoneIcon } from "@heroicons/react/24/solid";
-import { AxiosRequestConfig } from "axios";
 import { useEffect, useRef, useState } from "react";
-import { AnswerType, getAnswerTypeLabel } from "../types";
 
 interface AnswerTypeStepProps {
   questionText: string;
-  category: string;
-  currentAnswerType: AnswerType;
+  framework: string;
+  currentSection: string;
   currentStep: number;
   totalSteps: number;
   practiceId: string;
   questionIndex: number;
-  answerTypeIndex: number;
+  currentHint: string;
   onComplete: () => void;
+  onAnalyze?: () => void;
 }
 
 const AnswerTypeStep = ({
   questionText,
-  category,
-  currentAnswerType,
+  framework,
+  currentSection,
+  currentStep,
+  totalSteps,
   practiceId,
   questionIndex,
-  answerTypeIndex,
+  currentHint,
   onComplete,
+  onAnalyze,
 }: AnswerTypeStepProps) => {
-  const answerTypeLabel = getAnswerTypeLabel(currentAnswerType);
+  const sectionLabel = currentSection;
   const [isListening, setIsListening] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(180); // 3 minutes in seconds
+  const [timeElapsed, setTimeElapsed] = useState(0); // elapsed time in seconds
   const [waveformBars, setWaveformBars] = useState<number[]>(Array(20).fill(0));
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -48,7 +50,7 @@ const AnswerTypeStep = ({
   const audioAnalysisRef = useRef<AudioAnalysisContext | null>(null);
   const stopWaveformAnimationRef = useRef<(() => void) | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const recordingStartTimeRef = useRef<number | null>(null);
 
   const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
@@ -68,38 +70,34 @@ const AnswerTypeStep = ({
         stopWaveformAnimationRef.current();
       }
       cleanupAudioAnalysis(audioAnalysisRef.current);
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
     };
   }, []);
 
-  // Reset timer when answer type changes
+  // Reset timer when section changes
   useEffect(() => {
-    setTimeRemaining(180);
+    setTimeElapsed(0);
     setHasAnswered(false);
     setIsListening(false);
+    recordingStartTimeRef.current = null;
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-  }, [currentAnswerType]);
+  }, [currentSection]);
 
-  // Timer countdown effect
+  // Timer elapsed time effect
   useEffect(() => {
-    if (isListening && timeRemaining > 0) {
+    if (isListening) {
+      if (!recordingStartTimeRef.current) {
+        recordingStartTimeRef.current = Date.now();
+      }
       timerIntervalRef.current = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            return 0;
-          }
-          return prev - 1;
-        });
+        if (recordingStartTimeRef.current) {
+          const elapsed = Math.floor(
+            (Date.now() - recordingStartTimeRef.current) / 1000
+          );
+          setTimeElapsed(elapsed);
+        }
       }, 1000);
     } else {
       if (timerIntervalRef.current) {
@@ -113,86 +111,35 @@ const AnswerTypeStep = ({
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [isListening, timeRemaining]);
+  }, [isListening]);
 
   const { mutateAsync: submitAudio, isPending: isUploading } =
     apiClient.useMutation({
       url: ENDPOINTS_V2.SUBMIT_STRUCTURED_PRACTICE_AUDIO(
         practiceId,
-        questionIndex
+        questionIndex,
+        currentSection
       ),
       method: "post",
       config: {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        _signalGetter: () => abortControllerRef.current?.signal,
-      } as AxiosRequestConfig & {
-        _signalGetter?: () => AbortSignal | undefined;
       },
       options: {
         onSuccess: () => {
-          abortControllerRef.current = null;
           setHasAnswered(true);
-          // Move to next answer type after successful submission
-          onComplete();
         },
       },
     });
 
-  // Wrapper function to create new AbortController before each upload
-  const uploadAudio = async (formData: FormData) => {
-    abortControllerRef.current = new AbortController();
-    try {
-      return await submitAudio(formData);
-    } catch (error) {
-      const axiosError = error as { name?: string; code?: string };
-      if (
-        axiosError?.name === "CanceledError" ||
-        axiosError?.code === "ERR_CANCELED"
-      ) {
-        abortControllerRef.current = null;
-      }
-      throw error;
-    }
+  // Upload audio function - runs in background
+  const uploadAudio = (formData: FormData) => {
+    // Start the API call but don't wait for it
+    submitAudio(formData).catch((error) => {
+      console.error("Error uploading audio:", error);
+    });
   };
-
-  // Auto-submit when timer reaches 0
-  useEffect(() => {
-    if (isListening && timeRemaining === 0 && mediaRecorderRef.current) {
-      const autoSubmit = async () => {
-        if (!mediaRecorderRef.current) return;
-
-        return new Promise<void>((resolve) => {
-          if (mediaRecorderRef.current) {
-            mediaRecorderRef.current.onstop = async () => {
-              const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-
-              try {
-                const wavBlob = await resampleAudioTo16kHz(blob);
-                const file = new File([wavBlob], "recording.wav", {
-                  type: "audio/wav",
-                });
-
-                const formData = new FormData();
-                formData.append("file", file);
-                formData.append("answerTypeIndex", answerTypeIndex.toString());
-                formData.append("answerType", currentAnswerType);
-
-                await uploadAudio(formData);
-              } catch (error) {
-                console.error("Error processing audio:", error);
-              }
-              resolve();
-            };
-            stopRecording();
-          }
-        });
-      };
-      autoSubmit();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRemaining, isListening, uploadAudio]);
 
   const startRecording = async () => {
     try {
@@ -203,7 +150,8 @@ const AnswerTypeStep = ({
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
-      setTimeRemaining(180);
+      setTimeElapsed(0);
+      recordingStartTimeRef.current = Date.now();
 
       const audioAnalysis = createAudioAnalysisContext(stream);
       audioAnalysisRef.current = audioAnalysis;
@@ -240,6 +188,7 @@ const AnswerTypeStep = ({
     if (mediaRecorderRef.current && isListening) {
       mediaRecorderRef.current.stop();
       setIsListening(false);
+      recordingStartTimeRef.current = null;
 
       if (stopWaveformAnimationRef.current) {
         stopWaveformAnimationRef.current();
@@ -261,14 +210,22 @@ const AnswerTypeStep = ({
     startRecording();
   };
 
-  const handleStopListening = async () => {
+  const handleStopListening = () => {
     if (!mediaRecorderRef.current) return;
 
-    return new Promise<void>((resolve) => {
-      if (mediaRecorderRef.current) {
-        mediaRecorderRef.current.onstop = async () => {
-          const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+    // Capture the time elapsed before stopping
+    const capturedTimeElapsed = timeElapsed;
 
+    // Immediately move to next section
+    setHasAnswered(true);
+    onComplete();
+
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+
+        // Process and upload in background (fire and forget)
+        (async () => {
           try {
             const wavBlob = await resampleAudioTo16kHz(blob);
             const file = new File([wavBlob], "recording.wav", {
@@ -277,54 +234,49 @@ const AnswerTypeStep = ({
 
             const formData = new FormData();
             formData.append("file", file);
-            formData.append("answerTypeIndex", answerTypeIndex.toString());
-            formData.append("answerType", currentAnswerType);
+            formData.append(
+              "time_spent_seconds",
+              capturedTimeElapsed.toString()
+            );
 
-            await uploadAudio(formData);
+            // Upload in background
+            uploadAudio(formData);
           } catch (error) {
             console.error("Error processing audio:", error);
           }
-          resolve();
-        };
-        stopRecording();
-      }
-    });
+        })();
+      };
+      stopRecording();
+    }
   };
 
   const handleRedo = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
     stopRecording();
     chunksRef.current = [];
     setHasAnswered(false);
-    setTimeRemaining(180);
+    setTimeElapsed(0);
+    recordingStartTimeRef.current = null;
     startRecording();
   };
 
   return (
     <div className="flex flex-col px-6 py-8">
-      {/* Answer Type Header */}
+      {/* Section Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          {answerTypeLabel}
+          {sectionLabel}
         </h2>
-        <p className="text-sm text-gray-600">
-          Provide your answer for the {answerTypeLabel.toLowerCase()} aspect
-        </p>
+        <p className="text-sm text-gray-600 mb-2">Framework: {framework}</p>
+        {currentHint && (
+          <p className="text-sm text-gray-700 italic bg-blue-50 p-3 rounded">
+            {currentHint}
+          </p>
+        )}
       </div>
 
       {/* Question Text */}
       <div className="mb-8 bg-gray-50 rounded-lg p-4">
         <p className="text-lg leading-relaxed text-gray-900">{questionText}</p>
-      </div>
-
-      {/* Category Tag */}
-      <div className="mb-4">
-        <span className="inline-block px-3 py-1 bg-yellow-100 text-gray-800 text-sm rounded">
-          {category?.toUpperCase()}
-        </span>
       </div>
 
       {/* Recording UI */}
@@ -346,9 +298,9 @@ const AnswerTypeStep = ({
                 Listening...
               </h2>
 
-              {/* Timer */}
+              {/* Timer - Elapsed Time */}
               <div className="text-xl sm:text-4xl font-semibold text-indigo-700 tabular-nums">
-                {formatTime(timeRemaining)}
+                {formatTime(timeElapsed)}
               </div>
 
               {/* Microphone circle with glow */}
@@ -381,35 +333,38 @@ const AnswerTypeStep = ({
           </div>
 
           <div className="flex justify-end items-center w-full mt-auto pt-6">
-            <button
-              onClick={handleStopListening}
-              disabled={isUploading}
-              className="btn btn-primary text-white"
-            >
-              {isUploading ? "Submitting..." : "Done"}
+            <button onClick={handleStopListening} className="btn btn-neutral">
+              {"Done"}
             </button>
           </div>
         </>
       ) : (
-        <div className="flex justify-end mt-auto pt-6">
+        <div className="flex justify-end gap-3 mt-auto pt-6">
           {!hasAnswered ? (
-            <button
-              onClick={handleRecordClick}
-              disabled={isUploading}
-              className="btn btn-neutral"
-            >
-              Record {answerTypeLabel}
+            <button onClick={handleRecordClick} className="btn btn-neutral">
+              Record {sectionLabel}
               <MicrophoneIcon className="h-5 w-5" />
             </button>
           ) : (
-            <button
-              onClick={handleRedo}
-              disabled={isUploading}
-              className="btn btn-neutral"
-            >
-              Redo {answerTypeLabel}
-              <MicrophoneIcon className="h-5 w-5" />
-            </button>
+            <>
+              {currentStep === totalSteps && onAnalyze ? (
+                <button
+                  onClick={onAnalyze}
+                  disabled={isUploading}
+                  className="btn btn-primary text-white"
+                >
+                  Analyse Answer
+                </button>
+              ) : null}
+              <button
+                onClick={handleRedo}
+                disabled={isUploading}
+                className="btn btn-neutral"
+              >
+                Redo {sectionLabel}
+                <MicrophoneIcon className="h-5 w-5" />
+              </button>
+            </>
           )}
         </div>
       )}

@@ -8,6 +8,7 @@ import {
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
   ClockIcon,
+  ExclamationCircleIcon,
   LightBulbIcon,
   ScaleIcon,
 } from "@heroicons/react/24/outline";
@@ -16,6 +17,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/solid";
+import { useEffect } from "react";
 
 interface FrameworkSection {
   name: string;
@@ -89,22 +91,40 @@ const QuestionReport = ({
 }: QuestionReportProps) => {
   const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
-  const { data: analysisData, isLoading } =
-    apiClient.useQuery<QuestionReportResponse>({
-      key: ["structured-practice-analysis", practiceId, questionIndex],
-      url: ENDPOINTS_V2.ANALYSE_STRUCTURED_PRACTICE_AUDIO(
-        practiceId,
-        questionIndex
-      ),
-      method: "get",
-      enabled: !!practiceId && questionIndex !== undefined,
-    });
+  const {
+    mutateAsync: analyzePractice,
+    data: analysisData,
+    isPending: isLoading,
+  } = apiClient.useMutation<QuestionReportResponse, Record<string, never>>({
+    url: ENDPOINTS_V2.ANALYSE_STRUCTURED_PRACTICE_AUDIO(
+      practiceId,
+      questionIndex
+    ),
+    method: "post",
+  });
+
+  // Trigger analyze on mount (only if not skipped)
+  // When skipAutoAnalyze is true, the API was already called by handleAnalyze,
+  // but we still need to fetch the results, so we call it anyway
+  useEffect(() => {
+    if (practiceId && questionIndex !== undefined) {
+      analyzePractice({});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [practiceId, questionIndex]);
 
   if (isLoading) {
     return (
-      <div className="flex flex-col px-6 py-8 min-h-screen">
-        <div className="mb-8">
-          <p className="text-sm text-gray-600">Loading analysis...</p>
+      <div className="flex flex-col h-[80vh] items-center justify-center p-6">
+        <div className="relative max-w-md w-full">
+          {/* Gradient border using wrapper */}
+          <div className="bg-gradient-to-r from-purple-400 via-pink-400 to-yellow-400 rounded-2xl p-[2px] shadow-lg">
+            <div className="bg-white rounded-xl p-8">
+              <div className="text-gray-800 text-xl font-medium text-center">
+                Analyzing your practice...
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -129,27 +149,66 @@ const QuestionReport = ({
   const { frameworkProgress, timePerSection, keyInsight } = analysisData;
 
   return (
-    <div className="flex flex-col px-6 py-8 min-h-screen bg-gray-50">
+    <div className="flex flex-col px-6 py-8 min-h-screen ">
       {/* Overall Progress Section */}
-      <div className="mb-6 bg-white rounded-lg p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          Overall Progress
-        </h2>
-        <p className="text-sm text-gray-600 mb-4">Framework Completion</p>
-        <div className="flex items-center gap-4 mb-3">
-          <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-green-500 rounded-full transition-all duration-300"
-              style={{ width: `${frameworkProgress.completionPercentage}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100">
-            <span className="text-lg font-bold text-green-600">
-              {frameworkProgress.completionPercentage}%
-            </span>
+      <div className="mb-6 bg-white rounded-lg p-6 shadow-sm relative">
+        {/* Header with title and circular progress */}
+        <div className="flex items-start justify-between mb-2">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Overall Progress
+          </h2>
+          {/* Circular Progress Indicator */}
+          <div className="relative w-16 h-16 flex-shrink-0">
+            <svg
+              className="transform -rotate-90"
+              width="64"
+              height="64"
+              viewBox="0 0 64 64"
+            >
+              {/* Background circle */}
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                fill="none"
+                stroke="#e5e7eb"
+                strokeWidth="4"
+              />
+              {/* Progress circle */}
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="4"
+                strokeDasharray={`${2 * Math.PI * 28}`}
+                strokeDashoffset={`${
+                  2 *
+                  Math.PI *
+                  28 *
+                  (1 - frameworkProgress.completionPercentage / 100)
+                }`}
+                strokeLinecap="round"
+                className="transition-all duration-300"
+              />
+            </svg>
+            {/* Percentage text in center */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-lg font-bold text-green-600">
+                {frameworkProgress.completionPercentage}%
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-600 mb-4">Framework Completion</p>
+        {/* Horizontal Progress Bar */}
+        <progress
+          className="progress progress-success w-full mb-3"
+          value={frameworkProgress.completionPercentage}
+          max="100"
+        ></progress>
+        <div className="flex flex-col items-center justify-between">
           <span className="text-sm text-gray-600">
             {frameworkProgress.sectionsComplete} of{" "}
             {frameworkProgress.totalSections} complete
@@ -168,41 +227,60 @@ const QuestionReport = ({
         <div className="space-y-3">
           {frameworkProgress.sections.map((section, index) => {
             const IconComponent = getSectionIcon(section.name);
-            const isComplete = section.answerRecorded;
+            const status = section.status?.toLowerCase() || "";
+            const isGood = status === "good";
+            const isPartial = status === "partial";
+            const isMissing = status === "missing";
+
+            // Determine styling based on status
+            let cardClasses = "flex items-center gap-3 rounded-lg p-4 ";
+            let iconColor = "";
+            let statusTextColor = "";
+            let indicatorIcon = null;
+
+            if (isGood) {
+              cardClasses += "bg-white border border-gray-200";
+              iconColor = "text-blue-600";
+              statusTextColor = "text-gray-600";
+              indicatorIcon = (
+                <CheckCircleIcon className="h-6 w-6 text-blue-600" />
+              );
+            } else if (isPartial) {
+              cardClasses += "bg-yellow-50 border border-yellow-300";
+              iconColor = "text-yellow-600";
+              statusTextColor = "text-yellow-700";
+              indicatorIcon = (
+                <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600" />
+              );
+            } else if (isMissing) {
+              cardClasses += "bg-orange-50 border border-orange-200";
+              iconColor = "text-orange-600";
+              statusTextColor = "text-orange-600";
+              indicatorIcon = (
+                <ExclamationCircleIcon className="h-6 w-6 text-orange-600" />
+              );
+            } else {
+              // Fallback for unknown status
+              cardClasses += "bg-white border border-gray-200";
+              iconColor = "text-gray-600";
+              statusTextColor = "text-gray-600";
+              indicatorIcon = (
+                <ExclamationTriangleIcon className="h-6 w-6 text-gray-600" />
+              );
+            }
 
             return (
-              <div
-                key={index}
-                className={`flex items-center gap-3 rounded-lg p-4 ${
-                  isComplete
-                    ? "bg-white border border-gray-200"
-                    : "bg-orange-50 border border-orange-200"
-                }`}
-              >
-                <div
-                  className={`flex-shrink-0 ${
-                    isComplete ? "text-blue-600" : "text-orange-600"
-                  }`}
-                >
+              <div key={index} className={cardClasses}>
+                <div className={`flex-shrink-0 ${iconColor}`}>
                   <IconComponent className="h-6 w-6" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{section.name}</p>
-                  <p
-                    className={`text-sm ${
-                      isComplete ? "text-gray-600" : "text-orange-600"
-                    }`}
-                  >
+                  <p className={`text-sm ${statusTextColor}`}>
                     {section.status}
                   </p>
                 </div>
-                <div className="flex-shrink-0">
-                  {isComplete ? (
-                    <CheckCircleIcon className="h-6 w-6 text-blue-600" />
-                  ) : (
-                    <ExclamationTriangleIcon className="h-6 w-6 text-orange-600" />
-                  )}
-                </div>
+                <div className="flex-shrink-0">{indicatorIcon}</div>
               </div>
             );
           })}
@@ -217,17 +295,21 @@ const QuestionReport = ({
             Time Spent Per Section
           </h2>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-0">
           {timePerSection.map((item, index) => {
             const section = frameworkProgress.sections.find(
               (s) => s.name.toLowerCase() === item.sectionName.toLowerCase()
             );
-            const isIncomplete = section && !section.answerRecorded;
+            const status = section?.status?.toLowerCase() || "";
+            const isIncomplete = status === "partial" || status === "missing";
+            const isLast = index === timePerSection.length - 1;
 
             return (
               <div
                 key={index}
-                className="flex items-center justify-between py-2"
+                className={`flex items-center justify-between py-2 ${
+                  !isLast ? "border-b border-gray-200" : ""
+                }`}
               >
                 <span
                   className={`text-sm ${

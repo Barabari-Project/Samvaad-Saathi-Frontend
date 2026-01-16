@@ -30,7 +30,11 @@ const StructureYourAnswerPage = () => {
     if (!selectedRole) {
       return;
     }
-    router.push("/structure-your-answer/interview");
+    router.push(
+      `/structure-your-answer/interview?role=${encodeURIComponent(
+        selectedRole
+      )}`
+    );
   };
 
   if (showRoleSelection) {
@@ -89,9 +93,10 @@ const StructureYourAnswerPage = () => {
         perfection.
       </p>
 
-      <button className="btn btn-outline" disabled>
+      {/* <button className="btn btn-outline" disabled>
         View Sample Answers
-      </button>
+      </button> */}
+
       <button className="btn btn-primary" onClick={handleStartPractice}>
         Start Today&apos;s Practice
       </button>

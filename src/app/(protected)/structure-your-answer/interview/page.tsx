@@ -7,32 +7,25 @@ import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AnswerTypeStep, QuestionReport } from "./_components";
-import { AnswerType, getFrameworkForCategory } from "./types";
 
-interface StructuredPracticeItem {
-  interviewQuestionId: number;
+interface Question {
   text: string;
-  topic: string;
-  difficulty: string | null;
-  category: string;
-  isFollowUp: boolean;
-  parentQuestionId: number | null;
-  followUpStrategy: string | null;
-  supplement: string | null;
-  structureHint: string;
+  index: number;
+  sections: string[];
+  framework: string;
+  question_id: number;
+  current_hint: string;
+  structure_hint: string;
+  current_section: string;
 }
 
 interface StructuredPracticeResponse {
-  interviewId: number | null;
+  practiceId: number;
+  interviewId: number;
   track: string;
-  count: number;
-  questions: string[];
-  questionIds: number[] | null;
-  items: StructuredPracticeItem[];
-  llmModel: string | null;
-  llmLatencyMs: number | null;
-  llmError: string | null;
-  cached: boolean;
+  questions: Question[];
+  status: string;
+  createdAt: string;
 }
 
 const StructureYourAnswerInterviewPage = () => {
@@ -43,7 +36,7 @@ const StructureYourAnswerInterviewPage = () => {
   const [structuredPractice, setStructuredPractice] =
     useState<StructuredPracticeResponse | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [currentAnswerTypeIndex, setCurrentAnswerTypeIndex] = useState(0);
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [showReport, setShowReport] = useState(false);
   const [hasStartedPractice, setHasStartedPractice] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
@@ -53,7 +46,7 @@ const StructureYourAnswerInterviewPage = () => {
 
   const { mutateAsync: generateStructuredPractice } = apiClient.useMutation<
     StructuredPracticeResponse,
-    { interviewId?: string; role?: string }
+    { interviewId?: string; track?: string; difficulty?: string }
   >({
     url: ENDPOINTS_V2.GENERATE_STRUCTURED_PRACTICE,
     method: "post",
@@ -63,13 +56,18 @@ const StructureYourAnswerInterviewPage = () => {
     const callApi = async () => {
       try {
         setIsLoading(true);
-        const requestData: { interviewId?: string; role?: string } = {};
+        const requestData: {
+          interviewId?: string;
+          track?: string;
+          difficulty?: string;
+        } = {};
         if (interviewId) {
           requestData.interviewId = interviewId;
         }
         if (role) {
-          requestData.role = role;
+          requestData.track = role;
         }
+        requestData.difficulty = "easy";
         const response = await generateStructuredPractice(requestData);
         setStructuredPractice(response);
       } catch (error) {
@@ -94,33 +92,23 @@ const StructureYourAnswerInterviewPage = () => {
     }
   }, [isLoading, showWelcome]);
 
-  // Reset answer type index and practice state when question changes
+  // Reset section index and practice state when question changes
   useEffect(() => {
-    setCurrentAnswerTypeIndex(0);
+    setCurrentSectionIndex(0);
     setShowReport(false);
     setHasStartedPractice(false);
   }, [currentQuestionIndex]);
 
-  const currentQuestion = structuredPractice?.items[currentQuestionIndex];
+  const currentQuestion = structuredPractice?.questions[currentQuestionIndex];
+  const currentSections = currentQuestion?.sections || [];
+  const currentSection = currentSections[currentSectionIndex];
+  const totalSections = currentSections.length;
 
-  // Get framework for current question's category
-  const getCurrentFramework = (): AnswerType[] => {
-    if (!currentQuestion) return [];
-    return getFrameworkForCategory(currentQuestion.category);
-  };
-
-  const currentFramework = getCurrentFramework();
-  const currentAnswerType = currentFramework[currentAnswerTypeIndex];
-  const totalAnswerTypes = currentFramework.length;
-
-  // Handle completion of current answer type
-  const handleAnswerTypeComplete = () => {
-    if (currentAnswerTypeIndex < totalAnswerTypes - 1) {
-      // Move to next answer type
-      setCurrentAnswerTypeIndex((prev) => prev + 1);
-    } else {
-      // All answer types completed, show report
-      setShowReport(true);
+  // Handle completion of current section
+  const handleSectionComplete = () => {
+    if (currentSectionIndex < totalSections - 1) {
+      // Move to next section (don't wait for API call)
+      setCurrentSectionIndex((prev) => prev + 1);
     }
   };
 
@@ -129,15 +117,20 @@ const StructureYourAnswerInterviewPage = () => {
     setHasStartedPractice(true);
   };
 
+  // Handle manual analyze action - just show the report, API will be called in QuestionReport
+  const handleAnalyze = () => {
+    setShowReport(true);
+  };
+
   // Handle moving to next question after report
   const handleNextQuestion = () => {
     if (
       structuredPractice &&
-      currentQuestionIndex < structuredPractice.items.length - 1
+      currentQuestionIndex < structuredPractice.questions.length - 1
     ) {
       // Move to next question
       setCurrentQuestionIndex((prev) => prev + 1);
-      setCurrentAnswerTypeIndex(0);
+      setCurrentSectionIndex(0);
       setShowReport(false);
       setHasStartedPractice(false);
     } else {
@@ -178,24 +171,24 @@ const StructureYourAnswerInterviewPage = () => {
     );
   }
 
-  // If no framework found for category, show error
-  if (currentFramework.length === 0) {
+  // If no sections found, show error
+  if (currentSections.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center pt-10 gap-4">
-        <p>No framework found for category: {currentQuestion.category}</p>
+        <p>No sections found for this question.</p>
       </div>
     );
   }
 
-  // Show report if all answer types are completed
+  // Show report if all sections are completed
   if (showReport) {
     return (
       <QuestionReport
-        practiceId={structuredPractice?.interviewId?.toString() || ""}
+        practiceId={structuredPractice?.practiceId?.toString() || ""}
         questionIndex={currentQuestionIndex}
         onNextQuestion={handleNextQuestion}
         isLastQuestion={
-          currentQuestionIndex === structuredPractice.items.length - 1
+          currentQuestionIndex === structuredPractice.questions.length - 1
         }
       />
     );
@@ -218,14 +211,15 @@ const StructureYourAnswerInterviewPage = () => {
                 className="bg-green-500 h-2 rounded-full transition-all duration-300"
                 style={{
                   width: `${
-                    ((currentQuestionIndex + 1) / structuredPractice.count) *
+                    ((currentQuestionIndex + 1) /
+                      structuredPractice.questions.length) *
                     100
                   }%`,
                 }}
               ></div>
             </div>
             <span className="text-sm text-gray-700 whitespace-nowrap">
-              {currentQuestionIndex + 1}/{structuredPractice.count}
+              {currentQuestionIndex + 1}/{structuredPractice.questions.length}
             </span>
           </div>
         </div>
@@ -237,25 +231,25 @@ const StructureYourAnswerInterviewPage = () => {
           </p>
         </div>
 
-        {/* Category Tag */}
+        {/* Framework Tag */}
         <div className="mb-4">
           <span className="inline-block px-3 py-1 bg-yellow-100 text-gray-800 text-sm rounded">
-            {currentQuestion.category?.toUpperCase()}
+            {currentQuestion.framework}
           </span>
         </div>
 
         {/* Framework Hint */}
-        {currentQuestion.structureHint && (
+        {currentQuestion.structure_hint && (
           <div className="mb-8">
             <p className="text-sm text-gray-700">
-              {currentQuestion.structureHint}
+              {currentQuestion.structure_hint}
             </p>
           </div>
         )}
 
         {/* Start Practice Button */}
         <div className="flex justify-end mt-auto">
-          <button onClick={handleStartPractice} className="btn btn-primary">
+          <button onClick={handleStartPractice} className="btn btn-neutral">
             Start Practice
             <ArrowRightIcon className="h-5 w-5" />
           </button>
@@ -264,18 +258,18 @@ const StructureYourAnswerInterviewPage = () => {
     );
   }
 
-  // Show answer type step after practice has started
   return (
     <AnswerTypeStep
       questionText={currentQuestion.text}
-      category={currentQuestion.category}
-      currentAnswerType={currentAnswerType}
-      currentStep={currentAnswerTypeIndex + 1}
-      totalSteps={totalAnswerTypes}
-      practiceId={structuredPractice?.interviewId?.toString() || ""}
+      framework={currentQuestion.framework}
+      currentSection={currentSection}
+      currentStep={currentSectionIndex + 1}
+      totalSteps={totalSections}
+      practiceId={structuredPractice?.practiceId?.toString() || ""}
       questionIndex={currentQuestionIndex}
-      answerTypeIndex={currentAnswerTypeIndex}
-      onComplete={handleAnswerTypeComplete}
+      currentHint={currentQuestion.current_hint}
+      onComplete={handleSectionComplete}
+      onAnalyze={handleAnalyze}
     />
   );
 };

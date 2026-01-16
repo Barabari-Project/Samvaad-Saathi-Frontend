@@ -47,13 +47,15 @@ export const ENDPOINTS_V2 = {
     practiceId: string,
     questionNumber: number
   ) => `v2/pronunciation/${practiceId}/audio/${questionNumber}`,
-  GENERATE_STRUCTURED_PRACTICE: "v2/interviews/structure-practice",
+  GENERATE_STRUCTURED_PRACTICE: "v2/structure-practice/session",
   SUBMIT_STRUCTURED_PRACTICE_AUDIO: (
     practiceId: string,
-    questionIndex: number
-  ) => `v2/structure-practice/${practiceId}/question/${questionIndex}/submit`,
+    questionIndex: number,
+    sectionName: string
+  ) =>
+    `v2/structure-practice/${practiceId}/question/${questionIndex}/section/${sectionName}/submit`,
   ANALYSE_STRUCTURED_PRACTICE_AUDIO: (
     practiceId: string,
     questionIndex: number
-  ) => `v2/structure-practice/${practiceId}/question/${questionIndex}/audio`,
+  ) => `v2/structure-practice/${practiceId}/question/${questionIndex}/analyze`,
 };
