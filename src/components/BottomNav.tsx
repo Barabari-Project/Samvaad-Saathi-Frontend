@@ -2,7 +2,8 @@
 
 import { trackBottomNavClick } from "@/lib/posthog/tracking.utils";
 import { HomeIcon, ListBulletIcon, UserIcon } from "@heroicons/react/24/solid";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { TargetPracticeIcon } from "./icons";
 
 /**
@@ -10,7 +11,6 @@ import { TargetPracticeIcon } from "./icons";
  * Automatically highlights the currently active route based on pathname.
  */
 export default function BottomNav({ className = "" }: { className?: string }) {
-  const router = useRouter();
   const pathname = usePathname();
 
   // Determine which nav item should be active based on pathname
@@ -27,10 +27,9 @@ export default function BottomNav({ className = "" }: { className?: string }) {
     "flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 hover:text-white";
   const isActive = (key: string) => active === key;
 
-  // Handle navigation with tracking
-  const handleNavigation = (destination: string) => {
+  // Handle tracking on navigation
+  const handleClick = (destination: string) => {
     trackBottomNavClick(destination);
-    router.push(`/${destination}`);
   };
 
   return (
@@ -38,45 +37,49 @@ export default function BottomNav({ className = "" }: { className?: string }) {
       className={`fixed bottom-0 left-0 w-full h-16 bg-[#1F285B] rounded-t-[14px] flex justify-around items-center ${className}`}
       aria-label="Bottom Navigation"
     >
-      <button
+      <Link
+        href="/home"
         className={`${baseItemClass} ${
           isActive("home") ? "text-white" : "text-gray-400"
         }`}
-        onClick={() => handleNavigation("home")}
+        onClick={() => handleClick("home")}
         aria-label="Go to home"
       >
         <HomeIcon className="size-7" />
-      </button>
+      </Link>
 
-      <button
+      <Link
+        href="/history"
         className={`${baseItemClass} ${
           isActive("history") ? "text-white" : "text-gray-400"
         }`}
-        onClick={() => handleNavigation("history")}
+        onClick={() => handleClick("history")}
         aria-label="Go to history"
       >
         <ListBulletIcon className="size-7" />
-      </button>
+      </Link>
 
-      <button
+      <Link
+        href="/practice"
         className={`${baseItemClass} ${
           isActive("practice") ? "text-white" : "text-gray-400"
         }`}
-        onClick={() => handleNavigation("practice")}
+        onClick={() => handleClick("practice")}
         aria-label="Go to target practice"
       >
         <TargetPracticeIcon className="size-10" />
-      </button>
+      </Link>
 
-      <button
+      <Link
+        href="/profile"
         className={`${baseItemClass} ${
           isActive("profile") ? "text-white" : "text-gray-400"
         }`}
-        onClick={() => handleNavigation("profile")}
+        onClick={() => handleClick("profile")}
         aria-label="Go to profile"
       >
         <UserIcon className="size-7" />
-      </button>
+      </Link>
     </nav>
   );
 }
