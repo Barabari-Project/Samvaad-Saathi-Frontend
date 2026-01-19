@@ -4,16 +4,17 @@ import Empty from "@/components/Empty";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import CompletedInterviewsTab from "./_components/CompletedInterviewsTab";
 import HistorySkeletonLoader from "./_components/HistorySkeletonLoader";
 import IncompleteInterviewsTab from "./_components/IncompleteInterviewsTab";
 import {
-  InterviewItem,
-  InterviewStatus,
-  InterviewsListResponse,
-  ResumeInterviewResponse,
+    InterviewItem,
+    InterviewStatus,
+    InterviewsListResponse,
+    ResumeInterviewResponse,
 } from "./_components/types";
 
 export default function InterviewHistory() {
@@ -120,24 +121,32 @@ export default function InterviewHistory() {
         role="tablist"
         className="tabs tabs-box mb-3 w-full bg-gray-200 p-2 font-bold text-2xl"
       >
-        <a
+        <Link
+          href={`?tab=incomplete`}
           role="tab"
           className={`tab flex-1 ${
             activeTab === "incomplete" ? "tab-active shadow-2xl rounded-xl" : ""
           }`}
-          onClick={() => handleTabChange("incomplete")}
+          onClick={(e) => {
+            e.preventDefault();
+            handleTabChange("incomplete");
+          }}
         >
           Incomplete
-        </a>
-        <a
+        </Link>
+        <Link
+          href={`?tab=completed`}
           role="tab"
           className={`tab flex-1 ${
             activeTab === "completed" ? "tab-active" : ""
           }`}
-          onClick={() => handleTabChange("completed")}
+          onClick={(e) => {
+            e.preventDefault();
+            handleTabChange("completed");
+          }}
         >
           Completed
-        </a>
+        </Link>
       </div>
 
       {activeTab === "incomplete" ? (
