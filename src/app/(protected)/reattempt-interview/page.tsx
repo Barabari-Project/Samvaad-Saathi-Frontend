@@ -108,8 +108,46 @@ const ReAttemptInterview = () => {
           <h2 className="text-[20px] font-semibold text-primary mb-4">
             Reattempt Interview
           </h2>
-          <div className="flex justify-center items-center h-32">
-            <span className="loading loading-spinner loading-md"></span>
+
+          {/* Interview Details Card Skeleton */}
+          <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <div className="skeleton h-6 w-32 mb-2"></div>
+            <div className="skeleton h-4 w-40"></div>
+          </div>
+
+          {/* Question Selection Section Skeleton */}
+          <div className="mb-6">
+            <div className="flex flex-col md:flex-row mb-4">
+              <div className="skeleton h-6 w-64 mb-2"></div>
+              <div className="flex items-center justify-end gap-2 pr-4">
+                <div className="skeleton h-4 w-20"></div>
+                <div className="skeleton h-5 w-5 rounded"></div>
+              </div>
+            </div>
+
+            {/* Questions List Skeleton */}
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="card bg-base-100 shadow-lg">
+                  <div className="card-body p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="skeleton h-5 w-20 rounded-full"></div>
+                      <div className="flex items-center gap-2">
+                        <div className="skeleton h-4 w-12"></div>
+                        <div className="skeleton h-5 w-5 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="skeleton h-4 w-full"></div>
+                    <div className="skeleton h-4 w-5/6 mt-2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Button Skeleton */}
+          <div className="flex justify-center">
+            <div className="skeleton h-12 w-full rounded-lg"></div>
           </div>
         </div>
       </div>

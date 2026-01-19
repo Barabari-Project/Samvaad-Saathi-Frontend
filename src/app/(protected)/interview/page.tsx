@@ -9,9 +9,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CodeView, Footer, Header, Question, Welcome } from "./_components";
 import {
-  FollowUpQuestion,
-  GenerateQuestionsResponse,
-  StartQuestionAttemptResponse,
+    FollowUpQuestion,
+    GenerateQuestionsResponse,
+    StartQuestionAttemptResponse,
 } from "./types";
 
 const InterviewPage = () => {
@@ -30,6 +30,7 @@ const InterviewPage = () => {
     GenerateQuestionsResponse["items"]
   >([]);
   const [isTextToSpeechSpeaking, setIsTextToSpeechSpeaking] = useState(false);
+  const [pendingStart, setPendingStart] = useState(false);
 
   // mic permission utils
   const {
@@ -69,9 +70,10 @@ const InterviewPage = () => {
         ) as GenerateQuestionsResponse["items"];
         if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
           setQuestions(parsedQuestions);
-          // Start interview only after questions are parsed from URL
-          if (!hasStarted) {
+          // Start interview if user has clicked the start button
+          if (pendingStart) {
             setHasStarted(true);
+            setPendingStart(false);
           }
         }
       } catch (error) {
@@ -79,18 +81,19 @@ const InterviewPage = () => {
         // Fallback to generating questions via API if parsing fails
       }
     }
-  }, [selectedQuestionsParam, hasStarted]);
+  }, [selectedQuestionsParam, pendingStart]);
 
   // Update local questions state when generatedQuestions changes
   useEffect(() => {
     if (generatedQuestions?.items && generatedQuestions.items.length > 0) {
       setQuestions(generatedQuestions.items);
-      // Start interview only after questions are generated via API
-      if (!hasStarted) {
+      // Start interview if user has clicked the start button
+      if (pendingStart) {
         setHasStarted(true);
+        setPendingStart(false);
       }
     }
-  }, [generatedQuestions?.items, hasStarted]);
+  }, [generatedQuestions?.items, pendingStart]);
 
   useEffect(() => {
     if (questions?.[currentQuestionIndex] && interviewId) {
@@ -106,16 +109,18 @@ const InterviewPage = () => {
 
   const handleInterviewStart = () => {
     if (hasPermission) {
-      // Don't set hasStarted here - wait for questions to be ready
       // If selectedQuestions exists in URL, questions should be parsed from URL
       // Only call API if selectedQuestions is not present or parsing failed (no questions)
       if (!selectedQuestionsParam) {
+        // Questions need to be generated, set pendingStart flag
+        setPendingStart(true);
         generateQuestions({
           useResume: useResume === "true",
         });
       } else if (questions.length === 0) {
         // selectedQuestions exists but parsing failed or hasn't completed yet
         // Fallback to generating questions via API
+        setPendingStart(true);
         generateQuestions({
           useResume: useResume === "true",
         });
@@ -123,7 +128,6 @@ const InterviewPage = () => {
         // Questions already available from URL parsing, start immediately
         setHasStarted(true);
       }
-      // If selectedQuestions exists and questions are available, skip API call
     } else {
       showPermissionModal();
     }
@@ -132,16 +136,18 @@ const InterviewPage = () => {
   const handleRequestPermission = async () => {
     const granted = await requestPermission();
     if (granted) {
-      // Don't set hasStarted here - wait for questions to be ready
       // If selectedQuestions exists in URL, questions should be parsed from URL
       // Only call API if selectedQuestions is not present or parsing failed (no questions)
       if (!selectedQuestionsParam) {
+        // Questions need to be generated, set pendingStart flag
+        setPendingStart(true);
         generateQuestions({
           useResume: useResume === "true",
         });
       } else if (questions.length === 0) {
         // selectedQuestions exists but parsing failed or hasn't completed yet
         // Fallback to generating questions via API
+        setPendingStart(true);
         generateQuestions({
           useResume: useResume === "true",
         });
@@ -149,7 +155,6 @@ const InterviewPage = () => {
         // Questions already available from URL parsing, start immediately
         setHasStarted(true);
       }
-      // If selectedQuestions exists and questions are available, skip API call
     }
     return granted;
   };

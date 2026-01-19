@@ -85,15 +85,15 @@ const Header = ({
 
   return (
     <div
-      className={`navbar min-h-0 px-0 py-4 ${
+      className={`flex items-center justify-between p-4 gap-4 ${
         isMobile ? "" : "bg-[#ACADF1]/20 rounded-lg"
       }`}
     >
-      <div className="flex-1">
-        <h3 className="text-[#1f285b] text-2xl font-bold uppercase tracking-wide pl-4">
+
+        <h3 className="text-[#1f285b] text-2xl font-bold uppercase tracking-wide">
           {role || "Developer"}
         </h3>
-      </div>
+   
 
       <div className="flex-none pr-4">
         {/* Timer Container with Gradient Border */}

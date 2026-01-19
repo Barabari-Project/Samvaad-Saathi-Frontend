@@ -53,9 +53,18 @@ export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const userName = user?.authorizedUser?.name || "User";
-  const avatarUrl = `https://avatar.iran.liara.run/username?username=${encodeURIComponent(
-    userName
-  )}`;
+  
+  // Generate initials from first and last name
+  const getInitials = (name: string): string => {
+    const nameParts = name.trim().split(/\s+/);
+    if (nameParts.length === 0) return "U";
+    if (nameParts.length === 1) return nameParts[0][0]?.toUpperCase() || "U";
+    const firstInitial = nameParts[0][0]?.toUpperCase() || "";
+    const lastInitial = nameParts[nameParts.length - 1][0]?.toUpperCase() || "";
+    return `${firstInitial}${lastInitial}` || "U";
+  };
+  
+  const userInitials = getInitials(userName);
 
   // Create API client for interviews
   const apiClient = createApiClient(APIService.INTERVIEWS);
@@ -134,14 +143,11 @@ export default function HomePage() {
     <div className="flex flex-col py-6">
       <div className="flex justify-between items-center relative">
         <h2 className="text-2xl font-bold">Hi {userName},</h2>
-        <Image
-          width={50}
-          height={50}
-          src={avatarUrl}
-          alt="user avatar"
-          unoptimized
-          className="rounded-full object-cover"
-        />
+        <div className="avatar avatar-placeholder">
+          <div className="bg-primary text-neutral-content w-12 rounded-full">
+            <span className="text-xl">{userInitials}</span>
+          </div>
+        </div>
       </div>
 
       <div className="my-6">

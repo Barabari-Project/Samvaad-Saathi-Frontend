@@ -1,5 +1,4 @@
 "use client";
-import useTouchDevice from "@/hooks/useTouchDevice";
 import React from "react";
 
 interface WelcomeProps {
@@ -13,10 +12,9 @@ const Welcome = ({
   onInterviewStart,
   isGeneratingQuestions,
 }: WelcomeProps) => {
-  const isTouchDevice = useTouchDevice();
 
   return (
-    <div className="" onClick={() => isTouchDevice && onInterviewStart()}>
+    <div className="">
       <div className="flex-1">
         <h3 className="text-primary text-2xl font-bold tracking-wide uppercase">
           {role}
@@ -57,26 +55,19 @@ const Welcome = ({
               <li>
                 You can take more time than that depending on the question
               </li>
-              {isTouchDevice ? (
-                <li className="font-semibold text-primary mt-4 list-none -ml-5 text-center">
-                  Tap anywhere to continue
-                </li>
-              ) : null}
             </ul>
 
-            {!isTouchDevice && (
-              <div className="mt-6 flex justify-center">
-                <button
-                  onClick={onInterviewStart}
-                  className="btn btn-primary px-8 text-lg"
-                  disabled={isGeneratingQuestions}
-                >
-                  {isGeneratingQuestions
-                    ? "Generating questions..."
-                    : "Click here to continue"}
-                </button>
-              </div>
-            )}
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={onInterviewStart}
+                className="btn btn-primary px-8 text-lg"
+                disabled={isGeneratingQuestions}
+              >
+                {isGeneratingQuestions
+                  ? "Generating questions..."
+                  : "Click here to continue"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -1,9 +1,9 @@
 "use client";
 import {
-  ArrowsPointingOutIcon,
-  ChartBarIcon,
-  CodeBracketIcon,
-  XMarkIcon,
+    ArrowsPointingOutIcon,
+    ChartBarIcon,
+    CodeBracketIcon,
+    XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { MermaidDiagram } from "@lightenna/react-mermaid-diagram";
 import React, { useRef } from "react";
@@ -101,7 +101,7 @@ const CodeView: React.FC<CodeViewProps> = ({
             {isDiagram ? (
               <div className="overflow-hidden max-h-64 flex items-center justify-center">
                 <div className="[&_svg_text]:word-wrap [&_svg_text]:break-words [&_svg_text]:max-w-full">
-                  <MermaidDiagram>{content}</MermaidDiagram>
+                  <MermaidDiagram suppressErrorRendering={true}>{content}</MermaidDiagram>
                 </div>
               </div>
             ) : (
@@ -146,7 +146,7 @@ const CodeView: React.FC<CodeViewProps> = ({
             {isDiagram ? (
               <div className="flex items-center justify-center min-h-[400px]">
                 <div className="[&_svg_text]:word-wrap [&_svg_text]:break-words [&_svg_text]:max-w-full">
-                  <MermaidDiagram>{content}</MermaidDiagram>
+                  <MermaidDiagram suppressErrorRendering={true}>{content}</MermaidDiagram>
                 </div>
               </div>
             ) : (
