@@ -21,9 +21,9 @@ const Question = ({
 }: QuestionProps) => {
   // Use text-to-speech hook
   const { isSpeaking } = useTextToSpeech({
-    text: question?.text,
-    disabled: isLoading,
-  });
+      text: question?.text,
+      disabled: isLoading,
+    });
 
   // Notify parent when speaking state changes
   useEffect(() => {

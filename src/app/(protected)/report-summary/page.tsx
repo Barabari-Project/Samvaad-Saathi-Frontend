@@ -150,7 +150,7 @@ const ReportSummaryPage: React.FC = () => {
             <Link
               href={`/structure-your-answer/interview?interviewId=${interviewId}&role=${reportData.candidateInfo.roleTopic}`}
             >
-              <button className="btn btn-primary text-white">
+              <button className="btn btn-primary  cursor-pointer">
                 Practice Now
                 <ArrowRightIcon className="w-5 h-5" />
               </button>
@@ -207,7 +207,7 @@ const ReportSummaryPage: React.FC = () => {
               </div>
               <div className="flex justify-end">
                 <Link href="/pronunciation-practice">
-                  <button className="btn btn-primary">
+                  <button className="btn btn-primary cursor-pointer">
                     Practice Now
                     <ArrowRightIcon className="w-5 h-5" />
                   </button>

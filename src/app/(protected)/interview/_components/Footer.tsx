@@ -2,15 +2,14 @@ import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
 import {
-  AUDIO_CONSTRAINTS_16KHZ,
-  cleanupAudioAnalysis,
-  createAudioAnalysisContext,
-  resampleAudioTo16kHz,
-  startWaveformAnimation,
-  type AudioAnalysisContext,
+    AUDIO_CONSTRAINTS_16KHZ,
+    cleanupAudioAnalysis,
+    createAudioAnalysisContext,
+    resampleAudioTo16kHz,
+    startWaveformAnimation,
+    type AudioAnalysisContext,
 } from "@/lib/audio-utils";
 import { MicrophoneIcon } from "@heroicons/react/24/solid";
-import { AxiosRequestConfig } from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { FollowUpQuestion, TranscribeResponse } from "../types";
 
@@ -45,7 +44,6 @@ const Footer = ({
   const audioAnalysisRef = useRef<AudioAnalysisContext | null>(null);
   const stopWaveformAnimationRef = useRef<(() => void) | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
-  const abortControllerRef = useRef<AbortController | null>(null);
 
   const apiClient = createApiClient(APIService.TRANSCRIBE);
 
@@ -65,11 +63,6 @@ const Footer = ({
         stopWaveformAnimationRef.current();
       }
       cleanupAudioAnalysis(audioAnalysisRef.current);
-      // Cancel any ongoing API call on unmount
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
     };
   }, []);
 
@@ -79,11 +72,6 @@ const Footer = ({
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
-    }
-    // Cancel any ongoing API call when question changes
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
     }
   }, [question_attempt_id]);
 
@@ -112,12 +100,12 @@ const Footer = ({
     };
   }, [isListening, timeRemaining]);
 
-  const { mutateAsync: completeAnalysis } = apiClient.useMutation({
+  const { mutateAsync: completeAnalysis, isPending: isCompletingAnalysis } = apiClient.useMutation({
     url: ENDPOINTS.ANALYSIS.COMPLETE,
     method: "post",
   });
 
-  const { mutateAsync: uploadAudioBase, isPending: isUploading } =
+  const { mutateAsync: uploadAudio, isPending: isUploading } =
     apiClient.useMutation({
       url: ENDPOINTS.TRANSCRIBE.WHISPER,
       method: "post",
@@ -125,16 +113,9 @@ const Footer = ({
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        // Use signal getter to support dynamic cancellation
-        _signalGetter: () => abortControllerRef.current?.signal,
-      } as AxiosRequestConfig & {
-        _signalGetter?: () => AbortSignal | undefined;
       },
       options: {
         onSuccess: (response: TranscribeResponse) => {
-          // Clear AbortController on successful completion
-          abortControllerRef.current = null;
-
           completeAnalysis({
             question_attempt_id: question_attempt_id,
             analysisTypes: ["domain", "communication", "pace", "pause"],
@@ -152,25 +133,6 @@ const Footer = ({
         },
       },
     });
-
-  // Wrapper function to create new AbortController before each upload
-  const uploadAudio = async (formData: FormData) => {
-    // Create new AbortController for this request
-    abortControllerRef.current = new AbortController();
-    try {
-      return await uploadAudioBase(formData);
-    } catch (error) {
-      // Clear the ref if request is cancelled
-      const axiosError = error as { name?: string; code?: string };
-      if (
-        axiosError?.name === "CanceledError" ||
-        axiosError?.code === "ERR_CANCELED"
-      ) {
-        abortControllerRef.current = null;
-      }
-      throw error;
-    }
-  };
 
   // Auto-submit when timer reaches 0
   useEffect(() => {
@@ -213,7 +175,7 @@ const Footer = ({
       autoSubmit();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRemaining, isListening, question_attempt_id, uploadAudio]);
+  }, [timeRemaining, isListening, question_attempt_id]);
 
   const startRecording = async () => {
     try {
@@ -327,11 +289,6 @@ const Footer = ({
   };
 
   const handleRedo = () => {
-    // Cancel ongoing API call if any
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
     stopRecording();
     chunksRef.current = [];
     setHasAnswered(false);
@@ -467,7 +424,7 @@ const Footer = ({
           {isLastQuestion ? (
             <button
               onClick={handleSubmitClick}
-              disabled={disabled || isUploading}
+              disabled={disabled || isUploading || isCompletingAnalysis}
               className="btn btn-primary text-white"
             >
               Submit
@@ -475,7 +432,6 @@ const Footer = ({
           ) : (
             <button
               onClick={handleNextClick}
-              disabled={disabled}
               className="btn btn-outline"
             >
               Next
