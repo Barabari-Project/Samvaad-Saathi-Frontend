@@ -3,10 +3,10 @@
 import { ENDPOINTS } from "@/lib/api-config";
 import { SCREEN_VIEW } from "@/lib/posthog/events";
 import {
-  trackLoginAttempt,
-  trackLoginFailure,
-  trackLoginSuccess,
-  trackScreenView,
+    trackLoginAttempt,
+    trackLoginFailure,
+    trackLoginSuccess,
+    trackScreenView,
 } from "@/lib/posthog/tracking.utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -130,7 +130,7 @@ export default function SignupPage() {
         href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/${ENDPOINTS.AUTH.COGNITO_LOGIN}`}
         onClick={handleContinueClick}
       >
-        <button className="w-72 h-11 bg-white rounded-lg flex items-center justify-center gap-3 active:scale-95 transition shadow-md">
+        <button className="w-72 h-11 bg-white rounded-lg flex items-center justify-center gap-3 active:scale-95 transition shadow-md cursor-pointer">
           <span className="text-black text-sm font-semibold">Continue</span>
         </button>
       </Link>
