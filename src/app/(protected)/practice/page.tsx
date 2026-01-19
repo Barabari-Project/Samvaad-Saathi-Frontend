@@ -60,7 +60,7 @@ const PracticePage = () => {
                 </h2>
                 <p className="text-base text-gray-700">{module.description}</p>
                 <div className="flex justify-end mt-2">
-                  <button className="flex items-center gap-2 bg-[#1f285b] text-white px-5 py-2.5 rounded-lg font-medium hover:bg-[#1f285b]/90 transition-colors">
+                  <button className="flex items-center gap-2 bg-[#1f285b] text-white px-5 py-2.5 rounded-lg font-medium hover:bg-[#1f285b]/90 transition-colors cursor-pointer">
                     <span>Practice Now</span>
                     <ArrowRightIcon className="w-5 h-5" />
                   </button>

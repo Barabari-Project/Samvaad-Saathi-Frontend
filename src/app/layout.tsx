@@ -3,9 +3,9 @@ import AppProvider from "@/components/providers/app-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import type { Metadata } from "next";
 import {
-  Anek_Devanagari,
-  Noto_Sans_Devanagari,
-  Orbitron,
+    Anek_Devanagari,
+    Noto_Sans_Devanagari,
+    Orbitron,
 } from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "react-hot-toast";
