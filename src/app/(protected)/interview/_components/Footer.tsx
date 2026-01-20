@@ -491,7 +491,7 @@ const Footer = ({
                             disabled={disabled || isUploading || isCompletingAnalysis}
                             className="btn btn-primary text-white"
                         >
-                            Submit
+                            {isCompletingAnalysis ? "Submitting..." : "Submit"}
                         </button>
                     ) : (
                         <button

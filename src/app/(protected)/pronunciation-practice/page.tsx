@@ -4,157 +4,243 @@ import { createApiClient } from "@/lib/api-config/src/client";
 import { APIServiceV2 } from "@/lib/api-config/src/config";
 import { ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import { ROLE_OPTIONS } from "@/lib/constants";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import {
+    trackDifficultySelected,
+    trackRoleSelected,
+} from "@/lib/posthog/tracking.utils";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 interface CreatePronunciationPracticeRequest {
-  difficulty: string;
-  role: string;
+    difficulty: string;
+    role: string;
 }
 
 interface Word {
-  index: number;
-  word: string;
-  phonetic: string;
+    index: number;
+    word: string;
+    phonetic: string;
 }
 
 interface CreatePronunciationPracticeResponse {
-  practiceId: number;
-  difficulty: string;
-  words: Word[];
-  totalWords: number;
-  status: string;
-  createdAt: string;
+    practiceId: number;
+    difficulty: string;
+    words: Word[];
+    totalWords: number;
+    status: string;
+    createdAt: string;
 }
 
-const PronunciationPracticePage = () => {
-  const [selectedRole, setSelectedRole] = useState("");
-  const [difficulty, setDifficulty] = useState("");
-  const router = useRouter();
+// ============================================================================
+// Constants
+// ============================================================================
 
-  const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
+const DIFFICULTY_LEVELS = [
+    {
+        key: "easy",
+        label: "Easy",
+        baseClass: "bg-yellow-100",
+        activeClass: "bg-yellow-200 outline outline-2 outline-yellow-400",
+        hoverClass: "hover:bg-yellow-200",
+        fullWidth: false,
+    },
+    {
+        key: "medium",
+        label: "Medium",
+        baseClass: "bg-purple-100",
+        activeClass: "bg-purple-200 outline outline-2 outline-purple-400",
+        hoverClass: "hover:bg-purple-200",
+        fullWidth: false,
+    },
+    {
+        key: "hard",
+        label: "Hard",
+        baseClass: "bg-pink-100",
+        activeClass: "bg-pink-200 outline outline-2 outline-pink-400",
+        hoverClass: "hover:bg-pink-200",
+        fullWidth: true,
+    },
+] as const;
 
-  const { mutateAsync: createPronunciationPractice, isPending: isCreating } =
-    apiClient.useMutation<
-      CreatePronunciationPracticeResponse,
-      CreatePronunciationPracticeRequest
-    >({
-      url: ENDPOINTS_V2.CREATE_PRONUNCIATION_PRACTICE,
-      method: "post",
-      successMessage: "Practice session created successfully!",
-      errorMessage: "Failed to create practice session. Please try again.",
-    });
+const SESSION_STORAGE_KEY = "pronunciationPracticeData";
 
-  const handleGetStarted = async () => {
-    if (!selectedRole || !difficulty) {
-      return;
-    }
+// ============================================================================
+// Loading Component
+// ============================================================================
 
-    try {
-      const response = await createPronunciationPractice({
-        difficulty,
-        role: selectedRole,
-      });
-
-      // Store the response in sessionStorage
-      sessionStorage.setItem(
-        "pronunciationPracticeData",
-        JSON.stringify(response)
-      );
-
-      // Redirect to the start page
-      router.push("/pronunciation-practice/start");
-    } catch (error) {
-      // Error handling is done by the mutation hooks with toast notifications
-      console.error("Error creating pronunciation practice:", error);
-    }
-  };
-
-  return (
-    <div className="flex flex-col ">
-      {/* Main Content */}
-      <div className="flex flex-col gap-6 p-6 ">
-        {/* Role Selection */}
-        <div>
-          <label className="block text-[14px] font-noto font-[500] text-black mb-2">
-            Role
-          </label>
-          <select
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
-            className="select select-bordered w-full bg-white border-gray-300 rounded-lg"
-          >
-            <option value="" disabled>
-              Select a role
-            </option>
-            {ROLE_OPTIONS.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Difficulty Level */}
-        <div className="space-y-3">
-          <label className="block text-[14px] font-noto font-[500] text-black">
-            Difficulty Level
-          </label>
-          <p className="text-[14px] text-black font-noto">
-            Choose a difficulty level
-          </p>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setDifficulty("easy")}
-              className={`px-4 py-3 rounded-lg font-noto text-[14px] text-black transition-all ${
-                difficulty === "easy"
-                  ? "bg-yellow-200 outline-2 outline-yellow-400"
-                  : "bg-yellow-100 hover:bg-yellow-200"
-              }`}
-            >
-              Easy
-            </button>
-            <button
-              onClick={() => setDifficulty("medium")}
-              className={`px-4 py-3 rounded-lg font-noto text-[14px] text-black transition-all ${
-                difficulty === "medium"
-                  ? "bg-purple-200 outline-2 outline-purple-400"
-                  : "bg-purple-100 hover:bg-purple-200"
-              }`}
-            >
-              Medium
-            </button>
-            <button
-              onClick={() => setDifficulty("hard")}
-              className={`px-4 py-3 rounded-lg font-noto text-[14px] text-black col-span-2 transition-all ${
-                difficulty === "hard"
-                  ? "bg-pink-200 outline-2 outline-pink-400"
-                  : "bg-pink-100 hover:bg-pink-200"
-              }`}
-            >
-              Hard
-            </button>
-          </div>
-        </div>
-
-        {/* Get Started Button */}
-        <div className="pt-4 mt-auto">
-          <button
-            onClick={handleGetStarted}
-            disabled={!selectedRole || !difficulty || isCreating}
-            className={`w-full font-bold p-4 rounded-xl text-white transition-all ${
-              !selectedRole || !difficulty || isCreating
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-black hover:bg-gray-800"
-            }`}
-          >
-            {isCreating ? "Creating..." : "Get Started"}
-          </button>
-        </div>
-      </div>
+const LoadingState = () => (
+    <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <span className="loading loading-spinner loading-lg text-primary" />
+        <p className="text-sm text-gray-600">Starting practice session...</p>
     </div>
-  );
+);
+
+// ============================================================================
+// Main Content Component
+// ============================================================================
+
+const PronunciationPracticeContent = () => {
+    const searchParams = useSearchParams();
+    const roleParam = searchParams.get("role");
+    const difficultyParam = searchParams.get("difficulty");
+
+    const [selectedRole, setSelectedRole] = useState(roleParam || "");
+    const [difficulty, setDifficulty] = useState(difficultyParam || "");
+    const [isAutoStarting, setIsAutoStarting] = useState(
+        Boolean(roleParam && difficultyParam)
+    );
+
+    const router = useRouter();
+    const hasAutoStarted = useRef(false);
+
+    const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
+
+    const storePracticeDataAndNavigate =
+        (data: CreatePronunciationPracticeResponse) => {
+            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data));
+            router.push("/pronunciation-practice/start");
+        }
+
+
+
+    const { mutateAsync: createPronunciationPractice, isPending: isCreating } =
+        apiClient.useMutation<
+            CreatePronunciationPracticeResponse,
+            CreatePronunciationPracticeRequest
+        >({
+            url: ENDPOINTS_V2.CREATE_PRONUNCIATION_PRACTICE,
+            method: "post",
+            successMessage: "Practice session created successfully!",
+            errorMessage: "Failed to create practice session. Please try again.",
+            options: {
+                onSuccess: storePracticeDataAndNavigate,
+            },
+        });
+
+    // Auto-start practice if both role and difficulty are provided in URL params
+    useEffect(() => {
+        if (roleParam && difficultyParam && !hasAutoStarted.current) {
+            hasAutoStarted.current = true;
+
+            createPronunciationPractice({
+                difficulty: difficultyParam,
+                role: roleParam,
+            })
+        }
+    }, [roleParam, difficultyParam]);
+
+    const handleRoleChange = (role: string) => {
+        setSelectedRole(role);
+        trackRoleSelected(role);
+    };
+
+    const handleDifficultyChange = (level: string) => {
+        setDifficulty(level);
+        trackDifficultySelected(level);
+    };
+
+    const handleGetStarted = async () => {
+        if (!selectedRole || !difficulty) return;
+
+        try {
+            await createPronunciationPractice({
+                difficulty,
+                role: selectedRole,
+            });
+        } catch (error) {
+            console.error("Error creating pronunciation practice:", error);
+        }
+    };
+
+    // Show loading state during auto-start
+    if (isAutoStarting) {
+        return <LoadingState />;
+    }
+
+    const isFormValid = selectedRole && difficulty;
+    const isSubmitDisabled = !isFormValid || isCreating;
+
+    return (
+        <div className="flex flex-col gap-6 p-6">
+            {/* Role Selection */}
+            <div>
+                <label className="block text-sm font-medium text-black mb-2">
+                    Role
+                </label>
+                <select
+                    value={selectedRole}
+                    onChange={(e) => handleRoleChange(e.target.value)}
+                    className="select select-bordered w-full"
+                >
+                    <option value="" disabled>
+                        Select a role
+                    </option>
+                    {ROLE_OPTIONS.map((role) => (
+                        <option key={role} value={role}>
+                            {role}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Difficulty Level */}
+            <div className="space-y-3">
+                <label className="block text-sm font-medium text-black">
+                    Difficulty Level
+                </label>
+                <p className="text-sm text-gray-600">Choose a difficulty level</p>
+
+                <div className="grid grid-cols-2 gap-3">
+                    {DIFFICULTY_LEVELS.map((level) => {
+                        const isSelected = difficulty === level.key;
+                        const buttonClass = isSelected
+                            ? level.activeClass
+                            : `${level.baseClass} ${level.hoverClass}`;
+
+                        return (
+                            <button
+                                key={level.key}
+                                type="button"
+                                onClick={() => handleDifficultyChange(level.key)}
+                                className={`px-4 py-3 rounded-lg text-sm font-medium text-black transition-all ${buttonClass} ${level.fullWidth ? "col-span-2" : ""
+                                    }`}
+                            >
+                                {level.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Get Started Button */}
+            <div className="pt-4 mt-auto">
+                <button
+                    type="button"
+                    onClick={handleGetStarted}
+                    disabled={isSubmitDisabled}
+                    className="btn btn-neutral btn-block btn-lg"
+                >
+                    {isCreating ? "Starting..." : "Get Started"}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// ============================================================================
+// Page Component with Suspense
+// ============================================================================
+
+const PronunciationPracticePage = () => {
+    return (
+        <Suspense fallback={<LoadingState />}>
+            <PronunciationPracticeContent />
+        </Suspense>
+    );
 };
 
 export default PronunciationPracticePage;
