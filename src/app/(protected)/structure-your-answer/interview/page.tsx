@@ -113,6 +113,13 @@ const StructureYourAnswerInterviewPage = () => {
         }
     };
 
+    // Handle redo previous section
+    const handleRedoPrevious = () => {
+        if (currentSectionIndex > 0) {
+            setCurrentSectionIndex((prev) => prev - 1);
+        }
+    };
+
     // Handle starting practice for current question
     const handleStartPractice = () => {
         setHasStartedPractice(true);
@@ -213,7 +220,7 @@ const StructureYourAnswerInterviewPage = () => {
                                 className="bg-green-500 h-2 rounded-full transition-all duration-300"
                                 style={{
                                     width: `${((currentQuestionIndex + 1) /
-                                            structuredPractice.questions.length) *
+                                        structuredPractice.questions.length) *
                                         100
                                         }%`,
                                 }}
@@ -240,10 +247,10 @@ const StructureYourAnswerInterviewPage = () => {
                 </div>
 
                 {/* Framework Hint */}
-                {currentQuestion.structure_hint && (
+                {currentQuestion?.current_hint && (
                     <div className="mb-8">
                         <p className="text-sm text-gray-700">
-                            {currentQuestion.structure_hint}
+                            {currentQuestion?.current_hint}
                         </p>
                     </div>
                 )}
@@ -259,6 +266,10 @@ const StructureYourAnswerInterviewPage = () => {
         );
     }
 
+    const previousSection = currentSectionIndex > 0
+        ? currentSections[currentSectionIndex - 1]
+        : undefined;
+
     return (
         <AnswerTypeStep
             questionText={currentQuestion.text}
@@ -268,9 +279,12 @@ const StructureYourAnswerInterviewPage = () => {
             totalSteps={totalSections}
             practiceId={structuredPractice?.practiceId?.toString() || ""}
             questionIndex={currentQuestionIndex}
-            currentHint={currentQuestion.current_hint}
+            structureHint={currentQuestion?.structure_hint}
             onComplete={handleSectionComplete}
             onAnalyze={handleAnalyze}
+            onRedoPrevious={handleRedoPrevious}
+            hasPreviousSection={currentSectionIndex > 0}
+            previousSection={previousSection}
         />
     );
 };

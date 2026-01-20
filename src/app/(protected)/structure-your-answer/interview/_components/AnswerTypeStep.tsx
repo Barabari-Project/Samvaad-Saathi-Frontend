@@ -23,9 +23,12 @@ interface AnswerTypeStepProps {
     totalSteps: number;
     practiceId: string;
     questionIndex: number;
-    currentHint: string;
+    structureHint: string;
     onComplete: () => void;
     onAnalyze?: () => void;
+    onRedoPrevious?: () => void;
+    hasPreviousSection?: boolean;
+    previousSection?: string;
 }
 
 const AnswerTypeStep = ({
@@ -36,15 +39,20 @@ const AnswerTypeStep = ({
     totalSteps,
     practiceId,
     questionIndex,
-    currentHint,
+    structureHint,
     onComplete,
     onAnalyze,
+    onRedoPrevious,
+    hasPreviousSection = false,
+    previousSection,
 }: AnswerTypeStepProps) => {
+
     const sectionLabel = currentSection;
     const [isListening, setIsListening] = useState(false);
     const [hasAnswered, setHasAnswered] = useState(false);
     const [timeElapsed, setTimeElapsed] = useState(0); // elapsed time in seconds
     const [waveformBars, setWaveformBars] = useState<number[]>(Array(20).fill(0));
+    const [nextHint, setNextHint] = useState<string | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -79,6 +87,7 @@ const AnswerTypeStep = ({
         setTimeElapsed(0);
         setHasAnswered(false);
         setIsListening(false);
+        setNextHint(null);
         recordingStartTimeRef.current = null;
         if (timerIntervalRef.current) {
             clearInterval(timerIntervalRef.current);
@@ -131,11 +140,12 @@ const AnswerTypeStep = ({
                 onSuccess: (data: {
                     isComplete: boolean;
                     message: string;
+                    nextSectionHint: string;
                 }) => {
-                    console.log('data :', data);
-                    setHasAnswered(true);
-
                     toast.success(data.message);
+                    if (data.nextSectionHint) {
+                        setNextHint(data.nextSectionHint);
+                    }
                 },
                 onError: (error) => {
                     console.error("Error submitting audio:", error);
@@ -261,15 +271,6 @@ const AnswerTypeStep = ({
         }
     };
 
-    const handleRedo = () => {
-        stopRecording();
-        chunksRef.current = [];
-        setHasAnswered(false);
-        setTimeElapsed(0);
-        recordingStartTimeRef.current = null;
-        startRecording();
-    };
-
     return (
         <div className="flex flex-col px-6 py-8">
             {/* Section Header */}
@@ -278,15 +279,15 @@ const AnswerTypeStep = ({
                     {sectionLabel}
                 </h2>
                 <p className="text-sm text-gray-600 mb-2">Framework: {framework}</p>
-                {currentHint && (
+                {(nextHint || structureHint) && (
                     <p className="text-sm text-gray-700 italic bg-blue-50 p-3 rounded">
-                        {currentHint}
+                        {nextHint || structureHint}
                     </p>
                 )}
             </div>
 
             {/* Question Text */}
-            <div className="mb-8 bg-gray-50 rounded-lg p-4">
+            <div className="mb-8">
                 <p className="text-lg leading-relaxed text-gray-900">{questionText}</p>
             </div>
 
@@ -351,31 +352,35 @@ const AnswerTypeStep = ({
                 </>
             ) : (
                 <div className="flex justify-end gap-3 mt-auto pt-6">
-                    {!hasAnswered ? (
-                        <button onClick={handleRecordClick} className="btn btn-neutral">
-                            Record {sectionLabel}
-                            <MicrophoneIcon className="h-5 w-5" />
+                    {!hasAnswered && hasPreviousSection && previousSection && (
+                        <button
+                            onClick={onRedoPrevious}
+                            className="btn btn-outline"
+                        >
+                            Redo {previousSection}
                         </button>
-                    ) : (
+                    )}
+                    {currentStep === totalSteps && hasAnswered && onAnalyze ? (
                         <>
-                            {currentStep === totalSteps && onAnalyze ? (
-                                <button
-                                    onClick={onAnalyze}
-                                    disabled={isUploading}
-                                    className="btn btn-primary text-white"
-                                >
-                                    Analyse Answer
-                                </button>
-                            ) : null}
                             <button
-                                onClick={handleRedo}
-                                disabled={isUploading}
-                                className="btn btn-neutral"
+                                onClick={() => setHasAnswered(false)}
+                                className="btn btn-outline"
                             >
                                 Redo {sectionLabel}
-                                <MicrophoneIcon className="h-5 w-5" />
+                            </button>
+                            <button
+                                onClick={onAnalyze}
+                                disabled={isUploading}
+                                className="btn btn-primary text-white"
+                            >
+                                Analyse Answer
                             </button>
                         </>
+                    ) : (
+                        <button onClick={handleRecordClick} className="btn btn-neutral">
+                            Answer {sectionLabel}
+                            <MicrophoneIcon className="h-5 w-5" />
+                        </button>
                     )}
                 </div>
             )}

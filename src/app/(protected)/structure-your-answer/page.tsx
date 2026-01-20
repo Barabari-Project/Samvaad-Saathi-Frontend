@@ -1,17 +1,9 @@
 "use client";
 
+import { ROLE_OPTIONS } from "@/lib/constants";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import Link from "next/link";
 import { useState } from "react";
-
-const ROLE_OPTIONS = [
-    "React",
-    "Node Js",
-    "Express Js",
-    "MERN",
-    "UI Developer",
-    "JS",
-] as const;
 
 const StructureYourAnswerPage = () => {
     const [showRoleSelection, setShowRoleSelection] = useState(false);
