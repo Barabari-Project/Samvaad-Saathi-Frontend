@@ -276,7 +276,7 @@ const PronunciationPracticeStartPage = () => {
 
                 {/* Pronunciation Details Box */}
                 <div className="bg-purple-100 rounded-xl p-6 mt-4">
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-4 flex-wrap">
                         <div className="text-gray-600 text-sm">Sounds like</div>
                         <div className="flex items-center justify-between gap-4">
                             <div className="text-2xl font-bold text-black flex-1">
