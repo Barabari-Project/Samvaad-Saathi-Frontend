@@ -22,6 +22,7 @@ import {
   trackProfileUpdateButtonClick,
   trackScreenView,
 } from "@/lib/posthog/tracking.utils";
+import { getInitials } from "@/lib/utils";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import {
   ArrowLeftStartOnRectangleIcon,
@@ -66,6 +67,8 @@ export default function ProfilePage() {
     university: "",
   });
   const [errors, setErrors] = useState<Partial<ProfileFormData>>({});
+
+  const userInitials = getInitials(user?.authorizedUser?.name || "User");
 
   useEffect(() => {
     trackScreenView(SCREEN_VIEW.PROFILE_PAGE);
@@ -118,7 +121,7 @@ export default function ProfilePage() {
     const isCustomUniversity =
       currentUniversity &&
       !UNIVERSITY_OPTIONS.includes(
-        currentUniversity as (typeof UNIVERSITY_OPTIONS)[number]
+        currentUniversity as (typeof UNIVERSITY_OPTIONS)[number],
       );
 
     setTempData((prev) => ({
@@ -183,9 +186,9 @@ export default function ProfilePage() {
         field === "targetPosition"
           ? "target_position"
           : field === "yearsExperience"
-          ? "years_experience"
-          : field,
-        value
+            ? "years_experience"
+            : field,
+        value,
       );
     }
 
@@ -316,7 +319,7 @@ export default function ProfilePage() {
     const phoneNumber = "+918639322365";
     const message = "Hi, I need support with Samvaad Saathi app.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-      message
+      message,
     )}`;
     window.open(whatsappUrl, "_blank");
   };
@@ -383,16 +386,9 @@ export default function ProfilePage() {
       <section className=" ">
         {/* Avatar */}
         <div className="card-body items-center text-center">
-          <div className="avatar">
-            <div className="w-20 rounded-full">
-              <Image
-                src="https://avatar.iran.liara.run/public"
-                alt="User avatar"
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
-                priority
-              />
+          <div className="avatar avatar-placeholder">
+            <div className="bg-primary text-neutral-content w-12 rounded-full">
+              <span className="text-xl">{userInitials}</span>
             </div>
           </div>
 

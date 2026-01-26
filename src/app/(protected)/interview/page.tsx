@@ -9,9 +9,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CodeView, Footer, Header, Question, Welcome } from "./_components";
 import {
-    FollowUpQuestion,
-    GenerateQuestionsResponse,
-    StartQuestionAttemptResponse,
+  FollowUpQuestion,
+  GenerateQuestionsResponse,
+  StartQuestionAttemptResponse,
 } from "./types";
 
 const InterviewPage = () => {
@@ -66,7 +66,7 @@ const InterviewPage = () => {
     if (selectedQuestionsParam) {
       try {
         const parsedQuestions = JSON.parse(
-          decodeURIComponent(selectedQuestionsParam)
+          decodeURIComponent(selectedQuestionsParam),
         ) as GenerateQuestionsResponse["items"];
         if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
           setQuestions(parsedQuestions);
@@ -107,26 +107,41 @@ const InterviewPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questions, interviewId, currentQuestionIndex]);
 
+  // Generate questions automatically when the welcome screen is shown
+  useEffect(() => {
+    if (
+      !hasStarted &&
+      !selectedQuestionsParam &&
+      questions.length === 0 &&
+      !isGeneratingQuestions &&
+      !generatedQuestions
+    ) {
+      generateQuestions({
+        useResume: useResume === "true",
+      });
+    }
+  }, [
+    hasStarted,
+    selectedQuestionsParam,
+    questions.length,
+    isGeneratingQuestions,
+    generatedQuestions,
+    useResume,
+  ]);
+
   const handleInterviewStart = () => {
     if (hasPermission) {
-      // If selectedQuestions exists in URL, questions should be parsed from URL
-      // Only call API if selectedQuestions is not present or parsing failed (no questions)
-      if (!selectedQuestionsParam) {
-        // Questions need to be generated, set pendingStart flag
+      // If questions are currently generating, set pendingStart so it starts once ready
+      if (isGeneratingQuestions) {
         setPendingStart(true);
-        generateQuestions({
-          useResume: useResume === "true",
-        });
-      } else if (questions.length === 0) {
-        // selectedQuestions exists but parsing failed or hasn't completed yet
-        // Fallback to generating questions via API
-        setPendingStart(true);
-        generateQuestions({
-          useResume: useResume === "true",
-        });
-      } else {
-        // Questions already available from URL parsing, start immediately
+      } else if (questions.length > 0) {
         setHasStarted(true);
+      } else {
+        // Fallback: If no questions and not generating, try generating
+        setPendingStart(true);
+        generateQuestions({
+          useResume: useResume === "true",
+        });
       }
     } else {
       showPermissionModal();
@@ -136,24 +151,15 @@ const InterviewPage = () => {
   const handleRequestPermission = async () => {
     const granted = await requestPermission();
     if (granted) {
-      // If selectedQuestions exists in URL, questions should be parsed from URL
-      // Only call API if selectedQuestions is not present or parsing failed (no questions)
-      if (!selectedQuestionsParam) {
-        // Questions need to be generated, set pendingStart flag
+      if (isGeneratingQuestions) {
         setPendingStart(true);
-        generateQuestions({
-          useResume: useResume === "true",
-        });
-      } else if (questions.length === 0) {
-        // selectedQuestions exists but parsing failed or hasn't completed yet
-        // Fallback to generating questions via API
-        setPendingStart(true);
-        generateQuestions({
-          useResume: useResume === "true",
-        });
-      } else {
-        // Questions already available from URL parsing, start immediately
+      } else if (questions.length > 0) {
         setHasStarted(true);
+      } else {
+        setPendingStart(true);
+        generateQuestions({
+          useResume: useResume === "true",
+        });
       }
     }
     return granted;
@@ -199,7 +205,7 @@ const InterviewPage = () => {
         router.push(
           `/interview-completed?interviewId=${interviewId}&role=${
             role || "Interview"
-          }`
+          }`,
         );
       },
     },
