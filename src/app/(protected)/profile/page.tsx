@@ -13,14 +13,13 @@ import {
   ROLE_OPTIONS,
   UNIVERSITY_OPTIONS,
 } from "@/lib/constants";
-import { SCREEN_VIEW } from "@/lib/posthog/events";
+
 import {
   trackProfileEditButtonClick,
   trackProfileFieldValueChanged,
   trackProfileHelpButtonClick,
   trackProfileSupportButtonClick,
   trackProfileUpdateButtonClick,
-  trackScreenView,
 } from "@/lib/posthog/tracking.utils";
 import { getInitials } from "@/lib/utils";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
@@ -31,8 +30,8 @@ import {
   QuestionMarkCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
-import Image from "next/image";
-import { useEffect, useState } from "react";
+
+import { useState } from "react";
 import { z } from "zod";
 
 // Create API clients
@@ -69,10 +68,6 @@ export default function ProfilePage() {
   const [errors, setErrors] = useState<Partial<ProfileFormData>>({});
 
   const userInitials = getInitials(user?.authorizedUser?.name || "User");
-
-  useEffect(() => {
-    trackScreenView(SCREEN_VIEW.PROFILE_PAGE);
-  }, []);
 
   // Set up mutations
   const updateProfileMutation = usersApiClient.useMutation({

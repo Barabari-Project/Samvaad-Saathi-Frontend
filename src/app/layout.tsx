@@ -1,11 +1,12 @@
 import { AnalyticsProvider } from "@/components/providers/analytics-provider";
+import { PostHogPageView } from "@/components/providers/posthog-page-view";
 import AppProvider from "@/components/providers/app-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import type { Metadata } from "next";
 import {
-    Anek_Devanagari,
-    Noto_Sans_Devanagari,
-    Orbitron,
+  Anek_Devanagari,
+  Noto_Sans_Devanagari,
+  Orbitron,
 } from "next/font/google";
 import { Suspense } from "react";
 import { Toaster } from "react-hot-toast";
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ||
-      "https://samvaad-sathi.barabaricollective.org"
+      "https://samvaad-sathi.barabaricollective.org",
   ),
   alternates: {
     canonical: "/",
@@ -173,7 +174,10 @@ export default function RootLayout({
         <AppProvider>
           <AuthProvider>
             <AnalyticsProvider>
-              <Suspense fallback={null}>{children}</Suspense>
+              <Suspense fallback={null}>
+                <PostHogPageView />
+                {children}
+              </Suspense>
             </AnalyticsProvider>
             <Toaster />
           </AuthProvider>

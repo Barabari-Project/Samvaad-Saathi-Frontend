@@ -5,7 +5,10 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
-import { trackGetStartedButtonClick } from "@/lib/posthog/tracking.utils";
+import {
+  trackButtonClick,
+  trackGetStartedButtonClick,
+} from "@/lib/posthog/tracking.utils";
 import { getInitials } from "@/lib/utils";
 import { ClockIcon } from "@heroicons/react/24/outline";
 import dayjs from "dayjs";
@@ -93,6 +96,7 @@ export default function HomePage() {
 
   // Handle continue interview
   const handleContinueInterview = async (interviewId: number) => {
+    trackButtonClick("continue_interview", "home_page_recent_interviews");
     try {
       const response = await resumeInterviewMutation({ interviewId });
 
@@ -341,6 +345,12 @@ export default function HomePage() {
                               {interview.summaryReportAvailable ? (
                                 <Link
                                   href={`/report-summary?interviewId=${interview.interviewId}`}
+                                  onClick={() =>
+                                    trackButtonClick(
+                                      "view_report",
+                                      "home_page_recent_interviews",
+                                    )
+                                  }
                                   className="btn btn-outline btn-sm"
                                 >
                                   View Report
@@ -355,6 +365,12 @@ export default function HomePage() {
                               )}
                               <Link
                                 href={`/reattempt-interview?interviewId=${interview.interviewId}&role=${interview.track}&attemptsCount=${interview.attemptsCount}`}
+                                onClick={() =>
+                                  trackButtonClick(
+                                    "reattempt_interview",
+                                    "home_page_recent_interviews",
+                                  )
+                                }
                                 className="btn btn-neutral btn-sm"
                               >
                                 Reattempt

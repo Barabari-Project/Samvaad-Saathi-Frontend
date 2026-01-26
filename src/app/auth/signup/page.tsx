@@ -1,12 +1,11 @@
 "use client";
 
 import { ENDPOINTS } from "@/lib/api-config";
-import { SCREEN_VIEW } from "@/lib/posthog/events";
+
 import {
-    trackLoginAttempt,
-    trackLoginFailure,
-    trackLoginSuccess,
-    trackScreenView,
+  trackLoginAttempt,
+  trackLoginFailure,
+  trackLoginSuccess,
 } from "@/lib/posthog/tracking.utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,10 +18,6 @@ export default function SignupPage() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasTrackedLoginAttempt, setHasTrackedLoginAttempt] = useState(false);
-
-  useEffect(() => {
-    trackScreenView(SCREEN_VIEW.SIGNUP_PAGE);
-  }, []);
 
   useEffect(() => {
     const handleTokenExtraction = () => {
@@ -69,7 +64,7 @@ export default function SignupPage() {
         window.history.replaceState(
           {},
           document.title,
-          window.location.pathname
+          window.location.pathname,
         );
 
         // Redirect to root page to let the main routing logic handle the redirect

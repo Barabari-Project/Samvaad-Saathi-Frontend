@@ -6,7 +6,11 @@ import { APIServiceV2 } from "@/lib/api-config/src/config";
 import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  trackInterviewQuestionView,
+  trackEvent,
+} from "@/lib/posthog/tracking.utils";
 import { CodeView, Footer, Header, Question, Welcome } from "./_components";
 import {
   FollowUpQuestion,
@@ -31,6 +35,8 @@ const InterviewPage = () => {
   >([]);
   const [isTextToSpeechSpeaking, setIsTextToSpeechSpeaking] = useState(false);
   const [pendingStart, setPendingStart] = useState(false);
+  const questionStartTimeRef = useRef<number>(0);
+  const [lastTrackedIndex, setLastTrackedIndex] = useState<number>(-1);
 
   // mic permission utils
   const {
@@ -101,11 +107,53 @@ const InterviewPage = () => {
         interviewId: Number(interviewId),
         questionId: questions[currentQuestionIndex].interviewQuestionId,
       });
+
+      // Track question view
+      trackInterviewQuestionView(
+        questions[currentQuestionIndex].interviewQuestionId.toString(),
+        currentQuestionIndex + 1,
+        questions[currentQuestionIndex].isFollowUp ? "follow-up" : "main",
+        interviewId,
+      );
     }
     // Reset text-to-speech speaking state when question changes
     setIsTextToSpeechSpeaking(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questions, interviewId, currentQuestionIndex]);
+  }, [questions, interviewId, currentQuestionIndex, startQuestionAttempt]);
+
+  // Track time taken for each question
+  useEffect(() => {
+    if (hasStarted && currentQuestionIndex !== lastTrackedIndex) {
+      const now = Date.now();
+
+      // If we were on a previous question, track its time
+      if (lastTrackedIndex !== -1 && questionStartTimeRef.current !== 0) {
+        const timeTaken = Math.round(
+          (now - questionStartTimeRef.current) / 1000,
+        );
+        const prevQuestion = questions[lastTrackedIndex];
+
+        if (prevQuestion) {
+          trackEvent("interview_question_time_taken", {
+            question_id: prevQuestion.interviewQuestionId,
+            question_number: lastTrackedIndex + 1,
+            time_spent_seconds: timeTaken,
+            interview_id: interviewId,
+            question_topic: prevQuestion.topic,
+          });
+        }
+      }
+
+      // Start timer for current question
+      questionStartTimeRef.current = now;
+      setLastTrackedIndex(currentQuestionIndex);
+    }
+  }, [
+    hasStarted,
+    currentQuestionIndex,
+    questions,
+    interviewId,
+    lastTrackedIndex,
+  ]);
 
   // Generate questions automatically when the welcome screen is shown
   useEffect(() => {
@@ -127,6 +175,7 @@ const InterviewPage = () => {
     isGeneratingQuestions,
     generatedQuestions,
     useResume,
+    generateQuestions,
   ]);
 
   const handleInterviewStart = () => {
@@ -213,6 +262,24 @@ const InterviewPage = () => {
 
   const handleInterviewSubmit = () => {
     if (interviewId) {
+      // Track time for the final question before submitting
+      if (questionStartTimeRef.current !== 0) {
+        const timeTaken = Math.round(
+          (Date.now() - questionStartTimeRef.current) / 1000,
+        );
+        const currentQuestion = questions[currentQuestionIndex];
+
+        if (currentQuestion) {
+          trackEvent("interview_question_time_taken", {
+            question_id: currentQuestion.interviewQuestionId,
+            question_number: currentQuestionIndex + 1,
+            time_spent_seconds: timeTaken,
+            interview_id: interviewId,
+            question_topic: currentQuestion.topic,
+          });
+        }
+      }
+
       completeInterview({
         interviewId: Number(interviewId),
       });

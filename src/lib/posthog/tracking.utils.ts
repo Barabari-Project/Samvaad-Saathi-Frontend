@@ -33,27 +33,10 @@ interface ErrorProperties {
  */
 export const trackEvent = (
   eventName: string,
-  properties: EventProperties = {}
+  properties: EventProperties = {},
 ): void => {
   if (typeof window !== "undefined") {
     posthog.capture(eventName, properties);
-  }
-};
-
-/**
- * Track page views manually
- *
- * @param path - The URL path of the page being viewed
- *
- * @example
- * ```typescript
- * trackPageView("/dashboard");
- * trackPageView("/settings/profile");
- * ```
- */
-export const trackPageView = (path: string): void => {
-  if (typeof window !== "undefined") {
-    posthog.capture("$pageview", { $current_url: path });
   }
 };
 
@@ -74,7 +57,7 @@ export const trackPageView = (path: string): void => {
  */
 export const identifyUser = (
   userId: string,
-  properties: UserProperties = {}
+  properties: UserProperties = {},
 ): void => {
   if (typeof window !== "undefined") {
     posthog.identify(userId, properties);
@@ -101,7 +84,7 @@ export const identifyUser = (
  */
 export const trackError = (
   error: Error,
-  additionalProperties: ErrorProperties = {}
+  additionalProperties: ErrorProperties = {},
 ): void => {
   if (typeof window !== "undefined") {
     posthog.captureException(error, additionalProperties);
@@ -140,7 +123,7 @@ export const trackApiError = (
     status_code?: number;
     request_id?: string;
     user_id?: string;
-  } = {}
+  } = {},
 ): void => {
   if (typeof window !== "undefined") {
     const errorProperties = {
@@ -187,11 +170,13 @@ export const trackSignUp = (method: string = "email"): void => {
  */
 export const trackButtonClick = (
   buttonName: string,
-  location: string
+  location: string,
+  properties: EventProperties = {},
 ): void => {
   trackEvent("button_clicked", {
     button_name: buttonName,
     location,
+    ...properties,
   });
 };
 
@@ -246,7 +231,7 @@ export const resetUser = (): void => {
  */
 export const trackLoginAttempt = (
   loginMethod: string,
-  screenSource: string
+  screenSource: string,
 ): void => {
   trackEvent(EVENTS.LOGIN_ATTEMPT, {
     login_method: loginMethod,
@@ -369,7 +354,7 @@ export const trackLinkClick = (linkName: string): void => {
  */
 export const trackFieldInteraction = (
   fieldName: string,
-  interactionType: string
+  interactionType: string,
 ): void => {
   trackEvent(EVENTS.FIELD_INTERACTION, {
     field_name: fieldName,
@@ -405,7 +390,7 @@ export const trackNextButtonClick = (): void => {
 export const trackOnboardingEducationComplete = (
   degreeProvided: boolean,
   universityProvided: boolean,
-  timeOnScreen?: number
+  timeOnScreen?: number,
 ): void => {
   trackEvent(EVENTS.ONBOARDING_EDUCATION_COMPLETE, {
     degree_provided: degreeProvided,
@@ -476,7 +461,7 @@ export const trackResumeUploadStart = (): void => {
  */
 export const trackResumeUploadSuccess = (
   fileSize: number,
-  fileType: string
+  fileType: string,
 ): void => {
   trackEvent(EVENTS.RESUME_UPLOAD_SUCCESS, {
     file_size: fileSize,
@@ -524,7 +509,7 @@ export const trackSubmitButtonClick = (): void => {
 export const trackOnboardingSetupComplete = (
   targetRole: string,
   experience: string,
-  resumeUploaded: boolean
+  resumeUploaded: boolean,
 ): void => {
   trackEvent(EVENTS.ONBOARDING_SETUP_COMPLETE, {
     target_role: targetRole,
@@ -633,7 +618,7 @@ export const trackResumeToggleClick = (toggleState: boolean): void => {
 export const trackStartInterviewButtonClick = (
   selectedRole: string,
   difficultyLevel: string,
-  useResume: boolean
+  useResume: boolean,
 ): void => {
   trackEvent(EVENTS.START_INTERVIEW_BUTTON_CLICK, {
     selected_role: selectedRole,
@@ -661,7 +646,7 @@ export const trackInterviewQuestionView = (
   questionId: string,
   questionNumber: number,
   questionType: string,
-  interviewSessionId: string
+  interviewSessionId: string,
 ): void => {
   trackEvent(EVENTS.INTERVIEW_QUESTION_VIEW, {
     question_id: questionId,
@@ -726,7 +711,7 @@ export const trackAnswerRecorded = (timeToAnswer: number): void => {
  */
 export const trackRedoButtonClick = (
   questionId: string,
-  attemptNumber: number
+  attemptNumber: number,
 ): void => {
   trackEvent(EVENTS.REDO_BUTTON_CLICK, {
     question_id: questionId,
@@ -774,7 +759,7 @@ export const trackSubmitInterviewClick = (): void => {
  */
 export const trackScreenView = (
   screenName: string,
-  interviewSessionId?: string
+  interviewSessionId?: string,
 ): void => {
   trackEvent(EVENTS.SCREEN_VIEW, {
     screen_name: screenName,
@@ -861,7 +846,7 @@ export const trackProfileEditButtonClick = (fieldName: string): void => {
  */
 export const trackProfileFieldValueChanged = (
   fieldName: string,
-  newValue: string
+  newValue: string,
 ): void => {
   trackEvent(EVENTS.PROFILE_FIELD_VALUE_CHANGED, {
     field_name: fieldName,

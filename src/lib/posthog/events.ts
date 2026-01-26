@@ -69,4 +69,12 @@ export const SCREEN_VIEW = {
   CONGRATULATIONS_PAGE: "congratulations_page",
   OVERALL_REPORT_PAGE: "overall_report_page",
   DASHBOARD: "dashboard",
+  HISTORY_PAGE: "history_page",
+  PRACTICE_LIST_PAGE: "practice_list_page",
+  ONBOARDING_PAGE: "onboarding_page",
+  INTERVIEW_SETUP_PAGE: "interview_setup_page",
+  PRONUNCIATION_PRACTICE_START_PAGE: "pronunciation_practice_start_page",
+  PRONUNCIATION_PRACTICE_PAGE: "pronunciation_practice_page",
+  STRUCTURE_YOUR_ANSWER_INTERVIEW_PAGE: "structure_your_answer_interview_page",
+  STRUCTURE_YOUR_ANSWER_PAGE: "structure_your_answer_page",
 } as const;

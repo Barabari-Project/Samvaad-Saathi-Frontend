@@ -5,7 +5,6 @@ import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
 import {
   trackReportGenerationError,
   trackReportGenerationStart,
-  trackScreenView,
 } from "@/lib/posthog/tracking.utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,7 +33,7 @@ const InterviewCompleted = () => {
         onError: (error) => {
           // Track report generation error
           trackReportGenerationError(
-            error?.message || "Unknown error occurred"
+            error?.message || "Unknown error occurred",
           );
         },
       },
@@ -67,8 +66,6 @@ const InterviewCompleted = () => {
     if (!interviewId) {
       return;
     }
-
-    trackScreenView("congratulations_page", interviewId || "");
 
     // Track report generation start
     trackReportGenerationStart();

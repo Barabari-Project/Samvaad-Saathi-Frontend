@@ -1,9 +1,12 @@
 "use client";
 
+import { trackButtonClick } from "@/lib/posthog/tracking.utils";
 import { ArrowRightIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
+import { useRef } from "react";
 
 const PracticePage = () => {
+  const startTimeRef = useRef(Date.now());
   const practiceModules = [
     {
       id: 1,
@@ -49,7 +52,21 @@ const PracticePage = () => {
       {/* Practice Modules */}
       <div className="flex flex-col gap-6">
         {practiceModules.map((module) => (
-          <Link href={module.href || ""} key={module.id}>
+          <Link
+            href={module.href || ""}
+            key={module.id}
+            onClick={() =>
+              trackButtonClick(
+                `practice_module_${module.title.toLowerCase().replace(/\s/g, "_")}`,
+                "practice_page",
+                {
+                  time_spent_seconds: Math.round(
+                    (Date.now() - startTimeRef.current) / 1000,
+                  ),
+                },
+              )
+            }
+          >
             <div
               key={module.id}
               className={`relative rounded-2xl bg-gradient-to-br ${module.gradient} p-6 shadow-md transition-all duration-300 hover:shadow-lg hover:shadow-${module.shadowColor}-400/50 cursor-pointer`}
