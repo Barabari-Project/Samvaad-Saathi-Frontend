@@ -28,12 +28,12 @@ export const resampleAudioTo16kHz = async (audioBlob: Blob): Promise<Blob> => {
         // Create a new audio buffer with 16kHz sample rate
         const targetSampleRate = 16000;
         const targetLength = Math.floor(
-          (audioBuffer.length * targetSampleRate) / audioBuffer.sampleRate
+          (audioBuffer.length * targetSampleRate) / audioBuffer.sampleRate,
         );
         const resampledBuffer = audioContext.createBuffer(
           audioBuffer.numberOfChannels,
           targetLength,
-          targetSampleRate
+          targetSampleRate,
         );
 
         // Simple linear interpolation resampling
@@ -78,7 +78,7 @@ export const resampleAudioTo16kHz = async (audioBlob: Blob): Promise<Blob> => {
  * @param audioBuffer - The AudioBuffer to convert
  * @returns Blob - The WAV format blob
  */
-export const audioBufferToWav = (audioBuffer: AudioBuffer): Blob => {
+const audioBufferToWav = (audioBuffer: AudioBuffer): Blob => {
   const numberOfChannels = audioBuffer.numberOfChannels;
   const sampleRate = audioBuffer.sampleRate;
   const length = audioBuffer.length;
@@ -112,12 +112,12 @@ export const audioBufferToWav = (audioBuffer: AudioBuffer): Blob => {
     for (let channel = 0; channel < numberOfChannels; channel++) {
       const sample = Math.max(
         -1,
-        Math.min(1, audioBuffer.getChannelData(channel)[i])
+        Math.min(1, audioBuffer.getChannelData(channel)[i]),
       );
       view.setInt16(
         offset,
         sample < 0 ? sample * 0x8000 : sample * 0x7fff,
-        true
+        true,
       );
       offset += 2;
     }
@@ -152,7 +152,7 @@ export interface AudioAnalysisContext {
  * @returns AudioAnalysisContext with audioContext, analyser, and stream
  */
 export const createAudioAnalysisContext = (
-  stream: MediaStream
+  stream: MediaStream,
 ): AudioAnalysisContext => {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) {
@@ -181,26 +181,26 @@ export const createAudioAnalysisContext = (
  * @param barCount - Number of bars to generate (default: 20)
  * @returns Array of bar heights (0-100)
  */
-export const getSmoothedWaveformData = (
+const getSmoothedWaveformData = (
   analyser: AnalyserNode,
-  barCount: number = 20
+  barCount: number = 20,
 ): number[] => {
   const bufferLength = analyser.frequencyBinCount;
   const dataArray = new Uint8Array(bufferLength);
-  
+
   // Get frequency data
   analyser.getByteFrequencyData(dataArray);
 
   // Create smoothed bars with averaging and better frequency mapping
   const bars: number[] = [];
   const minBarHeight = 8; // Minimum bar height percentage
-  
+
   for (let i = 0; i < barCount; i++) {
     // Map bar index to frequency range (voice frequencies are typically 85-255 Hz for fundamental, up to 3400 Hz)
     // Focus on lower frequencies for voice visualization
     const startFreq = Math.floor((i / barCount) * bufferLength * 0.5); // Use lower half of spectrum
     const endFreq = Math.floor(((i + 1) / barCount) * bufferLength * 0.5);
-    
+
     // Average the values in this frequency range for smoother visualization
     let sum = 0;
     let count = 0;
@@ -208,11 +208,11 @@ export const getSmoothedWaveformData = (
       sum += dataArray[j];
       count++;
     }
-    
+
     const average = count > 0 ? sum / count : 0;
     // Convert to percentage (0-100) with minimum height
     const height = Math.max(minBarHeight, (average / 255) * 100);
-    
+
     bars.push(height);
   }
 
@@ -227,7 +227,7 @@ export const getSmoothedWaveformData = (
  */
 export const startWaveformAnimation = (
   analyser: AnalyserNode,
-  onUpdate: (bars: number[]) => void
+  onUpdate: (bars: number[]) => void,
 ): (() => void) => {
   let animationFrameId: number | undefined;
   let isRunning = true;
@@ -257,7 +257,7 @@ export const startWaveformAnimation = (
  * @param context - The AudioAnalysisContext to clean up
  */
 export const cleanupAudioAnalysis = (
-  context: AudioAnalysisContext | null
+  context: AudioAnalysisContext | null,
 ): void => {
   if (!context) return;
 

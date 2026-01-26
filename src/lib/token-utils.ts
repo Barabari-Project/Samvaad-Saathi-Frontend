@@ -8,7 +8,7 @@ export const getTokenFromCookies = (): string | null => {
   if (typeof window !== "undefined") {
     const cookies = document.cookie.split(";");
     const tokenCookie = cookies.find((cookie) =>
-      cookie.trim().startsWith("token=")
+      cookie.trim().startsWith("token="),
     );
     if (tokenCookie) {
       return tokenCookie.split("=")[1];
@@ -22,7 +22,7 @@ export const getRefreshTokenFromCookies = (): string | null => {
   if (typeof window !== "undefined") {
     const cookies = document.cookie.split(";");
     const refreshTokenCookie = cookies.find((cookie) =>
-      cookie.trim().startsWith("refresh_token=")
+      cookie.trim().startsWith("refresh_token="),
     );
     if (refreshTokenCookie) {
       return refreshTokenCookie.split("=")[1];
@@ -46,25 +46,12 @@ export const setTokensInCookies = (token: string, refreshToken: string) => {
 };
 
 // Helper function to clear tokens from cookies using native API
-export const clearTokensFromCookies = () => {
+const clearTokensFromCookies = () => {
   if (typeof window !== "undefined") {
     document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     document.cookie =
       "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   }
-};
-
-// Helper function to check if user is authenticated
-export const isAuthenticated = (): boolean => {
-  return getTokenFromCookies() !== null;
-};
-
-// Helper function to get authorization header
-export const getAuthHeader = ():
-  | { Authorization: string }
-  | Record<string, never> => {
-  const token = getTokenFromCookies();
-  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 // Helper function to logout user and clear all tokens

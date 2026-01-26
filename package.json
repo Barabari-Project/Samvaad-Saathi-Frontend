@@ -19,7 +19,6 @@
     "clsx": "^2.1.1",
     "daisyui": "^5.1.13",
     "dayjs": "^1.11.18",
-    "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "mermaid": "^11.12.2",
     "next": "15.5.2",
@@ -38,7 +37,6 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.5.2",
     "typescript": "^5"
   }
 }

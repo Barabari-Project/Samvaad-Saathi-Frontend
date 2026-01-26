@@ -67,15 +67,6 @@ export interface ReportResponse {
   };
 }
 
-// Component Props Types
-export type SummaryOverviewProps = {
-  candidateName: string;
-  role: string;
-  date: string;
-  duration?: string;
-  durationFeedback?: string;
-};
-
 export type OverallScoreSummaryProps = {
   knowledgeCompetence: ReportResponse["scoreSummary"]["knowledgeCompetence"];
   speechAndStructure: ReportResponse["scoreSummary"]["speechAndStructure"];

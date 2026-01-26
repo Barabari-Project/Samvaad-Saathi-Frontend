@@ -18,7 +18,7 @@ type Ring = {
   ariaLabel?: string;
 };
 
-export interface ConcentricRadialProgressProps {
+interface ConcentricRadialProgressProps {
   // Overall rendered size (width/height) in px
   size?: number;
   // Rings from outside to inside
@@ -68,7 +68,7 @@ export function ConcentricRadialProgress({
       className={cn(
         "relative inline-flex items-center justify-center",
         "select-none",
-        className
+        className,
       )}
       style={{
         // Ensure text uses your design tokens
@@ -139,7 +139,7 @@ export function ConcentricRadialProgress({
           <div
             className={cn(
               "flex flex-col items-center justify-center text-center",
-              "text-balance"
+              "text-balance",
             )}
           >
             {centerRender(safeRings)}

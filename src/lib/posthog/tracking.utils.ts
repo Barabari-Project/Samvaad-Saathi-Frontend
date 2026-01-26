@@ -140,22 +140,6 @@ export const trackApiError = (
 };
 
 /**
- * Track sign up events (useful for funnels)
- *
- * @param method - The signup method used (default: "email")
- *
- * @example
- * ```typescript
- * trackSignUp("google");
- * trackSignUp("apple");
- * trackSignUp("email");
- * ```
- */
-export const trackSignUp = (method: string = "email"): void => {
-  trackEvent("user_signed_up", { method });
-};
-
-/**
  * Track button clicks
  *
  * @param buttonName - The name/identifier of the button
@@ -178,26 +162,6 @@ export const trackButtonClick = (
     location,
     ...properties,
   });
-};
-
-/**
- * Set user properties
- *
- * @param properties - The properties to set for the current user
- *
- * @example
- * ```typescript
- * setUserProperties({
- *   plan: "premium",
- *   feature_flags: ["beta_access", "dark_mode"],
- *   last_login: new Date().toISOString()
- * });
- * ```
- */
-export const setUserProperties = (properties: UserProperties): void => {
-  if (typeof window !== "undefined") {
-    posthog.capture("$set", { $set: properties });
-  }
 };
 
 /**
@@ -285,237 +249,6 @@ export const trackLoginFailure = (errorMessage?: string): void => {
  */
 export const trackLogoutButtonClick = (): void => {
   trackEvent(EVENTS.LOGOUT_BUTTON_CLICK);
-};
-
-/**
- * Track account creation start
- *
- * @param signupMethod - The method used for signup ("Google", "Apple", "Email")
- *
- * @example
- * ```typescript
- * trackCreateAccountStart("Google");
- * trackCreateAccountStart("Email");
- * ```
- */
-export const trackCreateAccountStart = (signupMethod: string): void => {
-  trackEvent(EVENTS.CREATE_ACCOUNT_START, {
-    signup_method: signupMethod,
-  });
-};
-
-/**
- * Track successful account creation
- *
- * @param signupMethod - The method used for successful signup ("Google", "Apple", "Email")
- *
- * @example
- * ```typescript
- * trackCreateAccountSuccess("Google");
- * trackCreateAccountSuccess("Email");
- * ```
- */
-export const trackCreateAccountSuccess = (signupMethod: string): void => {
-  trackEvent(EVENTS.CREATE_ACCOUNT_SUCCESS, {
-    signup_method: signupMethod,
-  });
-};
-
-/**
- * Track link clicks
- *
- * @param linkName - The name/identifier of the link clicked
- *
- * @example
- * ```typescript
- * trackLinkClick("Create an account");
- * trackLinkClick("Login");
- * trackLinkClick("Forgot password");
- * ```
- */
-export const trackLinkClick = (linkName: string): void => {
-  trackEvent(EVENTS.LINK_CLICK, {
-    link_name: linkName,
-  });
-};
-
-// Onboarding tracking functions
-/**
- * Track field interactions during onboarding
- *
- * @param fieldName - The name of the field being interacted with ("degree", "university")
- * @param interactionType - The type of interaction ("select", "type")
- *
- * @example
- * ```typescript
- * trackFieldInteraction("degree", "select");
- * trackFieldInteraction("university", "type");
- * ```
- */
-export const trackFieldInteraction = (
-  fieldName: string,
-  interactionType: string,
-): void => {
-  trackEvent(EVENTS.FIELD_INTERACTION, {
-    field_name: fieldName,
-    interaction_type: interactionType,
-  });
-};
-
-/**
- * Track next button clicks during onboarding
- *
- * @example
- * ```typescript
- * trackNextButtonClick();
- * ```
- */
-export const trackNextButtonClick = (): void => {
-  trackEvent(EVENTS.NEXT_BUTTON_CLICK);
-};
-
-/**
- * Track completion of onboarding education step
- *
- * @param degreeProvided - Whether degree information was provided
- * @param universityProvided - Whether university information was provided
- * @param timeOnScreen - Optional time spent on the screen in seconds
- *
- * @example
- * ```typescript
- * trackOnboardingEducationComplete(true, true, 45);
- * trackOnboardingEducationComplete(false, true);
- * ```
- */
-export const trackOnboardingEducationComplete = (
-  degreeProvided: boolean,
-  universityProvided: boolean,
-  timeOnScreen?: number,
-): void => {
-  trackEvent(EVENTS.ONBOARDING_EDUCATION_COMPLETE, {
-    degree_provided: degreeProvided,
-    university_provided: universityProvided,
-    time_on_screen: timeOnScreen,
-  });
-};
-
-// Onboarding setup tracking functions
-/**
- * Track target role selection during onboarding
- *
- * @param selectedRole - The selected target role
- *
- * @example
- * ```typescript
- * trackTargetRoleSelected("Software Engineer");
- * trackTargetRoleSelected("Product Manager");
- * ```
- */
-export const trackTargetRoleSelected = (selectedRole: string): void => {
-  trackEvent(EVENTS.TARGET_ROLE_SELECTED, {
-    selected_role: selectedRole,
-  });
-};
-
-/**
- * Track experience level selection during onboarding
- *
- * @param selectedExperience - The selected experience level
- *
- * @example
- * ```typescript
- * trackExperienceSelected("0-2 years");
- * trackExperienceSelected("3-5 years");
- * trackExperienceSelected("6+ years");
- * ```
- */
-export const trackExperienceSelected = (selectedExperience: string): void => {
-  trackEvent(EVENTS.EXPERIENCE_SELECTED, {
-    selected_experience: selectedExperience,
-  });
-};
-
-/**
- * Track resume upload start
- *
- * @example
- * ```typescript
- * trackResumeUploadStart();
- * ```
- */
-export const trackResumeUploadStart = (): void => {
-  trackEvent(EVENTS.RESUME_UPLOAD_START);
-};
-
-/**
- * Track successful resume upload
- *
- * @param fileSize - The size of the uploaded file in bytes
- * @param fileType - The type of the uploaded file
- *
- * @example
- * ```typescript
- * trackResumeUploadSuccess(1024000, "application/pdf");
- * trackResumeUploadSuccess(512000, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
- * ```
- */
-export const trackResumeUploadSuccess = (
-  fileSize: number,
-  fileType: string,
-): void => {
-  trackEvent(EVENTS.RESUME_UPLOAD_SUCCESS, {
-    file_size: fileSize,
-    file_type: fileType,
-  });
-};
-
-/**
- * Track when company information is provided
- *
- * @example
- * ```typescript
- * trackCompanyProvided();
- * ```
- */
-export const trackCompanyProvided = (): void => {
-  trackEvent(EVENTS.COMPANY_PROVIDED);
-};
-
-/**
- * Track submit button clicks during onboarding
- *
- * @example
- * ```typescript
- * trackSubmitButtonClick();
- * ```
- */
-export const trackSubmitButtonClick = (): void => {
-  trackEvent(EVENTS.SUBMIT_BUTTON_CLICK);
-};
-
-/**
- * Track completion of onboarding setup
- *
- * @param targetRole - The selected target role
- * @param experience - The selected experience level
- * @param resumeUploaded - Whether a resume was uploaded
- *
- * @example
- * ```typescript
- * trackOnboardingSetupComplete("Software Engineer", "3-5 years", true);
- * trackOnboardingSetupComplete("Product Manager", "0-2 years", false);
- * ```
- */
-export const trackOnboardingSetupComplete = (
-  targetRole: string,
-  experience: string,
-  resumeUploaded: boolean,
-): void => {
-  trackEvent(EVENTS.ONBOARDING_SETUP_COMPLETE, {
-    target_role: targetRole,
-    experience,
-    resume_uploaded: resumeUploaded,
-  });
 };
 
 // Navigation tracking functions
@@ -657,18 +390,6 @@ export const trackInterviewQuestionView = (
 };
 
 /**
- * Track audio play clicks for hearing questions
- *
- * @example
- * ```typescript
- * trackAudioPlayClick();
- * ```
- */
-export const trackAudioPlayClick = (): void => {
-  trackEvent(EVENTS.AUDIO_PLAY_CLICK);
-};
-
-/**
  * Track answer start clicks
  *
  * @example
@@ -777,23 +498,6 @@ export const trackScreenView = (
  */
 export const trackReportGenerationStart = (): void => {
   trackEvent(EVENTS.REPORT_GENERATION_START);
-};
-
-/**
- * Track view report button clicks
- *
- * @param timeToReportView - Optional time from interview submit to report view (in seconds)
- *
- * @example
- * ```typescript
- * trackViewReportButtonClick(30); // 30 seconds after submission
- * trackViewReportButtonClick(); // No timing data
- * ```
- */
-export const trackViewReportButtonClick = (timeToReportView?: number): void => {
-  trackEvent(EVENTS.VIEW_REPORT_BUTTON_CLICK, {
-    time_to_report_view: timeToReportView,
-  });
 };
 
 /**
