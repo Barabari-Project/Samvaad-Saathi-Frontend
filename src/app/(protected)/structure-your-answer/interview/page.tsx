@@ -149,6 +149,21 @@ const StructureYourAnswerInterviewPage = () => {
         }
     };
 
+    // Handle skipping the current question (from overview, without starting practice)
+    const handleSkipQuestion = () => {
+        if (
+            structuredPractice &&
+            currentQuestionIndex < structuredPractice.questions.length - 1
+        ) {
+            setCurrentQuestionIndex((prev) => prev + 1);
+            setCurrentSectionIndex(0);
+            setShowReport(false);
+            setHasStartedPractice(false);
+        } else {
+            router.push("/practice");
+        }
+    };
+
     // Welcome screen component (shown during loading and after loading)
     const WelcomeScreen = ({ isLoading }: { isLoading: boolean }) => (
         <div className="flex flex-col h-[80vh] items-center justify-center p-6">
@@ -255,8 +270,14 @@ const StructureYourAnswerInterviewPage = () => {
                     </div>
                 )}
 
-                {/* Start Practice Button */}
-                <div className="flex justify-end mt-auto">
+                {/* Start Practice / Skip Question Buttons */}
+                <div className="flex justify-between gap-3">
+                    <button
+                        onClick={handleSkipQuestion}
+                        className="btn btn-outline"
+                    >
+                        Skip question
+                    </button>
                     <button onClick={handleStartPractice} className="btn btn-neutral">
                         Start Practice
                         <ArrowRightIcon className="h-5 w-5" />
@@ -283,6 +304,7 @@ const StructureYourAnswerInterviewPage = () => {
             onComplete={handleSectionComplete}
             onAnalyze={handleAnalyze}
             onRedoPrevious={handleRedoPrevious}
+            onSkipQuestion={handleSkipQuestion}
             hasPreviousSection={currentSectionIndex > 0}
             previousSection={previousSection}
         />

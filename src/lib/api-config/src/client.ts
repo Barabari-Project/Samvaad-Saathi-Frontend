@@ -75,29 +75,41 @@ export const createApiClient = (service: APIService | APIServiceV2) => {
     const [cookies] = useCookies(["token"]);
 
     const mutateData = async (params: TParams): Promise<TData> => {
-      // Try to get token from cookies first, fallback to react-cookie
-      const token = getTokenFromCookies() || cookies.token;
+      try {
+        // Try to get token from cookies first, fallback to react-cookie
+        const token = getTokenFromCookies() || cookies.token;
 
-      // Support dynamic signal getter (for request cancellation)
-      const signalGetter = (
-        config as AxiosRequestConfig & {
-          _signalGetter?: () => AbortSignal | undefined;
-        }
-      )?._signalGetter;
-      const signal = signalGetter ? signalGetter() : config?.signal;
+        // Support dynamic signal getter (for request cancellation)
+        const signalGetter = (
+          config as AxiosRequestConfig & {
+            _signalGetter?: () => AbortSignal | undefined;
+          }
+        )?._signalGetter;
+        const signal = signalGetter ? signalGetter() : config?.signal;
 
-      const res = await axiosInstance({
-        url,
-        method,
-        data: params,
-        ...config,
-        ...(signal && { signal }),
-        headers: {
-          ...config?.headers,
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-      return res.data;
+        const res = await axiosInstance({
+          url,
+          method,
+          data: params,
+          ...config,
+          ...(signal && { signal }),
+          headers: {
+            ...config?.headers,
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        return res.data;
+      } catch (error) {
+        const err = error as AxiosError<{ detail?: string }>;
+        const detail = err.response?.data?.detail ?? err.message;
+        console.error(
+          "API error:",
+          typeof detail === "string"
+            ? detail
+            : JSON.stringify(err.response?.data ?? err),
+        );
+        throw error;
+      }
     };
 
     const mutation = useMutation<TData, AxiosError<APIError>, TParams>({

@@ -27,6 +27,7 @@ interface AnswerTypeStepProps {
     onComplete: () => void;
     onAnalyze?: () => void;
     onRedoPrevious?: () => void;
+    onSkipQuestion?: () => void;
     hasPreviousSection?: boolean;
     previousSection?: string;
 }
@@ -43,6 +44,7 @@ const AnswerTypeStep = ({
     onComplete,
     onAnalyze,
     onRedoPrevious,
+    onSkipQuestion,
     hasPreviousSection = false,
     previousSection,
 }: AnswerTypeStepProps) => {
@@ -142,14 +144,12 @@ const AnswerTypeStep = ({
                     message: string;
                     nextSectionHint: string;
                 }) => {
-                    toast.success(data.message);
                     if (data.nextSectionHint) {
                         setNextHint(data.nextSectionHint);
                     }
                 },
                 onError: (error) => {
                     console.error("Error submitting audio:", error);
-                    toast.error("Enable to transcribe your answer");
                 },
             },
         });
@@ -234,6 +234,9 @@ const AnswerTypeStep = ({
     const handleStopListening = () => {
         if (!mediaRecorderRef.current) return;
 
+        // Show notification when user clicks Done (answer recorded)
+        toast.success("Answer recorded");
+
         // Capture the time elapsed before stopping
         const capturedTimeElapsed = timeElapsed;
 
@@ -270,6 +273,9 @@ const AnswerTypeStep = ({
             stopRecording();
         }
     };
+
+    const showAnalyzeActions =
+        currentStep === totalSteps && hasAnswered && Boolean(onAnalyze);
 
     return (
         <div className="flex flex-col px-6 py-8">
@@ -344,14 +350,15 @@ const AnswerTypeStep = ({
                         </div>
                     </div>
 
-                    <div className="flex justify-end items-center w-full mt-auto pt-6">
+                    <div className="flex justify-end gap-3 items-center w-full mt-auto pt-6 flex-wrap">
+
                         <button onClick={handleStopListening} className="btn btn-neutral">
-                            {"Done"}
+                            Done
                         </button>
                     </div>
                 </>
             ) : (
-                <div className="flex justify-end gap-3 mt-auto pt-6">
+                <div className="flex justify-between gap-1 mt-auto pt-6 flex-wrap">
                     {!hasAnswered && hasPreviousSection && previousSection && (
                         <button
                             onClick={onRedoPrevious}
@@ -360,23 +367,28 @@ const AnswerTypeStep = ({
                             Redo {previousSection}
                         </button>
                     )}
-                    {currentStep === totalSteps && hasAnswered && onAnalyze ? (
-                        <>
-                            <button
-                                onClick={() => setHasAnswered(false)}
-                                className="btn btn-outline"
-                            >
-                                Redo {sectionLabel}
-                            </button>
-                            <button
-                                onClick={onAnalyze}
-                                disabled={isUploading}
-                                className="btn btn-primary text-white"
-                            >
-                                Analyse Answer
-                            </button>
-                        </>
-                    ) : (
+
+
+                    {showAnalyzeActions && (
+                        <button
+                            onClick={() => setHasAnswered(false)}
+                            className="btn btn-outline"
+                        >
+                            Redo {sectionLabel}
+                        </button>
+                    )}
+
+                    {showAnalyzeActions && (
+                        <button
+                            onClick={onAnalyze}
+                            disabled={isUploading}
+                            className="btn btn-primary text-white"
+                        >
+                            {isUploading ? "Uploading Answer..." : "Analyse Answer"}
+                        </button>
+                    )}
+
+                    {!showAnalyzeActions && (
                         <button onClick={handleRecordClick} className="btn btn-neutral">
                             Answer {sectionLabel}
                             <MicrophoneIcon className="h-5 w-5" />

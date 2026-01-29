@@ -132,9 +132,9 @@ const QuestionReport = ({
 
     if (!analysisData) {
         return (
-            <div className="flex flex-col px-6 py-8 min-h-screen">
-                <div className="mb-8">
-                    <p className="text-sm text-gray-600">No analysis data available.</p>
+            <div className="flex flex-col px-6 py-8">
+                <div className="my-8">
+                    <p className="text-sm text-gray-600">No analysis data available for this question.</p>
                 </div>
                 <div className="flex justify-end mt-auto pt-6">
                     <button onClick={onNextQuestion} className="btn btn-primary">
