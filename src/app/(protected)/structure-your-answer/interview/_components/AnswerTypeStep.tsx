@@ -306,7 +306,7 @@ const AnswerTypeStep = ({
                         <div className="absolute inset-0 animate-gradient bg-gradient-to-br from-blue-200 via-purple-100 to-yellow-100 bg-[length:200%_200%]" />
 
                         {/* Content */}
-                        <div className="relative z-10 flex flex-col items-center gap-6 sm:gap-8">
+                        <div className="relative flex flex-col items-center gap-6 sm:gap-8">
                             {/* Listening text */}
                             <h2 className="text-lg sm:text-xl font-medium text-gray-800 flex items-center gap-2">
                                 <span className="relative flex h-3 w-3">
