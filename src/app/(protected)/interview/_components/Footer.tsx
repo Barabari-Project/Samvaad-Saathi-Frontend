@@ -27,6 +27,8 @@ interface FooterProps {
     question_attempt_id?: number;
     /** When "llm_transcription_based", follow-up comes from transcription API - Next is disabled until it completes */
     followUpStrategy?: string | null;
+    /** True when current question is a follow-up (child); "Generating Follow-up..." is only shown for parent with llm_transcription_based */
+    isCurrentQuestionFollowUp?: boolean;
     onNext?: () => void;
     isLastQuestion?: boolean;
     onSubmit?: () => void;
@@ -38,6 +40,7 @@ const Footer = ({
     disabled = false,
     question_attempt_id,
     followUpStrategy = null,
+    isCurrentQuestionFollowUp = false,
     onNext,
     isLastQuestion = false,
     onSubmit,
@@ -550,10 +553,11 @@ const Footer = ({
                     ) : (
                         <button
                             onClick={handleNextClick}
-                            disabled={disabled || isWaitingForFollowUpFromTranscription}
+                            disabled={isWaitingForFollowUpFromTranscription}
                             className="btn btn-outline"
                         >
-                            {isWaitingForFollowUpFromTranscription
+                            {isWaitingForFollowUpFromTranscription &&
+                                !isCurrentQuestionFollowUp
                                 ? "Generating Follow-up..."
                                 : "Next"}
                         </button>

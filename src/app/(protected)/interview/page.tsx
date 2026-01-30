@@ -378,6 +378,9 @@ const InterviewPage = () => {
                         followUpStrategy={
                             questions?.[currentQuestionIndex]?.followUpStrategy ?? null
                         }
+                        isCurrentQuestionFollowUp={
+                            questions?.[currentQuestionIndex]?.isFollowUp ?? false
+                        }
                         onNext={handleNextQuestion}
                         isLastQuestion={
                             questions && currentQuestionIndex === questions.length - 1
