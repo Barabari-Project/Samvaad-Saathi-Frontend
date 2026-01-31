@@ -2,8 +2,13 @@
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { MicPermissionModal, useMicPermission } from "@/hooks/useMicPermission";
 import { createApiClient } from "@/lib/api-config/src/client";
-import { APIServiceV2 } from "@/lib/api-config/src/config";
+import { APIService, APIServiceV2 } from "@/lib/api-config/src/config";
 import { ENDPOINTS, ENDPOINTS_V2 } from "@/lib/api-config/src/endpoints";
+import {
+    clearInterviewQuestions,
+    getInterviewQuestions,
+    setInterviewQuestions,
+} from "@/lib/interview-session-storage";
 import {
     trackEvent,
     trackInterviewQuestionView,
@@ -27,6 +32,8 @@ const InterviewPage = () => {
     const useResume = searchParams.get("useResume");
     const role = searchParams.get("role");
     const selectedQuestionsParam = searchParams.get("selectedQuestions");
+    const resumed = searchParams.get("resumed") === "true";
+    const reattempt = searchParams.get("reattempt") === "true";
 
     const [hasStarted, setHasStarted] = useState(false);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -48,6 +55,7 @@ const InterviewPage = () => {
     } = useMicPermission();
 
     const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
+    const interviewsV1Client = createApiClient(APIService.INTERVIEWS);
 
     const {
         mutateAsync: generateQuestions,
@@ -67,27 +75,76 @@ const InterviewPage = () => {
         method: "post",
     });
 
-    // Parse selectedQuestions from URL if present
+    interface ResumeInterviewResponse {
+        interviewId: number;
+        track: string;
+        difficulty: string;
+        questions: GenerateQuestionsResponse["items"];
+        totalQuestions: number;
+        attemptedQuestions: number;
+        remainingQuestions: number;
+    }
+    const { mutateAsync: resumeInterview } = interviewsV1Client.useMutation<
+        ResumeInterviewResponse,
+        { interviewId: number }
+    >({
+        url: ENDPOINTS.INTERVIEWS.RESUME_INTERVIEW,
+        method: "post",
+    });
+
+    // Read questions from session storage when resumed or reattempt
     useEffect(() => {
-        if (selectedQuestionsParam) {
-            try {
-                const parsedQuestions = JSON.parse(
-                    decodeURIComponent(selectedQuestionsParam),
-                ) as GenerateQuestionsResponse["items"];
-                if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
-                    setQuestions(parsedQuestions);
-                    // Start interview if user has clicked the start button
+        if (!interviewId || (!resumed && !reattempt)) return;
+        const id = Number(interviewId);
+        const stored = getInterviewQuestions(id);
+        if (Array.isArray(stored) && stored.length > 0) {
+            setQuestions(stored as GenerateQuestionsResponse["items"]);
+            if (pendingStart) {
+                setHasStarted(true);
+                setPendingStart(false);
+            }
+            return;
+        }
+        if (resumed) {
+            resumeInterview({ interviewId: id })
+                .then((response) => {
+                    setInterviewQuestions(response.interviewId, response.questions);
+                    setQuestions(response.questions);
                     if (pendingStart) {
                         setHasStarted(true);
                         setPendingStart(false);
                     }
-                }
-            } catch (error) {
-                console.error("Failed to parse selectedQuestions from URL:", error);
-                // Fallback to generating questions via API if parsing fails
-            }
+                })
+                .catch((err) => {
+                    console.error("Failed to refetch resume interview:", err);
+                });
+            return;
         }
-    }, [selectedQuestionsParam, pendingStart]);
+        if (reattempt) {
+            router.push(
+                `/reattempt-interview?interviewId=${interviewId}&role=${encodeURIComponent(role || "")}`
+            );
+        }
+    }, [interviewId, resumed, reattempt, pendingStart, role, router, resumeInterview]);
+
+    // Parse selectedQuestions from URL if present (fallback for old links; skip when using session storage)
+    useEffect(() => {
+        if (resumed || reattempt || !selectedQuestionsParam) return;
+        try {
+            const parsedQuestions = JSON.parse(
+                decodeURIComponent(selectedQuestionsParam),
+            ) as GenerateQuestionsResponse["items"];
+            if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+                setQuestions(parsedQuestions);
+                if (pendingStart) {
+                    setHasStarted(true);
+                    setPendingStart(false);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to parse selectedQuestions from URL:", error);
+        }
+    }, [selectedQuestionsParam, pendingStart, resumed, reattempt]);
 
     // Update local questions state when generatedQuestions changes
     useEffect(() => {
@@ -161,11 +218,13 @@ const InterviewPage = () => {
         lastTrackedIndex,
     ]);
 
-    // Generate questions automatically when the welcome screen is shown
+    // Generate questions automatically when the welcome screen is shown (skip when loading from session storage)
     useEffect(() => {
         if (
             !hasStarted &&
             !selectedQuestionsParam &&
+            !resumed &&
+            !reattempt &&
             questions.length === 0 &&
             !isGeneratingQuestions &&
             !generatedQuestions
@@ -177,6 +236,8 @@ const InterviewPage = () => {
     }, [
         hasStarted,
         selectedQuestionsParam,
+        resumed,
+        reattempt,
         questions.length,
         isGeneratingQuestions,
         generatedQuestions,
@@ -253,9 +314,9 @@ const InterviewPage = () => {
         method: "post",
         options: {
             onSuccess: () => {
-                // Clear timer on completion
                 if (interviewId) {
                     sessionStorage.removeItem(`interviewEndTime_${interviewId}`);
+                    clearInterviewQuestions(Number(interviewId));
                 }
                 router.push(
                     `/interview-completed?interviewId=${interviewId}&role=${role || "Interview"
