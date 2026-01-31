@@ -43,13 +43,10 @@ export const EVENTS = {
 export const SCREEN_VIEW = {
   SIGNUP_PAGE: "signup_page",
   HOME_PAGE: "home_page",
-  ONBOARDING_SETUP_PAGE: "onboarding_setup_page",
   PROFILE_PAGE: "profile_page",
   INTERVIEW_PAGE: "interview_page",
   INTERVIEW_COMPLETED_PAGE: "interview_completed_page",
-  CONGRATULATIONS_PAGE: "congratulations_page",
   OVERALL_REPORT_PAGE: "overall_report_page",
-  DASHBOARD: "dashboard",
   HISTORY_PAGE: "history_page",
   PRACTICE_LIST_PAGE: "practice_list_page",
   ONBOARDING_PAGE: "onboarding_page",
