@@ -300,7 +300,7 @@ const StructureYourAnswerInterviewPage = () => {
             totalSteps={totalSections}
             practiceId={structuredPractice?.practiceId?.toString() || ""}
             questionIndex={currentQuestionIndex}
-            structureHint={currentQuestion?.structure_hint}
+            current_hint={currentQuestion?.current_hint}
             onComplete={handleSectionComplete}
             onAnalyze={handleAnalyze}
             onRedoPrevious={handleRedoPrevious}

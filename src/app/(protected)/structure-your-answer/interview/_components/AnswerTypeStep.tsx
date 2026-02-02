@@ -23,7 +23,7 @@ interface AnswerTypeStepProps {
     totalSteps: number;
     practiceId: string;
     questionIndex: number;
-    structureHint: string;
+    current_hint: string;
     onComplete: () => void;
     onAnalyze?: () => void;
     onRedoPrevious?: () => void;
@@ -40,7 +40,7 @@ const AnswerTypeStep = ({
     totalSteps,
     practiceId,
     questionIndex,
-    structureHint,
+    current_hint,
     onComplete,
     onAnalyze,
     onRedoPrevious,
@@ -62,6 +62,7 @@ const AnswerTypeStep = ({
     const stopWaveformAnimationRef = useRef<(() => void) | null>(null);
     const lastUpdateTimeRef = useRef<number>(0);
     const recordingStartTimeRef = useRef<number | null>(null);
+    const skipNextHintResetRef = useRef(false);
 
     const apiClient = createApiClient(APIServiceV2.INTERVIEWS);
 
@@ -84,12 +85,16 @@ const AnswerTypeStep = ({
         };
     }, []);
 
-    // Reset timer when section changes
+    // Reset timer when section changes (preserve nextHint if we just set it from API)
     useEffect(() => {
+        if (skipNextHintResetRef.current) {
+            skipNextHintResetRef.current = false;
+        } else {
+            setNextHint(null);
+        }
         setTimeElapsed(0);
         setHasAnswered(false);
         setIsListening(false);
-        setNextHint(null);
         recordingStartTimeRef.current = null;
         if (timerIntervalRef.current) {
             clearInterval(timerIntervalRef.current);
@@ -145,6 +150,7 @@ const AnswerTypeStep = ({
                     nextSectionHint: string;
                 }) => {
                     if (data.nextSectionHint) {
+                        skipNextHintResetRef.current = true;
                         setNextHint(data.nextSectionHint);
                     }
                 },
@@ -154,12 +160,9 @@ const AnswerTypeStep = ({
             },
         });
 
-    // Upload audio function - runs in background
+    // Upload audio and return promise so caller can await completion
     const uploadAudio = (formData: FormData) => {
-        // Start the API call but don't wait for it
-        submitAudio(formData).catch((error) => {
-            console.error("Error uploading audio:", error);
-        });
+        return submitAudio(formData);
     };
 
     const startRecording = async () => {
@@ -234,41 +237,34 @@ const AnswerTypeStep = ({
     const handleStopListening = () => {
         if (!mediaRecorderRef.current) return;
 
-        // Show notification when user clicks Done (answer recorded)
-        toast.success("Answer recorded");
-
-        // Capture the time elapsed before stopping
+        // Capture the time elapsed and section before stopping
         const capturedTimeElapsed = timeElapsed;
-
-        // Immediately move to next section
-        setHasAnswered(true);
-        onComplete();
 
         if (mediaRecorderRef.current) {
             mediaRecorderRef.current.onstop = async () => {
                 const blob = new Blob(chunksRef.current, { type: "audio/webm" });
 
-                // Process and upload in background (fire and forget)
-                (async () => {
-                    try {
-                        const wavBlob = await resampleAudioTo16kHz(blob);
-                        const file = new File([wavBlob], "recording.wav", {
-                            type: "audio/wav",
-                        });
+                try {
+                    const wavBlob = await resampleAudioTo16kHz(blob);
+                    const file = new File([wavBlob], "recording.wav", {
+                        type: "audio/wav",
+                    });
 
-                        const formData = new FormData();
-                        formData.append("file", file);
-                        formData.append(
-                            "time_spent_seconds",
-                            capturedTimeElapsed.toString()
-                        );
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append(
+                        "time_spent_seconds",
+                        capturedTimeElapsed.toString()
+                    );
 
-                        // Upload in background
-                        uploadAudio(formData);
-                    } catch (error) {
-                        console.error("Error processing audio:", error);
-                    }
-                })();
+                    await uploadAudio(formData);
+                    toast.success("Answer recorded");
+                    setHasAnswered(true);
+                    onComplete();
+                } catch (error) {
+                    console.error("Error submitting audio:", error);
+                    toast.error("Failed to submit. Please try again.");
+                }
             };
             stopRecording();
         }
@@ -285,9 +281,9 @@ const AnswerTypeStep = ({
                     {sectionLabel}
                 </h2>
                 <p className="text-sm text-gray-600 mb-2">Framework: {framework}</p>
-                {(nextHint || structureHint) && (
+                {(nextHint || current_hint) && (
                     <p className="text-sm text-gray-700 italic bg-blue-50 p-3 rounded">
-                        {nextHint || structureHint}
+                        {nextHint || current_hint}
                     </p>
                 )}
             </div>
@@ -351,9 +347,12 @@ const AnswerTypeStep = ({
                     </div>
 
                     <div className="flex justify-end gap-3 items-center w-full mt-auto pt-6 flex-wrap">
-
-                        <button onClick={handleStopListening} className="btn btn-neutral">
-                            Done
+                        <button
+                            onClick={handleStopListening}
+                            disabled={isUploading}
+                            className="btn btn-neutral"
+                        >
+                            {isUploading ? "Submitting..." : "Done"}
                         </button>
                     </div>
                 </>
@@ -389,9 +388,22 @@ const AnswerTypeStep = ({
                     )}
 
                     {!showAnalyzeActions && (
-                        <button onClick={handleRecordClick} className="btn btn-neutral">
-                            Answer {sectionLabel}
-                            <MicrophoneIcon className="h-5 w-5" />
+                        <button
+                            onClick={handleRecordClick}
+                            disabled={isUploading}
+                            className="btn btn-neutral inline-flex items-center gap-2"
+                        >
+                            {isUploading ? (
+                                <>
+                                    <span className="animate-spin size-5 border-2 border-current border-t-transparent rounded-full shrink-0" />
+                                    Submitting...
+                                </>
+                            ) : (
+                                <>
+                                    Answer {sectionLabel}
+                                    <MicrophoneIcon className="h-5 w-5" />
+                                </>
+                            )}
                         </button>
                     )}
                 </div>
