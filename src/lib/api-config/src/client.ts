@@ -56,6 +56,7 @@ const baseUrls = {
   [APIService.INTERVIEWS]: AUTH_BASE_URL || "",
   [APIService.TRANSCRIBE]: AUTH_BASE_URL || "",
   [APIService.ANALYSIS]: AUTH_BASE_URL || "",
+  [APIService.TTS]: AUTH_BASE_URL || "",
 };
 
 // Hook-based API client that uses react-cookie
