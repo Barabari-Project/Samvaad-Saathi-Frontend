@@ -22,6 +22,7 @@ export enum APIService {
   INTERVIEWS = "INTERVIEWS",
   TRANSCRIBE = "TRANSCRIBE",
   ANALYSIS = "ANALYSIS",
+  TTS = "TTS",
 }
 
 export enum APIServiceV2 {

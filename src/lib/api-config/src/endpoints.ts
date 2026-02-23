@@ -12,6 +12,9 @@ export const ENDPOINTS = {
   RESUME: {
     EXTRACT: "extract-resume",
   },
+  TTS: {
+    CONVERT: "tts/convert",
+  },
   INTERVIEWS: {
     LIST: "interviews",
     CREATE: "interviews/create",
