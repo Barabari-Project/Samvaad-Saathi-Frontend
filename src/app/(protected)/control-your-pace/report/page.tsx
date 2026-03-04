@@ -1,19 +1,16 @@
 "use client";
 
 import {
-    MicrophoneIcon,
     CheckCircleIcon,
     ExclamationTriangleIcon,
+    MicrophoneIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 
 const ReportPage = () => {
     return (
         <div className="flex flex-col min-h-full bg-base-200/30">
-            {/* Dark Header */}
-            <div className="bg-[#1E293B] text-white p-6 pb-12 rounded-b-3xl">
-                <h1 className="text-2xl font-bold text-center">Your Performance Report</h1>
-            </div>
+
 
             <div className="p-6 -mt-8 space-y-6">
                 {/* Score Card */}

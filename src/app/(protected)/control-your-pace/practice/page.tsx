@@ -115,24 +115,19 @@ const PracticePage = () => {
                             <span className="text-xs text-gray-500">Retry</span>
                         </div>
 
-                        {/* Listen Icon (Mock) */}
-                        <div className="absolute left-6 bottom-24 flex items-center justify-center">
-                            <div className="relative">
-                                <button className="btn btn-circle btn-sm bg-gray-100 border-none text-black shadow-sm">
-                                    <SpeakerWaveIcon className="w-4 h-4" />
-                                </button>
-                                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-white">
-                                    S
-                                </div>
-                            </div>
-                        </div>
+                        <div className="flex items-center gap-4 w-full">
+                            {/* Listen Icon (Mock) */}
+                            <button className="btn btn-circle bg-gray-100 border-none text-black shadow-sm shrink-0">
+                                <SpeakerWaveIcon className="w-5 h-5" />
+                            </button>
 
-                        <button
-                            onClick={() => router.push("/control-your-pace/report")}
-                            className="btn btn-primary btn-block btn-lg rounded-xl bg-blue-600 hover:bg-blue-700 border-none text-white font-bold"
-                        >
-                            View Report
-                        </button>
+                            <button
+                                onClick={() => router.push("/control-your-pace/report")}
+                                className="btn btn-primary btn-lg rounded-full bg-blue-600 hover:bg-blue-700 border-none text-white font-bold flex-1"
+                            >
+                                View Report
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
