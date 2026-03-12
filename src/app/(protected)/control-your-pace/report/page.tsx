@@ -57,9 +57,9 @@ const UNLOCK_THRESHOLD = 90;
 /** Card border + optional subtle bg by status (Good = green, Needs Adjustment = amber, Poor = red) */
 function getStatusCardBorder(status: string): string {
     const s = status?.toLowerCase()?.trim() ?? "";
-    if (s === "good" || s === "success") return "border-2 border-green-300 bg-green-50";
+    if (s === "good" || s === "success") return "border-2 border-green-300";
     if (["needs adjustment", "needs_adjustment", "average", "needs improvement", "warning"].includes(s))
-        return "border-2 border-amber-300 bg-amber-50";
+        return "border-2 border-amber-300";
     if (s === "poor" || s === "error") return "border-2 border-red-300 bg-red-50";
     return "border-2 border-gray-200 bg-white";
 }
@@ -331,7 +331,7 @@ const ReportPage = () => {
             <div className="mt-auto p-6 pb-10">
                 <Link
                     href={`/control-your-pace/practice?level=${level}`}
-                    className="btn btn-neutral btn-block btn-lg bg-[#0F172A] text-white rounded-xl"
+                    className="btn btn-neutral btn-block btn-lg rounded-xl"
                 >
                     <MicrophoneIcon className="w-5 h-5 mr-2" />
                     Next Sentence
