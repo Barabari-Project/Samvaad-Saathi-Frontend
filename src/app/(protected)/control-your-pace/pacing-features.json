@@ -1,0 +1,26 @@
+[
+  {
+    "id": "measure-speed",
+    "title": "Measure Speech Speed (WPM)",
+    "description": "Track your words per minute to ensure you're speaking at an optimal pace for interviews.",
+    "icon": "clock",
+    "iconBgClass": "bg-blue-200",
+    "iconColorClass": "text-blue-600"
+  },
+  {
+    "id": "detect-pauses",
+    "title": "Detect pauses & filler words",
+    "description": "Identify \"um\", \"uh\", and awkward pauses to help you speak more confidently.",
+    "icon": "chatBubble",
+    "iconBgClass": "bg-purple-200",
+    "iconColorClass": "text-purple-600"
+  },
+  {
+    "id": "interview-ready",
+    "title": "Get Interview-ready Feedback",
+    "description": "Get detailed feedback on your pacing, fluency, and overall interview performance.",
+    "icon": "chatBubble",
+    "iconBgClass": "bg-green-200",
+    "iconColorClass": "text-green-600"
+  }
+]

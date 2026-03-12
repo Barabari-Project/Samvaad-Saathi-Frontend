@@ -90,9 +90,6 @@ const PronunciationPracticeContent = () => {
 
     const [selectedRole, setSelectedRole] = useState(roleParam || "");
     const [difficulty, setDifficulty] = useState(difficultyParam || "");
-    const [isAutoStarting, setIsAutoStarting] = useState(
-        Boolean(roleParam && difficultyParam)
-    );
 
     const router = useRouter();
     const hasAutoStarted = useRef(false);
@@ -104,8 +101,6 @@ const PronunciationPracticeContent = () => {
             sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(data));
             router.push("/pronunciation-practice/start");
         }
-
-
 
     const { mutateAsync: createPronunciationPractice, isPending: isCreating } =
         apiClient.useMutation<
@@ -155,11 +150,6 @@ const PronunciationPracticeContent = () => {
             console.error("Error creating pronunciation practice:", error);
         }
     };
-
-    // Show loading state during auto-start
-    if (isAutoStarting) {
-        return <LoadingState />;
-    }
 
     const isFormValid = selectedRole && difficulty;
     const isSubmitDisabled = !isFormValid || isCreating;
