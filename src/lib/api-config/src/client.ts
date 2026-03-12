@@ -57,6 +57,7 @@ const baseUrls = {
   [APIService.TRANSCRIBE]: AUTH_BASE_URL || "",
   [APIService.ANALYSIS]: AUTH_BASE_URL || "",
   [APIService.TTS]: AUTH_BASE_URL || "",
+  [APIService.PACING]: AUTH_BASE_URL || "",
 };
 
 // Hook-based API client that uses react-cookie

@@ -6,10 +6,31 @@ import {
     MicrophoneIcon,
 } from "@heroicons/react/24/outline";
 import { useMicPermission, MicPermissionModal } from "@/hooks/useMicPermission";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createApiClient } from "@/lib/api-config/src/client";
+import { APIService } from "@/lib/api-config/src/config";
+import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import type { PacingLevelsResponse } from "@/lib/pacing-practice/types";
+
+const LEVEL_NAMES: Record<number, string> = {
+    1: "Level 1 - Sentence Control",
+    2: "Level 2 - Paragraph Fluency",
+    3: "Level 3 - Interview Mastery",
+};
 
 const LevelIntroPage = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const level = searchParams.get("level") ? Number(searchParams.get("level")) : 1;
+    const apiClient = createApiClient(APIService.PACING);
+    const { data: levelsData } = apiClient.useQuery<PacingLevelsResponse>({
+        key: ["pacing-levels"],
+        url: ENDPOINTS.PACING.LEVELS,
+    });
+    const levelTitle =
+        levelsData?.levels?.find((l) => l.level === level)?.name ??
+        LEVEL_NAMES[level] ??
+        `Level ${level}`;
     const {
         hasPermission,
         showModal,
@@ -26,14 +47,19 @@ const LevelIntroPage = () => {
                 return;
             }
         }
-        router.push("/control-your-pace/practice");
+        router.push(`/control-your-pace/practice?level=${level}`);
     };
 
     return (
         <div className="flex flex-col bg-base-200/30">
+            <div className="p-6 pt-6 space-y-6">
+                {/* Level title */}
+                <h1 className="text-xl font-bold text-black text-center">
+                    {levelTitle}
+                </h1>
+            </div>
 
-
-            <div className="p-6 mt-8 space-y-6">
+            <div className="p-6 space-y-6">
                 {/* What you'll practice */}
                 <div className="card bg-white shadow-lg border border-gray-100 p-6 rounded-2xl">
                     <div className="flex items-center gap-3 mb-4">

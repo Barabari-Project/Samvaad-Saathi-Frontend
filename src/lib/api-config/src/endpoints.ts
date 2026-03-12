@@ -37,6 +37,14 @@ export const ENDPOINTS = {
     GENERATE_SUMMARY_REPORT: "summary-report",
     // GET_SUMMARY_REPORT: (interviewId: string) =>`summary-report/${interviewId}`,
   },
+  PACING: {
+    LEVELS: "pacing-practice/levels",
+    SESSION_CREATE: "pacing-practice/session",
+    SESSION_SUBMIT: (sessionId: string) =>
+      `pacing-practice/session/${sessionId}/submit`,
+    SESSION_GET: (sessionId: string) =>
+      `pacing-practice/session/${sessionId}`,
+  },
 };
 
 export const ENDPOINTS_V2 = {
