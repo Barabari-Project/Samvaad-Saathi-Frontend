@@ -3,6 +3,11 @@
 import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import { ENDPOINTS } from "@/lib/api-config/src/endpoints";
+import {
+    DEFAULT_TTS_VOICE_ID,
+    TTS_VOICE_OPTIONS,
+    TTS_VOICE_STORAGE_KEY,
+} from "@/lib/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseTextToSpeechOptions {
@@ -43,6 +48,18 @@ interface UseTextToSpeechOptions {
 
 interface TTSRequestBody {
     text: string;
+    voice_id: string;
+}
+
+const allowedTtsVoiceIds = new Set<string>(
+    TTS_VOICE_OPTIONS.map((option) => option.id),
+);
+
+function resolveStoredTtsVoiceId(): string {
+    if (typeof window === "undefined") return DEFAULT_TTS_VOICE_ID;
+    const raw = localStorage.getItem(TTS_VOICE_STORAGE_KEY);
+    if (raw && allowedTtsVoiceIds.has(raw)) return raw;
+    return DEFAULT_TTS_VOICE_ID;
 }
 
 /**
@@ -196,9 +213,11 @@ export const useTextToSpeech = ({
 
             // First, try to get audio from backend.
             let audioBlob: Blob | null = null;
+            const voice_id = resolveStoredTtsVoiceId();
             try {
                 audioBlob = await convertTextToSpeech({
                     text: processedText,
+                    voice_id,
                 });
             } catch (error) {
                 console.error(
@@ -275,7 +294,17 @@ export const useTextToSpeech = ({
                 setIsSpeaking(false);
             }
         },
-        [isSupported, useNaturalPauses, stop, rate, pitch, volume, lang, voiceName]
+        [
+            isSupported,
+            useNaturalPauses,
+            stop,
+            rate,
+            pitch,
+            volume,
+            lang,
+            voiceName,
+            convertTextToSpeech,
+        ]
     );
 
     useEffect(() => {

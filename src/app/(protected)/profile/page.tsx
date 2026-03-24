@@ -6,11 +6,14 @@ import { createApiClient } from "@/lib/api-config/src/client";
 import { APIService } from "@/lib/api-config/src/config";
 import {
   APP_VERSION,
+  DEFAULT_TTS_VOICE_ID,
   DEGREE_OPTIONS,
   EXPERIENCE_OPTIONS,
   MAX_PROFILE_RESUME_SIZE_MB,
   RESUME_FILE_TYPES,
   ROLE_OPTIONS,
+  TTS_VOICE_OPTIONS,
+  TTS_VOICE_STORAGE_KEY,
   UNIVERSITY_OPTIONS,
 } from "@/lib/constants";
 
@@ -31,7 +34,18 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/solid";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const allowedTtsVoiceIds = new Set<string>(
+  TTS_VOICE_OPTIONS.map((option) => option.id),
+);
+
+function readStoredTtsVoiceId(): string {
+  if (typeof window === "undefined") return DEFAULT_TTS_VOICE_ID;
+  const raw = localStorage.getItem(TTS_VOICE_STORAGE_KEY);
+  if (raw && allowedTtsVoiceIds.has(raw)) return raw;
+  return DEFAULT_TTS_VOICE_ID;
+}
 import { z } from "zod";
 
 // Create API clients
@@ -66,8 +80,20 @@ export default function ProfilePage() {
     university: "",
   });
   const [errors, setErrors] = useState<Partial<ProfileFormData>>({});
+  const [ttsVoiceId, setTtsVoiceId] = useState<string>(DEFAULT_TTS_VOICE_ID);
 
   const userInitials = getInitials(user?.authorizedUser?.name || "User");
+
+  useEffect(() => {
+    setTtsVoiceId(readStoredTtsVoiceId());
+  }, []);
+
+  const handleTtsVoiceChange = (id: string) => {
+    setTtsVoiceId(id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(TTS_VOICE_STORAGE_KEY, id);
+    }
+  };
 
   // Set up mutations
   const updateProfileMutation = usersApiClient.useMutation({
@@ -731,6 +757,23 @@ export default function ProfilePage() {
                   </span>
                 </label>
               )}
+            </div>
+
+            <div className="form-control">
+              <label className="label mb-2">
+                <span className="label-text">Default interview voice</span>
+              </label>
+              <select
+                className="select select-bordered w-full"
+                value={ttsVoiceId}
+                onChange={(e) => handleTtsVoiceChange(e.target.value)}
+              >
+                {TTS_VOICE_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

@@ -35,3 +35,13 @@ export const EXPERIENCE_OPTIONS = ["0", "1", "2", "3", "4", "5"] as const;
 export const RESUME_FILE_TYPES = ".pdf,.doc,.docx";
 export const MAX_RESUME_SIZE_MB = 5; // 5MB for onboarding
 export const MAX_PROFILE_RESUME_SIZE_MB = 1; // 1MB for profile updates
+
+export const TTS_VOICE_STORAGE_KEY = "samvaad_tts_voice_id";
+
+export const TTS_VOICE_OPTIONS = [
+  { name: "Sia (Female)", id: "oO7sLA3dWfQXsKeSAjpA" },
+  { name: "Tara (Female)", id: "P7vsEyTOpZ6YUTulin8m" },
+  { name: "Shobhit (Male)", id: "RC0x4iZi3WQKkwkGubnK" },
+] as const;
+
+export const DEFAULT_TTS_VOICE_ID = TTS_VOICE_OPTIONS[0].id;
