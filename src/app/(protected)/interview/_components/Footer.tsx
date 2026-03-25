@@ -46,7 +46,6 @@ const Footer = ({
     onSubmit,
     onFollowUpQuestion,
 }: FooterProps) => {
-    console.log('followUpStrategy :', followUpStrategy);
     const [isListening, setIsListening] = useState(false);
     const [hasAnswered, setHasAnswered] = useState(false);
     const [showSkipModal, setShowSkipModal] = useState(false);
@@ -449,9 +448,6 @@ const Footer = ({
             }
         }
     };
-
-    console.log('hasAnswered :', hasAnswered);
-
 
     return (
         <div className="w-full py-4 transition-all duration-300 ease-in-out flex flex-col items-center justify-center max-w-5xl mx-auto">
