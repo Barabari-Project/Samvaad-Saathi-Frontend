@@ -107,10 +107,11 @@ const ReportPage = () => {
     });
 
     useEffect(() => {
+        // redirect to levels if no session id
         if (!sessionId) {
             router.replace("/control-your-pace/levels");
         }
-    }, [sessionId, router]);
+    }, [sessionId]);
 
     if (!sessionId) {
         return null;
@@ -141,7 +142,6 @@ const ReportPage = () => {
 
     const {
         score,
-
         speechSpeed,
         pauseDistribution,
         fillerWords,
